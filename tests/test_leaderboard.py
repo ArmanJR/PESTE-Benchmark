@@ -71,6 +71,7 @@ def test_rank_order_and_oom_exclusion(
         ("zeta", "success", 0.1, 0.1, 20.0),
         ("alpha", "success", 0.1, 0.1, 10.0),
         ("beta", "success", 0.1, 0.05, 20.0),
+        ("cer-leader", "success", 0.2, 0.01, 5.0),
         ("oom-model", "oom", 0.0, 0.0, 100.0),
     ):
         directory = results / model
@@ -80,8 +81,18 @@ def test_rank_order_and_oom_exclusion(
             encoding="utf-8",
         )
     rows = collect_rows(suite, results, require_tracked=False, root=tmp_path)  # type: ignore[arg-type]
-    assert [row.model_id for row in accuracy_order(rows)] == ["beta", "alpha", "zeta"]
-    assert [row.model_id for row in efficiency_order(rows)] == ["beta", "zeta", "alpha"]
+    assert [row.model_id for row in accuracy_order(rows)] == [
+        "cer-leader",
+        "beta",
+        "alpha",
+        "zeta",
+    ]
+    assert [row.model_id for row in efficiency_order(rows)] == [
+        "beta",
+        "zeta",
+        "alpha",
+        "cer-leader",
+    ]
 
 
 def test_static_outputs_are_deterministic(
@@ -179,13 +190,15 @@ def test_markdown_links_models_to_declared_hugging_face_repositories(
     readme = (tmp_path / "README.md").read_text(encoding="utf-8")
     assert expected_link in readme
     accuracy_image = "![Normalized accuracy leaderboard](generated/leaderboard-accuracy.svg)"
-    accuracy_table = "| Rank | Model | WER | CER | Word accuracy |"
+    accuracy_table = "| Rank | Model | CER | WER | Word accuracy |"
     memory_heading = "### Accuracy per peak CUDA memory"
     memory_image = "![Accuracy per peak CUDA memory leaderboard](generated/leaderboard-memory.svg)"
     memory_table = "| Rank | Model | Accuracy / reserved GiB | WER | Peak CUDA reserved GiB |"
     assert readme.index(accuracy_image) < readme.index(accuracy_table)
     assert readme.index(accuracy_table) < readme.index(memory_heading)
     assert readme.index(memory_image) < readme.index(memory_table)
+    assert "CER is the primary ranking metric" in readme
+    assert "fa-v1 converts ZWNJ to spaces" in readme
     accuracy_svg = (output / "leaderboard-accuracy.svg").read_text(encoding="utf-8")
     memory_svg = (output / "leaderboard-memory.svg").read_text(encoding="utf-8")
     for svg in (accuracy_svg, memory_svg):

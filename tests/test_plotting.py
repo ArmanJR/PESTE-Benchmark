@@ -34,6 +34,18 @@ def test_accuracy_plot_adapts_to_models_and_metric_ranges() -> None:
     assert "https://huggingface.co/organization/model-alpha" in svg
 
 
+def test_accuracy_plot_uses_cer_ranking_and_presents_cer_first() -> None:
+    rows = [
+        PlotRow("wer-leader", 0.10, 0.20, 10.0, 2.0),
+        PlotRow("cer-leader", 0.20, 0.10, 10.0, 2.0),
+    ]
+
+    svg = render_accuracy_svg("future-suite", rows)
+
+    assert svg.index(">cer-leader</text>") < svg.index(">wer-leader</text>")
+    assert svg.index("CER ↓") < svg.index("WER ↓")
+
+
 def test_memory_plot_uses_efficiency_ranking() -> None:
     rows = [
         PlotRow("accuracy-leader", 0.10, 0.05, 2.0, 2.0),

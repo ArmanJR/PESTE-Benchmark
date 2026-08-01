@@ -41,8 +41,8 @@ class MetricSpec:
 
 
 ACCURACY_METRICS = (
-    MetricSpec("WER ↓", "percent", "wer", lambda row: row.wer * 100, lambda value: f"{value:.1f}%"),
     MetricSpec("CER ↓", "percent", "cer", lambda row: row.cer * 100, lambda value: f"{value:.1f}%"),
+    MetricSpec("WER ↓", "percent", "wer", lambda row: row.wer * 100, lambda value: f"{value:.1f}%"),
 )
 MEMORY_METRICS = (
     MetricSpec(
@@ -269,14 +269,16 @@ def render_accuracy_svg(
     repositories: dict[str, str] | None = None,
 ) -> str:
     """Render the normalized-accuracy plot in leaderboard order."""
-    ordered = sorted(rows, key=lambda row: (row.wer, row.cer, row.model_id))
+    ordered = sorted(rows, key=lambda row: (row.cer, row.wer, row.model_id))
     return _render_leaderboard_svg(
         suite_id,
         ordered,
         ACCURACY_METRICS,
         board="accuracy",
         accessible_title="PESTE normalized accuracy leaderboard",
-        accessible_description="Compared by word error rate and character error rate.",
+        accessible_description=(
+            "Ranked by whitespace-insensitive character error rate; word error rate is also shown."
+        ),
         repositories=repositories,
     )
 

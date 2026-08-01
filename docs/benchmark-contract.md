@@ -46,7 +46,9 @@ The `fa-v1` normalizer is applied identically to references and predictions. It 
 6. whitespace collapse and trimming.
 
 Normalization intentionally removes punctuation from the accuracy measurement. Punctuation
-quality is not a separate metric in the current suite.
+quality is not a separate metric in the current suite. Replacing ZWNJ with a space also makes WER
+sensitive to Persian word-segmentation conventions: a model that emits joined compounds can
+receive word substitutions and deletions even when its letters match the reference.
 
 ## Model contract
 
@@ -130,8 +132,21 @@ word_accuracy_pct = 100 × max(0, 1 − WER)
 memory_efficiency = word_accuracy_pct / peak_cuda_reserved_gib
 ```
 
-The accuracy board sorts by WER ascending, CER ascending, then stable model ID. The memory board
-sorts by memory efficiency descending, WER ascending, then model ID.
+The accuracy board sorts by CER ascending, WER ascending, then stable model ID. CER is primary
+because it ignores normalized whitespace and is therefore robust to Persian ZWNJ/word-segmentation
+variation. WER remains a complementary measure of word-level transcription and orthographic
+segmentation. The memory board sorts by memory efficiency descending, WER ascending, then model ID;
+because memory efficiency derives from word accuracy, that secondary board remains
+segmentation-sensitive.
+
+### ZWNJ-policy sensitivity
+
+In the current test manifest, 622 of 871 references (71.4%) contain ZWNJ. As a sensitivity check,
+removing ZWNJ instead of converting it to a space changes corpus WER materially and changes the
+model order. For example, `whisper-large-v3` changes from 0.1980 to 0.2882 WER, while
+`whisper-large-persian-steja` changes from 0.2648 to 0.1917 and moves from fourth to first under
+that alternative. These alternative values are diagnostic only; official `fleurs-fa-ir-v1`
+scores retain the immutable `fa-v1` policy.
 
 Peak CUDA reserved and allocated memory are reset before checkpoint loading and measured through
 the complete run. Peak process RSS is also retained. Resumed runs carry forward the highest

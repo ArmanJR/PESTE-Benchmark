@@ -107,7 +107,7 @@ def collect_rows(
 
 
 def accuracy_order(rows: list[LeaderboardRow]) -> list[LeaderboardRow]:
-    return sorted(rows, key=lambda row: (row.wer, row.cer, row.model_id))
+    return sorted(rows, key=lambda row: (row.cer, row.wer, row.model_id))
 
 
 def efficiency_order(rows: list[LeaderboardRow]) -> list[LeaderboardRow]:
@@ -132,11 +132,11 @@ def _table(rows: list[LeaderboardRow], efficiency: bool, repositories: dict[str,
             for rank, row in enumerate(rows, start=1)
         ]
     else:
-        headings = "| Rank | Model | WER | CER | Word accuracy |"
+        headings = "| Rank | Model | CER | WER | Word accuracy |"
         separator = "|---:|---|---:|---:|---:|"
         values = [
             f"| {rank} | {_model_cell(row.model_id, repositories)} | "
-            f"{row.wer:.4f} | {row.cer:.4f} | "
+            f"{row.cer:.4f} | {row.wer:.4f} | "
             f"{row.word_accuracy_pct:.2f}% |"
             for rank, row in enumerate(rows, start=1)
         ]
@@ -160,6 +160,9 @@ def render_markdown(
         f"{heading} Normalized accuracy\n\n"
         f"![Normalized accuracy leaderboard]({image_prefix}leaderboard-accuracy.svg)\n\n"
         + _table(accuracy_order(rows), efficiency=False, repositories=model_repositories)
+        + "\n\nCER is the primary ranking metric because Persian WER is orthography-sensitive: "
+        "fa-v1 converts ZWNJ to spaces, while CER ignores normalized whitespace. WER and "
+        "derived word accuracy remain complementary, segmentation-sensitive measurements."
         + f"\n\n{heading} Accuracy per peak CUDA memory\n\n"
         f"![Accuracy per peak CUDA memory leaderboard]({image_prefix}leaderboard-memory.svg)\n\n"
         + _table(efficiency_order(rows), efficiency=True, repositories=model_repositories)

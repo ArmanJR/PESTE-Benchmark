@@ -18,15 +18,17 @@ weights or dataset audio.
 
 ![Normalized accuracy leaderboard](generated/leaderboard-accuracy.svg)
 
-| Rank | Model | WER | CER | Word accuracy |
+| Rank | Model | CER | WER | Word accuracy |
 |---:|---|---:|---:|---:|
-| 1 | [`whisper-large-v3`](https://huggingface.co/openai/whisper-large-v3) | 0.1980 | 0.0599 | 80.20% |
-| 2 | [`whisper-large-v3-turbo`](https://huggingface.co/openai/whisper-large-v3-turbo) | 0.2041 | 0.0650 | 79.59% |
-| 3 | [`qwen3-asr-1-7b`](https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf) | 0.2417 | 0.0892 | 75.83% |
-| 4 | [`whisper-large-persian-steja`](https://huggingface.co/steja/whisper-large-persian) | 0.2648 | 0.0589 | 73.52% |
-| 5 | [`vibevoice-asr`](https://huggingface.co/microsoft/VibeVoice-ASR) | 0.2704 | 0.1378 | 72.96% |
-| 6 | [`qwen3-asr-0-6b`](https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf) | 0.4803 | 0.2086 | 51.97% |
-| 7 | [`whisper-persian-paulwalker`](https://huggingface.co/Paulwalker4884/whisper-persian) | 0.9430 | 1.4341 | 5.70% |
+| 1 | [`whisper-large-persian-steja`](https://huggingface.co/steja/whisper-large-persian) | 0.0589 | 0.2648 | 73.52% |
+| 2 | [`whisper-large-v3`](https://huggingface.co/openai/whisper-large-v3) | 0.0599 | 0.1980 | 80.20% |
+| 3 | [`whisper-large-v3-turbo`](https://huggingface.co/openai/whisper-large-v3-turbo) | 0.0650 | 0.2041 | 79.59% |
+| 4 | [`qwen3-asr-1-7b`](https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf) | 0.0892 | 0.2417 | 75.83% |
+| 5 | [`vibevoice-asr`](https://huggingface.co/microsoft/VibeVoice-ASR) | 0.1378 | 0.2704 | 72.96% |
+| 6 | [`qwen3-asr-0-6b`](https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf) | 0.2086 | 0.4803 | 51.97% |
+| 7 | [`whisper-persian-paulwalker`](https://huggingface.co/Paulwalker4884/whisper-persian) | 1.4341 | 0.9430 | 5.70% |
+
+CER is the primary ranking metric because Persian WER is orthography-sensitive: fa-v1 converts ZWNJ to spaces, while CER ignores normalized whitespace. WER and derived word accuracy remain complementary, segmentation-sensitive measurements.
 
 ### Accuracy per peak CUDA memory
 
@@ -48,16 +50,37 @@ Peak CUDA memory is unified system/GPU memory and is not directly comparable wit
 
 ### Reading the results
 
-- **WER** is corpus-level word error rate; lower is better.
-- **CER** is corpus-level character error rate after whitespace removal; lower is better.
+- **CER** is corpus-level character error rate after whitespace removal; lower is better and it is
+  the primary accuracy ranking metric.
+- **WER** is corpus-level word error rate; lower is better. It is sensitive to Persian spacing and
+  ZWNJ conventions.
 - **Word accuracy** is `100 × max(0, 1 − WER)`.
 - **Accuracy / reserved GiB** is word accuracy divided by peak CUDA reserved memory; higher is
   better.
 
-The accuracy board sorts by WER, CER, then stable model ID. The efficiency board sorts by memory
+The accuracy board sorts by CER, WER, then stable model ID. The efficiency board sorts by memory
 efficiency, WER, then model ID. Only complete official result bundles whose suite and model
 digests match the current specifications are ranked. Failed and out-of-memory runs remain
 auditable but unranked.
+
+### ZWNJ sensitivity
+
+The official `fa-v1` normalizer converts ZWNJ to a space. This affects WER because joined and split
+Persian compounds become different word-token sequences; CER removes normalized whitespace and is
+not affected by that segmentation choice. ZWNJ occurs in 622 of the 871 test references (71.4%).
+
+Recomputing the published raw predictions with ZWNJ removed instead of replaced by a space gives
+the following sensitivity analysis. These are diagnostic values, not alternative official scores.
+
+| Model | Official WER, ZWNJ → space | Diagnostic WER, ZWNJ → join | Diagnostic rank |
+|---|---:|---:|---:|
+| `whisper-large-persian-steja` | 0.2648 | 0.1917 | 1 |
+| `qwen3-asr-1-7b` | 0.2417 | 0.2662 | 2 |
+| `whisper-large-v3` | 0.1980 | 0.2882 | 3 |
+| `whisper-large-v3-turbo` | 0.2041 | 0.2944 | 4 |
+| `vibevoice-asr` | 0.2704 | 0.3274 | 5 |
+| `qwen3-asr-0-6b` | 0.4803 | 0.5049 | 6 |
+| `whisper-persian-paulwalker` | 0.9430 | 0.9663 | 7 |
 
 ## Documentation
 
