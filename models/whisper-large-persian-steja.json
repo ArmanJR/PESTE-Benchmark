@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "model_id": "whisper-large-persian-steja",
+  "repository": "steja/whisper-large-persian",
+  "revision": "4c8e5a01a1a684aa59b36a70b2ce408ad780af11",
+  "adapter": "transformers-whisper",
+  "native_dtype": "float16",
+  "license": "Apache-2.0",
+  "language": "fa",
+  "generation": {"task": "transcribe", "max_new_tokens": 444, "return_timestamps": false},
+  "runtime": {"name": "modern", "image": "psst-modern:1.0.0", "dockerfile": "runtimes/modern/Dockerfile"}
+}

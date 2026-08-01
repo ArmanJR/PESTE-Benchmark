@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "model_id": "whisper-persian-paulwalker",
+  "repository": "Paulwalker4884/whisper-persian",
+  "revision": "80f96e52051b23f239db9b9798c41ed04d5aa568",
+  "adapter": "transformers-whisper",
+  "native_dtype": "float32",
+  "license": "Apache-2.0",
+  "language": "fa",
+  "generation": {"task": "transcribe", "max_new_tokens": 444, "return_timestamps": false},
+  "runtime": {"name": "modern", "image": "psst-modern:1.0.0", "dockerfile": "runtimes/modern/Dockerfile"}
+}

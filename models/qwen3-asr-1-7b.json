@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "model_id": "qwen3-asr-1-7b",
+  "repository": "Qwen/Qwen3-ASR-1.7B-hf",
+  "revision": "bcd2b5b7f32b480ab5790554cfa8347f246a14f3",
+  "adapter": "transformers-qwen",
+  "native_dtype": "bfloat16",
+  "license": "Apache-2.0",
+  "language": "fa",
+  "generation": {"max_new_tokens": 256},
+  "runtime": {"name": "modern", "image": "psst-modern:1.0.0", "dockerfile": "runtimes/modern/Dockerfile"}
+}

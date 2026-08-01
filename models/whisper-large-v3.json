@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "model_id": "whisper-large-v3",
+  "repository": "openai/whisper-large-v3",
+  "revision": "06f233fe06e710322aca913c1bc4249a0d71fce1",
+  "adapter": "transformers-whisper",
+  "native_dtype": "float16",
+  "license": "Apache-2.0",
+  "language": "fa",
+  "generation": {"task": "transcribe", "max_new_tokens": 444, "return_timestamps": false},
+  "runtime": {"name": "modern", "image": "psst-modern:1.0.0", "dockerfile": "runtimes/modern/Dockerfile"}
+}

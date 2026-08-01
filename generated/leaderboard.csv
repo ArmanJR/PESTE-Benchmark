@@ -1,0 +1,1 @@
+board,rank,model_id,run_id,wer,cer,word_accuracy_pct,memory_efficiency,peak_cuda_reserved_gib,peak_cuda_allocated_gib,peak_process_rss_gib,checkpoint_gib,parameter_count,native_dtype

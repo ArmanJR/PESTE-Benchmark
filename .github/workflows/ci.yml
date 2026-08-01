@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.14"
+          enable-cache: true
+      - name: Install Python 3.12
+        run: uv python install 3.12
+      - name: Sync frozen environment
+        run: uv sync --frozen --all-groups
+      - name: Ruff format
+        run: uv run --frozen ruff format --check src tests tools runtimes/nemo/compat runtimes/transformers-compat
+      - name: Ruff lint
+        run: uv run --frozen ruff check src tests tools runtimes/nemo/compat runtimes/transformers-compat
+      - name: Mypy
+        run: uv run --frozen mypy
+      - name: Pytest
+        run: uv run --frozen pytest
+      - name: Validate immutable specifications
+        run: uv run --frozen psst validate-specs
+      - name: Verify deterministic generated outputs
+        run: uv run --frozen psst check-generated

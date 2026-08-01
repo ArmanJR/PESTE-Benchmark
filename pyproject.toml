@@ -1,0 +1,65 @@
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "psst-benchmark"
+version = "1.0.0"
+description = "Reproducible FLEURS Persian ASR leaderboard"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { file = "LICENSE" }
+authors = [{ name = "PSST contributors" }]
+dependencies = [
+  "datasets>=4.0.0,<5",
+  "docker[ssh]>=7.1.0,<8",
+  "huggingface-hub>=0.34.0,<2",
+  "numpy>=2.1.0,<3",
+  "pydantic>=2.11.0,<3",
+  "soundfile>=0.13.1,<1",
+  "typer>=0.16.0,<1",
+]
+
+[project.scripts]
+psst = "psst.cli:app"
+
+[dependency-groups]
+dev = [
+  "mypy==1.17.1",
+  "pytest==8.4.1",
+  "pytest-cov==6.2.1",
+  "ruff==0.12.7",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/psst"]
+
+[tool.pytest.ini_options]
+addopts = "--strict-config --strict-markers -q"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "LOG", "G"]
+ignore = ["RUF001"] # Persian/Arabic characters are intentional benchmark data.
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["psst"]
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = [
+  "datasets.*",
+  "docker.*",
+  "nemo.*",
+  "soundfile.*",
+  "torch.*",
+  "transformers.*",
+  "vibevoice.*",
+]
+ignore_missing_imports = true

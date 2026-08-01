@@ -1,0 +1,21 @@
+.DS_Store
+.env
+.venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.coverage
+htmlcov/
+
+# The independent llama.cpp checkout is not part of PSST.
+/llama.cpp/
+
+# Persistent benchmark data and temporary run working files are intentionally untracked.
+# Completed result bundles remain visible so maintainers can review and commit them explicitly.
+/cache/
+/audios/
+/results/**/work/
+/results/**/logs/

@@ -1,0 +1,14 @@
+[project]
+name = "psst-runtime-nemo"
+version = "1.0.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "datasets==4.0.0",
+  "huggingface-hub==0.34.3",
+  "nemo_toolkit[asr]==2.7.3",
+  "numpy==1.26.4",
+  "pydantic==2.11.7",
+  "soundfile==0.14.0",
+  "torchaudio==2.8.0",
+  "typer==0.16.0",
+]

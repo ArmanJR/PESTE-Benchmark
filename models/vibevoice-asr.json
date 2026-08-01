@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "model_id": "vibevoice-asr",
+  "repository": "microsoft/VibeVoice-ASR",
+  "revision": "d0c9efdb8d614685062c04425d91e01b6f37d944",
+  "adapter": "vibevoice",
+  "native_dtype": "bfloat16",
+  "license": "MIT",
+  "language": null,
+  "generation": {"max_new_tokens": 512, "temperature": 0.0, "top_p": 1.0, "num_beams": 1},
+  "runtime": {"name": "vibevoice", "image": "psst-vibevoice:1.0.0", "dockerfile": "runtimes/vibevoice/Dockerfile"}
+}
