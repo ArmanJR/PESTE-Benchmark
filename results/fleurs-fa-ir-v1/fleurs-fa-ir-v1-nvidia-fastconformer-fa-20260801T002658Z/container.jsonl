@@ -1,0 +1,180 @@
+{"timestamp": "2026-08-01T00:27:06.926+00:00", "level": "INFO", "logger": "psst.runner", "message": "Starting benchmark run", "run": "fleurs-fa-ir-v1-nvidia-fastconformer-fa-20260801T002658Z", "model": "nvidia-fastconformer-fa", "completed": 0}
+{"timestamp": "2026-08-01T00:27:12.866+00:00", "level": "WARNING", "logger": "nv_one_logger.api.config", "message": "OneLogger: Setting error_handling_strategy to DISABLE_QUIETLY_AND_REPORT_METRIC_ERROR for rank (rank=0) with OneLogger disabled. To override: explicitly set error_handling_strategy parameter."}
+{"timestamp": "2026-08-01T00:27:12.901+00:00", "level": "INFO", "logger": "nv_one_logger.exporter.export_config_manager", "message": "Final configuration contains 0 exporter(s)"}
+{"timestamp": "2026-08-01T00:27:12.901+00:00", "level": "WARNING", "logger": "nv_one_logger.training_telemetry.api.training_telemetry_provider", "message": "No exporters were provided. This means that no telemetry data will be collected."}
+[NeMo W 2026-08-01 00:27:13 nemo_logging:364] /opt/venv/lib/python3.12/site-packages/pydub/utils.py:170: RuntimeWarning: Couldn't find ffmpeg or avconv - defaulting to ffmpeg, but may not work
+      warn("Couldn't find ffmpeg or avconv - defaulting to ffmpeg, but may not work", RuntimeWarning)
+    
+{"timestamp": "2026-08-01T00:27:14.563+00:00", "level": "INFO", "logger": "psst.adapters.nemo", "message": "Loading NeMo checkpoint", "model": "nvidia-fastconformer-fa"}
+[NeMo I 2026-08-01 00:27:15 mixins:184] Tokenizer SentencePieceTokenizer initialized with 1024 tokens
+[NeMo W 2026-08-01 00:27:17 modelPT:188] If you intend to do training or fine-tuning, please call the ModelPT.setup_training_data() method and provide a valid configuration file to setup the train data loader.
+    Train config : 
+    manifest_filepath: dummy
+    sample_rate: 16000
+    batch_size: 1
+    shuffle: true
+    num_workers: 8
+    pin_memory: true
+    max_duration: 10
+    min_duration: 0.5
+    is_tarred: false
+    tarred_audio_filepaths: null
+    shuffle_n: 2048
+    bucketing_strategy: fully_randomized
+    bucketing_batch_size: null
+    use_lhotse: true
+    lhotse:
+      shar_path: /data_artifacts/data/shar/train
+      batch_duration: 1200
+      quadratic_duration: 15
+      num_buckets: 10
+      num_cuts_for_bins_estimate: 10000
+      buffer_size: 10000
+      shuffle_buffer_size: 10000
+    
+[NeMo W 2026-08-01 00:27:17 modelPT:195] If you intend to do validation, please call the ModelPT.setup_validation_data() or ModelPT.setup_multiple_validation_data() method and provide a valid configuration file to setup the validation data loader(s). 
+    Validation config : 
+    manifest_filepath: /data_artifacts/data/nemo/dev_decoded_exprunner.json
+    sample_rate: 16000
+    batch_size: 512
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    
+[NeMo W 2026-08-01 00:27:17 modelPT:202] Please call the ModelPT.setup_test_data() or ModelPT.setup_multiple_test_data() method and provide a valid configuration file to setup the test data loader(s).
+    Test config : 
+    manifest_filepath: /data_artifacts/data/nemo/test_decoded_exprunner.json
+    sample_rate: 16000
+    batch_size: 512
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    
+[NeMo I 2026-08-01 00:27:18 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo I 2026-08-01 00:27:18 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo I 2026-08-01 00:27:18 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo I 2026-08-01 00:27:20 save_restore_connector:285] Model EncDecHybridRNNTCTCBPEModel was successfully restored from /cache/hf/models--nvidia--stt_fa_fastconformer_hybrid_large/snapshots/249cf5bf70dda7220a60ddeeecff2f6aad8e1784/stt_fa_fastconformer_hybrid_large.nemo.
+[NeMo I 2026-08-01 00:27:20 hybrid_rnnt_ctc_bpe_models:440] No `decoding_cfg` passed when changing decoding strategy, using internal config
+[NeMo I 2026-08-01 00:27:20 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo I 2026-08-01 00:27:20 hybrid_rnnt_ctc_bpe_models:479] Changed decoding strategy of the RNNT decoder to 
+    model_type: rnnt
+    strategy: greedy_batch
+    compute_hypothesis_token_set: false
+    preserve_alignments: null
+    tdt_include_token_duration: null
+    confidence_cfg:
+      preserve_frame_confidence: false
+      preserve_token_confidence: false
+      preserve_word_confidence: false
+      exclude_blank: true
+      aggregation: min
+      tdt_include_duration: false
+      method_cfg:
+        name: entropy
+        entropy_type: tsallis
+        alpha: 0.33
+        entropy_norm: exp
+        temperature: DEPRECATED
+    fused_batch_size: null
+    compute_timestamps: null
+    compute_langs: false
+    word_seperator: ' '
+    segment_seperators:
+    - .
+    - '!'
+    - '?'
+    segment_gap_threshold: null
+    rnnt_timestamp_type: all
+    greedy:
+      max_symbols_per_step: 10
+      preserve_alignments: false
+      preserve_frame_confidence: false
+      tdt_include_token_duration: false
+      tdt_include_duration_confidence: false
+      confidence_method_cfg:
+        name: entropy
+        entropy_type: tsallis
+        alpha: 0.33
+        entropy_norm: exp
+        temperature: DEPRECATED
+      loop_labels: true
+      use_cuda_graph_decoder: true
+      ngram_lm_model: null
+      ngram_lm_alpha: 0.0
+      boosting_tree:
+        model_path: null
+        key_phrases_file: null
+        key_phrases_list: null
+        key_phrase_items_list: null
+        context_score: 1.0
+        depth_scaling: 2.0
+        unk_score: 0.0
+        final_eos_score: 1.0
+        score_per_phrase: 0.0
+        source_lang: en
+        use_triton: true
+        uniform_weights: false
+        use_bpe_dropout: false
+        num_of_transcriptions: 5
+        bpe_alpha: 0.3
+      boosting_tree_alpha: 0.0
+      enable_per_stream_biasing: false
+      max_symbols: 10
+    beam:
+      beam_size: 2
+      search_type: default
+      score_norm: true
+      return_best_hypothesis: false
+      tsd_max_sym_exp_per_step: 50
+      alsd_max_target_len: 2.0
+      nsc_max_timesteps_expansion: 1
+      nsc_prefix_alpha: 1
+      maes_num_steps: 2
+      maes_prefix_alpha: 1
+      maes_expansion_gamma: 2.3
+      maes_expansion_beta: 2
+      language_model: null
+      softmax_temperature: 1.0
+      preserve_alignments: false
+      ngram_lm_model: null
+      ngram_lm_alpha: 0.0
+      boosting_tree:
+        model_path: null
+        key_phrases_file: null
+        key_phrases_list: null
+        key_phrase_items_list: null
+        context_score: 1.0
+        depth_scaling: 2.0
+        unk_score: 0.0
+        final_eos_score: 1.0
+        score_per_phrase: 0.0
+        source_lang: en
+        use_triton: true
+        uniform_weights: false
+        use_bpe_dropout: false
+        num_of_transcriptions: 5
+        bpe_alpha: 0.3
+      boosting_tree_alpha: 0.0
+      hat_subtract_ilm: false
+      hat_ilm_weight: 0.0
+      max_symbols_per_step: 10
+      blank_lm_score_mode: LM_WEIGHTED_FULL
+      pruning_mode: LATE
+      allow_cuda_graphs: true
+      tsd_max_sym_exp: 50
+    temperature: 1.0
+    durations: []
+    big_blank_durations: []
+    
+[NeMo W 2026-08-01 00:27:20 dataloader:826] The following configuration keys are ignored by Lhotse dataloader: use_start_end_token
+{"timestamp": "2026-08-01T00:27:20.197+00:00", "level": "INFO", "logger": "root", "message": "Initializing Lhotse CutSet from a single NeMo manifest\n            (is_tarred=False): '/tmp/tmplj5jjeej/manifest.json'"}
+[NeMo W 2026-08-01 00:27:20 dataloader:523] You are using a non-tarred dataset and requested tokenization during data sampling (pretokenize=True). This will cause the tokenization to happen in the main (GPU) process,possibly impacting the training speed if your tokenizer is very large.If the impact is noticable, set pretokenize=False in dataloader config.(note: that will disable token-per-second filtering and 2D bucketing features)
+Transcribing: 0it [00:00, ?it/s]Transcribing: 0it [00:00, ?it/s]
+{"timestamp": "2026-08-01T00:27:20.797+00:00", "level": "ERROR", "logger": "psst.runner", "message": "Native-precision CUDA OOM; no fallback will be attempted", "run": "fleurs-fa-ir-v1-nvidia-fastconformer-fa-20260801T002658Z", "model": "nvidia-fastconformer-fa", "exception": "Traceback (most recent call last):\n  File \"/opt/venv/lib/python3.12/site-packages/psst/runner.py\", line 255, in run_benchmark\n    transcription = active_adapter.transcribe(audio_path)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/psst/adapters/nemo.py\", line 37, in transcribe\n    hypotheses = self.model.transcribe([str(audio_path)], batch_size=1)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/torch/utils/_contextlib.py\", line 116, in decorate_context\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/nemo/collections/asr/models/hybrid_rnnt_ctc_models.py\", line 165, in transcribe\n    return ASRTranscriptionMixin.transcribe(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/torch/utils/_contextlib.py\", line 116, in decorate_context\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/nemo/collections/asr/parts/mixins/transcription.py\", line 298, in transcribe\n    for processed_outputs in generator:\n  File \"/opt/venv/lib/python3.12/site-packages/nemo/collections/asr/parts/mixins/transcription.py\", line 398, in transcribe_generator\n    processed_outputs = self._transcribe_output_processing(model_outputs, transcribe_cfg)\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/nemo/collections/asr/models/hybrid_rnnt_ctc_models.py\", line 208, in _transcribe_output_processing\n    return super()._transcribe_output_processing(outputs, trcfg)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/nemo/collections/asr/models/rnnt_models.py\", line 956, in _transcribe_output_processing\n    hyp = self.decoding.rnnt_decoder_predictions_tensor(\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/nemo/collections/asr/parts/submodules/rnnt_decoding.py\", line 719, in rnnt_decoder_predictions_tensor\n    hypotheses_list = self.decoding(\n                      ^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/nemo/collections/asr/parts/submodules/rnnt_greedy_decoding.py\", line 201, in __call__\n    return self.forward(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/nemo/core/classes/common.py\", line 1198, in wrapped_call\n    outputs = wrapped(*args, **kwargs)\n              ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/nemo/collections/asr/parts/submodules/rnnt_greedy_decoding.py\", line 767, in forward\n    hypotheses = self._greedy_decode(\n                 ^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/torch/utils/_contextlib.py\", line 116, in decorate_context\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/nemo/collections/asr/parts/submodules/rnnt_greedy_decoding.py\", line 815, in _greedy_decode_blank_as_pad_loop_labels\n    batched_hyps, alignments, batched_state = self.decoding_computer(\n                                              ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/nemo/collections/asr/parts/submodules/transducer_decoding/label_looping_base.py\", line 297, in __call__\n    return self.cuda_graphs_impl(\n           ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.12/site-packages/nemo/collections/asr/parts/submodules/transducer_decoding/rnnt_label_looping.py\", line 697, in cuda_graphs_impl\n    self._graph_reinitialize(encoder_output)\n  File \"/opt/venv/lib/python3.12/site-packages/nemo/collections/asr/parts/submodules/transducer_decoding/rnnt_label_looping.py\", line 872, in _graph_reinitialize\n    self._warmup_for_cuda_graphs()\n  File \"/opt/venv/lib/python3.12/site-packages/nemo/collections/asr/parts/submodules/transducer_decoding/rnnt_label_looping.py\", line 907, in _warmup_for_cuda_graphs\n    self._before_inner_loop_get_joint_output()\n  File \"/opt/venv/lib/python3.12/site-packages/nemo/collections/asr/parts/submodules/transducer_decoding/rnnt_label_looping.py\", line 1070, in _before_inner_loop_get_joint_output\n    self.joint.joint_after_projection(\n  File \"/opt/venv/lib/python3.12/site-packages/nemo/collections/asr/modules/rnnt.py\", line 1703, in joint_after_projection\n    res = self.joint_net(inp)  # [B, T, U, V + 1]\n          ^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py\", line 1751, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py\", line 1762, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/torch/nn/modules/container.py\", line 240, in forward\n    input = module(input)\n            ^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py\", line 1751, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py\", line 1762, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/torch/nn/modules/linear.py\", line 125, in forward\n    return F.linear(input, self.weight, self.bias)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: CUDA driver error: out of memory"}
+{"timestamp": "2026-08-01T00:27:21.360+00:00", "level": "INFO", "logger": "psst.runner", "message": "Benchmark run finalized", "run": "fleurs-fa-ir-v1-nvidia-fastconformer-fa-20260801T002658Z", "model": "nvidia-fastconformer-fa", "status": "oom"}
