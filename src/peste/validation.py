@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from psst.schemas import ModelSpec
+from peste.schemas import ModelSpec
 
 
 def validate_model_policy(model: ModelSpec, root: Path) -> None:

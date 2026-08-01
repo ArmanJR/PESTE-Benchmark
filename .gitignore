@@ -10,7 +10,7 @@ __pycache__/
 .coverage
 htmlcov/
 
-# The independent llama.cpp checkout is not part of PSST.
+# The independent llama.cpp checkout is not part of PESTE.
 /llama.cpp/
 
 # Persistent benchmark data and temporary run working files are intentionally untracked.

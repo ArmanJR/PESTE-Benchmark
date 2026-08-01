@@ -1570,6 +1570,33 @@ wheels = [
 ]
 
 [[package]]
+name = "peste-runtime-nemo"
+version = "1.0.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "datasets" },
+    { name = "huggingface-hub" },
+    { name = "nemo-toolkit", extra = ["asr"] },
+    { name = "numpy" },
+    { name = "pydantic" },
+    { name = "soundfile" },
+    { name = "torchaudio" },
+    { name = "typer" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "datasets", specifier = "==4.0.0" },
+    { name = "huggingface-hub", specifier = "==0.34.3" },
+    { name = "nemo-toolkit", extras = ["asr"], specifier = "==2.7.3" },
+    { name = "numpy", specifier = "==1.26.4" },
+    { name = "pydantic", specifier = "==2.11.7" },
+    { name = "soundfile", specifier = "==0.14.0" },
+    { name = "torchaudio", specifier = "==2.8.0" },
+    { name = "typer", specifier = "==0.16.0" },
+]
+
+[[package]]
 name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1683,33 +1710,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/b7/d7/48cbf6b0c3c39761e47a99cb483405f0fde2be22cf00d71ef316ce52b458/protobuf-5.29.6-cp38-abi3-manylinux2014_aarch64.whl", hash = "sha256:a8866b2cff111f0f863c1b3b9e7572dc7eaea23a7fae27f6fc613304046483e6", size = 320284, upload-time = "2026-02-04T22:54:31.782Z" },
     { url = "https://files.pythonhosted.org/packages/e3/dd/cadd6ec43069247d91f6345fa7a0d2858bef6af366dbd7ba8f05d2c77d3b/protobuf-5.29.6-cp38-abi3-manylinux2014_x86_64.whl", hash = "sha256:e3387f44798ac1106af0233c04fb8abf543772ff241169946f698b3a9a3d3ab9", size = 320478, upload-time = "2026-02-04T22:54:32.909Z" },
     { url = "https://files.pythonhosted.org/packages/5a/cb/e3065b447186cb70aa65acc70c86baf482d82bf75625bf5a2c4f6919c6a3/protobuf-5.29.6-py3-none-any.whl", hash = "sha256:6b9edb641441b2da9fa8f428760fc136a49cf97a52076010cf22a2ff73438a86", size = 173126, upload-time = "2026-02-04T22:54:39.462Z" },
-]
-
-[[package]]
-name = "psst-runtime-nemo"
-version = "1.0.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "datasets" },
-    { name = "huggingface-hub" },
-    { name = "nemo-toolkit", extra = ["asr"] },
-    { name = "numpy" },
-    { name = "pydantic" },
-    { name = "soundfile" },
-    { name = "torchaudio" },
-    { name = "typer" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "datasets", specifier = "==4.0.0" },
-    { name = "huggingface-hub", specifier = "==0.34.3" },
-    { name = "nemo-toolkit", extras = ["asr"], specifier = "==2.7.3" },
-    { name = "numpy", specifier = "==1.26.4" },
-    { name = "pydantic", specifier = "==2.11.7" },
-    { name = "soundfile", specifier = "==0.14.0" },
-    { name = "torchaudio", specifier = "==2.8.0" },
-    { name = "typer", specifier = "==0.16.0" },
 ]
 
 [[package]]

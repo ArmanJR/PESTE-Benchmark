@@ -3,13 +3,13 @@ requires = ["hatchling==1.27.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "psst-benchmark"
+name = "peste-benchmark"
 version = "1.0.0"
-description = "Reproducible FLEURS Persian ASR leaderboard"
+description = "Reproducible Persian speech-to-text benchmark and leaderboard"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 license = { file = "LICENSE" }
-authors = [{ name = "PSST contributors" }]
+authors = [{ name = "PESTE contributors" }]
 dependencies = [
   "datasets>=4.0.0,<5",
   "docker[ssh]>=7.1.0,<8",
@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.scripts]
-psst = "psst.cli:app"
+peste = "peste.cli:app"
 
 [dependency-groups]
 dev = [
@@ -32,7 +32,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/psst"]
+packages = ["src/peste"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers -q"
@@ -49,7 +49,7 @@ ignore = ["RUF001"] # Persian/Arabic characters are intentional benchmark data.
 [tool.mypy]
 python_version = "3.12"
 strict = true
-packages = ["psst"]
+packages = ["peste"]
 warn_unreachable = true
 
 [[tool.mypy.overrides]]

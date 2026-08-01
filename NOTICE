@@ -1,5 +1,5 @@
-PSST — Persian Speech-to-Script Test Benchmark
-Copyright 2026 PSST contributors
+PESTE — Persian Speech to Text benchmark
+Copyright 2026 PESTE contributors
 
 The fleurs-fa-ir-v1 benchmark definition is derived from the Persian (fa_ir)
 configuration of Google FLEURS. FLEURS dataset content is licensed under

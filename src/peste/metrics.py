@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from psst.normalization import normalize
+from peste.normalization import normalize
 
 
 @dataclass(frozen=True, slots=True)

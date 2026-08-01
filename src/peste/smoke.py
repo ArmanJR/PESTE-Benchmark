@@ -3,12 +3,12 @@
 import logging
 from pathlib import Path
 
-from psst.adapters import create_adapter
-from psst.digests import sha256_bytes
-from psst.manifest import validate_manifest
-from psst.normalization import normalize
-from psst.runner import _seed_runtime
-from psst.schemas import ModelSpec, SuiteSpec
+from peste.adapters import create_adapter
+from peste.digests import sha256_bytes
+from peste.manifest import validate_manifest
+from peste.normalization import normalize
+from peste.runner import _seed_runtime
+from peste.schemas import ModelSpec, SuiteSpec
 
 LOGGER = logging.getLogger(__name__)
 

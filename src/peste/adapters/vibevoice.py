@@ -5,8 +5,8 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
-from psst.adapters.base import ASRAdapter, Transcription
-from psst.prefetch import (
+from peste.adapters.base import ASRAdapter, Transcription
+from peste.prefetch import (
     VIBEVOICE_TOKENIZER_REPOSITORY,
     VIBEVOICE_TOKENIZER_REVISION,
     pinned_snapshot_directory,

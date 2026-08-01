@@ -8,9 +8,9 @@ import pytest
 import soundfile as sf
 from conftest import make_model
 
-import psst.smoke as smoke
-from psst.adapters.base import ASRAdapter, Transcription
-from psst.schemas import SuiteSpec
+import peste.smoke as smoke
+from peste.adapters.base import ASRAdapter, Transcription
+from peste.schemas import SuiteSpec
 
 
 class SmokeAdapter(ASRAdapter):

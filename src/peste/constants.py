@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-PROJECT_ROOT = Path(os.environ.get("PSST_PROJECT_ROOT", Path(__file__).resolve().parents[2]))
+PROJECT_ROOT = Path(os.environ.get("PESTE_PROJECT_ROOT", Path(__file__).resolve().parents[2]))
 DEFAULT_SUITE_ID = "fleurs-fa-ir-v1"
 DEFAULT_NORMALIZER = "fa-v1"
 DATASET_REPOSITORY = "google/fleurs"

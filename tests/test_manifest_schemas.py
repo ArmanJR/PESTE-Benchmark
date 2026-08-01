@@ -6,9 +6,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from psst.digests import sha256_file
-from psst.manifest import validate_manifest
-from psst.schemas import RunBundle, RunStatus
+from peste.digests import sha256_file
+from peste.manifest import validate_manifest
+from peste.schemas import RunBundle, RunStatus
 
 
 def test_manifest_digest_counts_and_order(
@@ -39,7 +39,7 @@ def test_success_requires_aggregates() -> None:
         "model_digest": "b" * 64,
         "status": RunStatus.SUCCESS,
         "environment": {
-            "psst_revision": "rev",
+            "peste_revision": "rev",
             "image_reference": "image",
             "image_digest": "digest",
             "dependency_versions": {},

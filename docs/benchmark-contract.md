@@ -1,0 +1,171 @@
+# Benchmark contract
+
+This document defines the inputs, execution policy, metrics, artifacts, and publication rules for
+the current PESTE benchmark. A result is comparable only when it follows the same suite, model,
+normalization, inference, and hardware contracts.
+
+## Dataset contract
+
+The current suite is [`fleurs-fa-ir-v1`](../suites/fleurs-fa-ir-v1/suite.json), derived from the
+Persian `fa_ir` configuration of `google/fleurs`.
+
+| Property | Value |
+|---|---|
+| Repository | `google/fleurs` |
+| Revision | `70bb2e84b976b7e960aa89f1c648e09c59f894dd` |
+| License | CC BY 4.0 |
+| Evaluation split | `test` |
+| Manifest | [`manifest.jsonl`](../suites/fleurs-fa-ir-v1/manifest.jsonl) |
+| Manifest SHA-256 | `76e87e96769cd63ce5d5abbc7827563644e55c3ba3fdc4041f4359a67435c061` |
+
+| Split | Rows | Benchmark use |
+|---|---:|---|
+| train | 3,101 | Materialized and verified, not scored |
+| validation | 369 | Materialized and verified, not scored |
+| test | 871 | Official ranking |
+
+The manifest records the upstream ID and row index, exact transcript, duration, canonical audio
+hash and path, source revision, and license. Dataset preparation decodes every recording once into
+16-kHz mono PCM-16 WAV and verifies the materialized data against the committed manifest.
+
+The upstream `transcription` field is the scoring reference. Empty normalized references are not
+valid suite data. Empty model predictions are valid outputs and are scored as errors.
+
+Published manifests are immutable. A source revision, transcript, audio, split, or normalization
+change requires a new suite ID and independent leaderboard.
+
+## Text normalization
+
+The `fa-v1` normalizer is applied identically to references and predictions. It performs:
+
+1. Unicode NFKC normalization;
+2. Arabic/Persian letter-variant unification;
+3. tatweel and diacritic removal;
+4. Persian and Arabic-Indic digit conversion to ASCII;
+5. replacement of ZWNJ, non-breaking spaces, punctuation, and symbols with spaces; and
+6. whitespace collapse and trimming.
+
+Normalization intentionally removes punctuation from the accuracy measurement. Punctuation
+quality is not a separate metric in the current suite.
+
+## Model contract
+
+Every checkpoint has an immutable JSON specification under [`models/`](../models) containing its
+Hugging Face repository and revision, adapter, native dtype, declared license, language policy,
+generation policy, and runtime image.
+
+The model digest is stored in every run request and result bundle. A result whose model digest no
+longer matches the corresponding specification is excluded from generated rankings.
+
+Supported model proposals must follow an existing adapter contract. See
+[Adding a model](adding-a-model.md). New inference interfaces require maintainer-owned adapter and
+runtime work; see the [maintainer guide](maintainer-guide.md).
+
+## Execution contract
+
+Official runs use:
+
+- one CUDA device and batch size 1;
+- checkpoint-native benchmark precision;
+- canonical manifest order;
+- fixed Python, NumPy, PyTorch, and CUDA seeds;
+- strict PyTorch deterministic algorithms;
+- a fixed CUDA BLAS workspace configuration;
+- disabled TF32 and cuDNN autotuning;
+- inference/evaluation mode; and
+- no fallback decoder, precision, quantization, offload, or compilation.
+
+Dataset and checkpoint acquisition run in network-enabled preparation containers. Official
+inference containers have networking disabled and mount dataset/model caches read-only.
+
+Framework families run in separate images with frozen dependencies:
+
+| Runtime | Use |
+|---|---|
+| `modern` | Transformers-based Whisper and Qwen adapters |
+| `vibevoice` | VibeVoice ASR and its pinned compatible tokenizer stack |
+| `nemo` | NeMo ASR and the default RNNT adapter |
+
+Runtime Dockerfiles and lockfiles under [`runtimes/`](../runtimes) are authoritative.
+
+## Hardware contract
+
+The official profile is:
+
+- Jetson AGX Orin 32GB;
+- Ubuntu 22.04;
+- JetPack 6.2 / L4T R36.4.7;
+- host CUDA 12.6;
+- NVIDIA container runtime;
+- MAXN power mode;
+- at least 60 GiB free cache storage; and
+- no competing NVIDIA containers or detected host GPU processes.
+
+`peste doctor` enforces this profile before smoke tests and full runs. The captured profile, runtime
+image digest, Python/PyTorch/CUDA versions, installed dependencies, seed, and source revision are
+stored in the result bundle.
+
+Jetson CUDA memory is unified system/GPU memory. Peak CUDA values therefore should not be compared
+directly with process VRAM measurements from discrete GPUs.
+
+## Metrics
+
+WER and CER are corpus-level Levenshtein error rates:
+
+```text
+WER = total word substitutions + deletions + insertions
+      -------------------------------------------------
+                   total reference words
+
+CER = total character substitutions + deletions + insertions
+      ------------------------------------------------------
+                 total reference characters
+```
+
+CER removes normalized whitespace before counting characters. Word accuracy and memory efficiency
+are derived values:
+
+```text
+word_accuracy_pct = 100 × max(0, 1 − WER)
+memory_efficiency = word_accuracy_pct / peak_cuda_reserved_gib
+```
+
+The accuracy board sorts by WER ascending, CER ascending, then stable model ID. The memory board
+sorts by memory efficiency descending, WER ascending, then model ID.
+
+Peak CUDA reserved and allocated memory are reset before checkpoint loading and measured through
+the complete run. Peak process RSS is also retained. Resumed runs carry forward the highest
+measurements from earlier segments.
+
+## Result bundles
+
+An official result directory contains:
+
+| Artifact | Purpose |
+|---|---|
+| `request.json` | Immutable run request and digests |
+| `run.json` | Status, aggregates, environment, memory, and artifact references |
+| `predictions.jsonl` | Append-only per-sample references, predictions, normalized text, and edit counts |
+| `runner.jsonl` | Structured runner log |
+| `container.jsonl` | Captured container output |
+| `diagnostics.json` | External failure diagnostics when a container cannot produce a bundle |
+
+Resume validates the original request, append-only prediction count, and sample sequence. It is
+available only for failed or killed runs, not OOM runs.
+
+## Ranking eligibility
+
+A result enters a generated leaderboard only when:
+
+- `run.json` is tracked as an intended official result;
+- the suite ID and digest match the current suite specification;
+- the model digest matches the current model specification;
+- status is `success` and aggregate metrics are present;
+- the prediction count equals the complete evaluation split; and
+- the recorded source revision is not `uncommitted`.
+
+The generator rejects multiple successful official runs for the same model ID. Failed, killed,
+incomplete, stale, and OOM bundles remain available for audit but are not ranked.
+
+Maintainers regenerate Markdown, SVG, JSON, CSV, and the README leaderboard block from eligible
+bundles. Generated artifacts are never the source of benchmark metrics.

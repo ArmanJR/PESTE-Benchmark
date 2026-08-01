@@ -8,5 +8,5 @@
   "license": "Apache-2.0",
   "language": "fa",
   "generation": {"max_new_tokens": 256},
-  "runtime": {"name": "modern", "image": "psst-modern:1.0.0", "dockerfile": "runtimes/modern/Dockerfile"}
+  "runtime": {"name": "modern", "image": "peste-modern:1.0.0", "dockerfile": "runtimes/modern/Dockerfile"}
 }

@@ -2,7 +2,7 @@
 
 import pytest
 
-from psst.normalization import normalize, normalize_fa_v1
+from peste.normalization import normalize, normalize_fa_v1
 
 
 @pytest.mark.parametrize(

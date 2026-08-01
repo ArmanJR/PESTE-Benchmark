@@ -8,5 +8,5 @@
   "license": "MIT",
   "language": "fa",
   "generation": {"task": "transcribe", "max_new_tokens": 444, "return_timestamps": false},
-  "runtime": {"name": "modern", "image": "psst-modern:1.0.0", "dockerfile": "runtimes/modern/Dockerfile"}
+  "runtime": {"name": "modern", "image": "peste-modern:1.0.0", "dockerfile": "runtimes/modern/Dockerfile"}
 }

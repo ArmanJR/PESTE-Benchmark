@@ -14,13 +14,13 @@ from typing import Any
 
 import numpy as np
 
-from psst.adapters import create_adapter
-from psst.adapters.base import ASRAdapter
-from psst.digests import canonical_json
-from psst.logging import configure_logging
-from psst.manifest import validate_manifest
-from psst.metrics import EditCounts, SampleScore, aggregate_scores, memory_efficiency, score_sample
-from psst.schemas import (
+from peste.adapters import create_adapter
+from peste.adapters.base import ASRAdapter
+from peste.digests import canonical_json
+from peste.logging import configure_logging
+from peste.manifest import validate_manifest
+from peste.metrics import EditCounts, SampleScore, aggregate_scores, memory_efficiency, score_sample
+from peste.schemas import (
     AggregateMetrics,
     EnvironmentFingerprint,
     LogReferences,
@@ -32,7 +32,7 @@ from psst.schemas import (
     RunStatus,
     SuiteSpec,
 )
-from psst.specs import spec_digest
+from peste.specs import spec_digest
 
 LOGGER = logging.getLogger(__name__)
 GIB = 1024**3
@@ -86,7 +86,7 @@ def _checkpoint_bytes(model: ModelSpec, cache_directory: Path) -> int:
 
 
 def _source_revision() -> str:
-    explicit = os.environ.get("PSST_SOURCE_REVISION")
+    explicit = os.environ.get("PESTE_SOURCE_REVISION")
     if explicit:
         return explicit
     try:
@@ -110,13 +110,13 @@ def _environment(seed: int) -> EnvironmentFingerprint:
         if distribution.metadata["Name"]
     }
     try:
-        hardware = json.loads(os.environ.get("PSST_HARDWARE_PROFILE_JSON", "{}"))
+        hardware = json.loads(os.environ.get("PESTE_HARDWARE_PROFILE_JSON", "{}"))
     except json.JSONDecodeError as error:
-        raise ValueError("PSST_HARDWARE_PROFILE_JSON is not valid JSON") from error
+        raise ValueError("PESTE_HARDWARE_PROFILE_JSON is not valid JSON") from error
     return EnvironmentFingerprint(
-        psst_revision=_source_revision(),
-        image_reference=os.environ.get("PSST_IMAGE_REFERENCE", "unknown"),
-        image_digest=os.environ.get("PSST_IMAGE_DIGEST", "unknown"),
+        peste_revision=_source_revision(),
+        image_reference=os.environ.get("PESTE_IMAGE_REFERENCE", "unknown"),
+        image_digest=os.environ.get("PESTE_IMAGE_DIGEST", "unknown"),
         dependency_versions=versions,
         python_version=platform.python_version(),
         pytorch_version=torch.__version__,

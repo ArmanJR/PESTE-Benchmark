@@ -104,7 +104,7 @@ class RunStatus(StrEnum):
 
 
 class EnvironmentFingerprint(ContractModel):
-    psst_revision: str
+    peste_revision: str
     image_reference: str
     image_digest: str
     dependency_versions: dict[str, str]

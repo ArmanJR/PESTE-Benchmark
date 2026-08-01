@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from psst.digests import canonical_json, sha256_bytes
-from psst.schemas import DatasetSource, ManifestRow, ModelSpec, RuntimeSpec, SuiteSpec
+from peste.digests import canonical_json, sha256_bytes
+from peste.schemas import DatasetSource, ManifestRow, ModelSpec, RuntimeSpec, SuiteSpec
 
 
 def make_model(
@@ -50,7 +50,7 @@ def make_model(
             "generation": generations[adapter],
             "runtime": RuntimeSpec(
                 name=runtime_name,
-                image=f"psst-{runtime_name}:test",
+                image=f"peste-{runtime_name}:test",
                 dockerfile=f"runtimes/{runtime_name}/Dockerfile",
             ),
         }

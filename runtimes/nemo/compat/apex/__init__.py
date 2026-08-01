@@ -2,5 +2,5 @@
 
 raise ModuleNotFoundError(
     "Apex is intentionally disabled: Jetson PyTorch has distributed support disabled, "
-    "and PSST's NeMo ASR path does not use Apex or Megatron."
+    "and PESTE's NeMo ASR path does not use Apex or Megatron."
 )

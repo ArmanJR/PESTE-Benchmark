@@ -5,9 +5,9 @@ from collections import Counter
 from collections.abc import Iterator
 from pathlib import Path
 
-from psst.digests import sha256_file
-from psst.normalization import normalize
-from psst.schemas import ManifestRow, SuiteSpec
+from peste.digests import sha256_file
+from peste.normalization import normalize
+from peste.schemas import ManifestRow, SuiteSpec
 
 
 def iter_manifest(path: Path) -> Iterator[ManifestRow]:

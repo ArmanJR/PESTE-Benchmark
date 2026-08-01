@@ -5,9 +5,9 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from psst.constants import PROJECT_ROOT
-from psst.digests import canonical_json, sha256_bytes
-from psst.schemas import ModelSpec, SuiteSpec
+from peste.constants import PROJECT_ROOT
+from peste.digests import canonical_json, sha256_bytes
+from peste.schemas import ModelSpec, SuiteSpec
 
 
 def _load[SpecT: BaseModel](path: Path, model_type: type[SpecT]) -> SpecT:

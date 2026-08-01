@@ -2,7 +2,7 @@
 
 import pytest
 
-from psst.metrics import (
+from peste.metrics import (
     aggregate_scores,
     edit_counts,
     memory_efficiency,

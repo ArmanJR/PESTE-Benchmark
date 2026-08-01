@@ -7,10 +7,11 @@ import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from psst.constants import PROJECT_ROOT
-from psst.digests import canonical_json
-from psst.schemas import RunBundle, RunStatus, SuiteSpec
-from psst.specs import discover_models, spec_digest
+from peste.constants import PROJECT_ROOT
+from peste.digests import canonical_json
+from peste.plotting import render_accuracy_svg, render_memory_svg
+from peste.schemas import RunBundle, RunStatus, SuiteSpec
+from peste.specs import discover_models, spec_digest
 
 LOGGER = logging.getLogger(__name__)
 GIB = 1024**3
@@ -71,7 +72,7 @@ def collect_rows(
         if expected_model_digest is not None and bundle.model_digest != expected_model_digest:
             LOGGER.warning("Ignoring result with a stale model digest", extra={"path": str(path)})
             continue
-        if bundle.environment.psst_revision == "uncommitted":
+        if bundle.environment.peste_revision == "uncommitted":
             LOGGER.warning("Ignoring result from uncommitted source", extra={"path": str(path)})
             continue
         if bundle.aggregates is None:
@@ -113,12 +114,20 @@ def efficiency_order(rows: list[LeaderboardRow]) -> list[LeaderboardRow]:
     return sorted(rows, key=lambda row: (-row.memory_efficiency, row.wer, row.model_id))
 
 
-def _table(rows: list[LeaderboardRow], efficiency: bool) -> str:
+def _model_cell(model_id: str, repositories: dict[str, str]) -> str:
+    repository = repositories.get(model_id)
+    if repository is None:
+        return f"`{model_id}`"
+    return f"[`{model_id}`](https://huggingface.co/{repository})"
+
+
+def _table(rows: list[LeaderboardRow], efficiency: bool, repositories: dict[str, str]) -> str:
     if efficiency:
         headings = "| Rank | Model | Accuracy / reserved GiB | WER | Peak CUDA reserved GiB |"
         separator = "|---:|---|---:|---:|---:|"
         values = [
-            f"| {rank} | `{row.model_id}` | {row.memory_efficiency:.4f} | "
+            f"| {rank} | {_model_cell(row.model_id, repositories)} | "
+            f"{row.memory_efficiency:.4f} | "
             f"{row.wer:.4f} | {row.peak_cuda_reserved_gib:.3f} |"
             for rank, row in enumerate(rows, start=1)
         ]
@@ -126,7 +135,8 @@ def _table(rows: list[LeaderboardRow], efficiency: bool) -> str:
         headings = "| Rank | Model | WER | CER | Word accuracy |"
         separator = "|---:|---|---:|---:|---:|"
         values = [
-            f"| {rank} | `{row.model_id}` | {row.wer:.4f} | {row.cer:.4f} | "
+            f"| {rank} | {_model_cell(row.model_id, repositories)} | "
+            f"{row.wer:.4f} | {row.cer:.4f} | "
             f"{row.word_accuracy_pct:.2f}% |"
             for rank, row in enumerate(rows, start=1)
         ]
@@ -135,13 +145,24 @@ def _table(rows: list[LeaderboardRow], efficiency: bool) -> str:
     return "\n".join([headings, separator, *values])
 
 
-def render_markdown(rows: list[LeaderboardRow]) -> str:
+def render_markdown(
+    suite: SuiteSpec,
+    rows: list[LeaderboardRow],
+    repositories: dict[str, str] | None = None,
+    *,
+    image_prefix: str = "",
+    heading_level: int = 2,
+) -> str:
+    model_repositories = repositories or {}
+    heading = "#" * heading_level
     return (
-        "# PSST v1 leaderboards\n\n"
-        "## Normalized accuracy — FLEURS Persian test split\n\n"
-        + _table(accuracy_order(rows), efficiency=False)
-        + "\n\n## Accuracy per peak CUDA memory — Jetson AGX Orin 32GB\n\n"
-        + _table(efficiency_order(rows), efficiency=True)
+        f"# PESTE leaderboard — `{suite.suite_id}`\n\n"
+        f"{heading} Normalized accuracy\n\n"
+        f"![Normalized accuracy leaderboard]({image_prefix}leaderboard-accuracy.svg)\n\n"
+        + _table(accuracy_order(rows), efficiency=False, repositories=model_repositories)
+        + f"\n\n{heading} Accuracy per peak CUDA memory\n\n"
+        f"![Accuracy per peak CUDA memory leaderboard]({image_prefix}leaderboard-memory.svg)\n\n"
+        + _table(efficiency_order(rows), efficiency=True, repositories=model_repositories)
         + "\n\nPeak CUDA memory is unified system/GPU memory and is not directly comparable "
         "with process VRAM reported on discrete GPUs.\n"
     )
@@ -162,8 +183,16 @@ def generate_leaderboards(
     rows = collect_rows(suite, results_directory, require_tracked=require_tracked, root=root)
     accuracy = accuracy_order(rows)
     efficiency = efficiency_order(rows)
+    repositories = {model.model_id: model.repository for model in discover_models(root)}
+    markdown = render_markdown(suite, rows, repositories)
     generated_directory.mkdir(parents=True, exist_ok=True)
-    (generated_directory / "leaderboard.md").write_text(render_markdown(rows), encoding="utf-8")
+    (generated_directory / "leaderboard.md").write_text(markdown, encoding="utf-8")
+    (generated_directory / "leaderboard-accuracy.svg").write_text(
+        render_accuracy_svg(suite.suite_id, rows, repositories), encoding="utf-8"
+    )
+    (generated_directory / "leaderboard-memory.svg").write_text(
+        render_memory_svg(suite.suite_id, rows, repositories), encoding="utf-8"
+    )
     payload = {
         "schema_version": 1,
         "suite_id": suite.suite_id,
@@ -188,7 +217,13 @@ def generate_leaderboards(
             raise ValueError("README leaderboard markers are missing or duplicated")
         before, remainder = readme.split(start_marker)
         _, after = remainder.split(end_marker)
-        embedded = render_markdown(rows).removeprefix("# PSST v1 leaderboards\n\n")
+        embedded = render_markdown(
+            suite,
+            rows,
+            repositories,
+            image_prefix="generated/",
+            heading_level=3,
+        ).removeprefix(f"# PESTE leaderboard — `{suite.suite_id}`\n\n")
         readme_path.write_text(
             f"{before}{start_marker}\n\n{embedded}\n{end_marker}{after}", encoding="utf-8"
         )

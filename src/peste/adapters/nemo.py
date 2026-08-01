@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from psst.adapters.base import ASRAdapter, Transcription
+from peste.adapters.base import ASRAdapter, Transcription
 
 LOGGER = logging.getLogger(__name__)
 

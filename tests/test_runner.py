@@ -9,10 +9,10 @@ import numpy as np
 import soundfile as sf
 from conftest import make_model
 
-import psst.runner as runner
-from psst.adapters.base import ASRAdapter, Transcription
-from psst.schemas import ResumeState, RunRequest, RunStatus, SuiteSpec
-from psst.specs import spec_digest
+import peste.runner as runner
+from peste.adapters.base import ASRAdapter, Transcription
+from peste.schemas import ResumeState, RunRequest, RunStatus, SuiteSpec
+from peste.specs import spec_digest
 
 
 class FakeCuda:
@@ -98,14 +98,14 @@ def _create_audio(tmp_path: Path, rows: list[Any]) -> None:
 
 
 def _patch_runtime(monkeypatch: Any, fake_cuda: FakeCuda) -> None:
-    from psst.schemas import EnvironmentFingerprint
+    from peste.schemas import EnvironmentFingerprint
 
     monkeypatch.setattr(runner, "_seed_runtime", lambda seed: SimpleNamespace(cuda=fake_cuda))
     monkeypatch.setattr(
         runner,
         "_environment",
         lambda seed: EnvironmentFingerprint(
-            psst_revision="test",
+            peste_revision="test",
             image_reference="test",
             image_digest="test",
             dependency_versions={},

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from huggingface_hub import snapshot_download
 
-from psst.schemas import ModelSpec
+from peste.schemas import ModelSpec
 
 LOGGER = logging.getLogger(__name__)
 VIBEVOICE_TOKENIZER_REPOSITORY = "Qwen/Qwen2.5-7B"

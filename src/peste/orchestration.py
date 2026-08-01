@@ -15,9 +15,9 @@ from urllib.parse import urlparse
 import docker
 from docker.models.containers import Container
 
-from psst.constants import DEFAULT_SEED, PROJECT_ROOT
-from psst.digests import canonical_json
-from psst.schemas import (
+from peste.constants import DEFAULT_SEED, PROJECT_ROOT
+from peste.digests import canonical_json
+from peste.schemas import (
     EnvironmentFingerprint,
     LogReferences,
     MemoryStatistics,
@@ -28,13 +28,13 @@ from psst.schemas import (
     RunStatus,
     SuiteSpec,
 )
-from psst.specs import spec_digest
+from peste.specs import spec_digest
 
 LOGGER = logging.getLogger(__name__)
 BASE_IMAGE = (
     "nvcr.io/nvidia/pytorch@sha256:90f3c17838fde28d5c7ae2d5bfbc8a4c587d3797767ea96cdd48fe82e3613f3b"
 )
-HF_VOLUME = "psst-huggingface-cache-v1"
+HF_VOLUME = "peste-huggingface-cache-v1"
 OFFLINE_ENVIRONMENT = {
     "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
     "HF_DATASETS_OFFLINE": "1",
@@ -45,11 +45,11 @@ OFFLINE_ENVIRONMENT = {
 
 
 def _dataset_volume(suite: SuiteSpec) -> str:
-    return f"psst-{suite.suite_id}-audio"
+    return f"peste-{suite.suite_id}-audio"
 
 
 def _result_volume(suite: SuiteSpec) -> str:
-    return f"psst-{suite.suite_id}-results"
+    return f"peste-{suite.suite_id}-results"
 
 
 class JetsonOrchestrator:
@@ -217,8 +217,8 @@ class JetsonOrchestrator:
         if token := os.environ.get("HF_TOKEN"):
             environment["HF_TOKEN"] = token
         self._run_checked(
-            "psst-modern:1.0.0",
-            ["psst", "_dataset-container", "--suite", suite.suite_id],
+            "peste-modern:1.0.0",
+            ["peste", "_dataset-container", "--suite", suite.suite_id],
             network_disabled=False,
             volumes={_dataset_volume(suite): {"bind": "/cache/dataset", "mode": "rw"}},
             environment=environment,
@@ -230,7 +230,7 @@ class JetsonOrchestrator:
             environment["HF_TOKEN"] = token
         self._run_checked(
             model.runtime.image,
-            ["psst", "_prefetch-container", "--model", model.model_id],
+            ["peste", "_prefetch-container", "--model", model.model_id],
             network_disabled=False,
             volumes={HF_VOLUME: {"bind": "/cache/hf", "mode": "rw"}},
             environment=environment,
@@ -242,7 +242,7 @@ class JetsonOrchestrator:
         output = self._run_checked(
             model.runtime.image,
             [
-                "psst",
+                "peste",
                 "_smoke-container",
                 "--suite",
                 suite.suite_id,
@@ -256,7 +256,7 @@ class JetsonOrchestrator:
             },
             environment={
                 **OFFLINE_ENVIRONMENT,
-                "PSST_HARDWARE_PROFILE_JSON": json.dumps(profile, sort_keys=True),
+                "PESTE_HARDWARE_PROFILE_JSON": json.dumps(profile, sort_keys=True),
             },
         )
         LOGGER.info(
@@ -319,15 +319,15 @@ class JetsonOrchestrator:
         image_digest = image.attrs.get("Id", "unknown")
         environment = {
             **OFFLINE_ENVIRONMENT,
-            "PSST_RUN_REQUEST_JSON": request.model_dump_json(),
-            "PSST_HARDWARE_PROFILE_JSON": json.dumps(profile, sort_keys=True),
-            "PSST_IMAGE_REFERENCE": model.runtime.image,
-            "PSST_IMAGE_DIGEST": str(image_digest),
-            "PSST_SOURCE_REVISION": self._local_source_revision(),
+            "PESTE_RUN_REQUEST_JSON": request.model_dump_json(),
+            "PESTE_HARDWARE_PROFILE_JSON": json.dumps(profile, sort_keys=True),
+            "PESTE_IMAGE_REFERENCE": model.runtime.image,
+            "PESTE_IMAGE_DIGEST": str(image_digest),
+            "PESTE_SOURCE_REVISION": self._local_source_revision(),
         }
         container: Container = self.client.containers.run(
             model.runtime.image,
-            ["psst", "_run-container"],
+            ["peste", "_run-container"],
             detach=True,
             remove=False,
             runtime="nvidia",
@@ -400,7 +400,7 @@ class JetsonOrchestrator:
             model_digest=request.model_digest,
             status=status,
             environment=EnvironmentFingerprint(
-                psst_revision="unknown-container-killed",
+                peste_revision="unknown-container-killed",
                 image_reference=model.runtime.image,
                 image_digest="unknown",
                 dependency_versions={},

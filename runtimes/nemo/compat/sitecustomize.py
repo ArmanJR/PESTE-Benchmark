@@ -14,7 +14,7 @@ class _UnavailableGradBucket:
     def buffer(self) -> NoReturn:
         raise RuntimeError(
             "torch.distributed.GradBucket is unavailable in the Jetson PyTorch build; "
-            "PSST does not use distributed training or DDP communication hooks"
+            "PESTE does not use distributed training or DDP communication hooks"
         )
 
 

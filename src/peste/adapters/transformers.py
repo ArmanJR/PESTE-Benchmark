@@ -6,8 +6,8 @@ from typing import Any
 
 import soundfile as sf
 
-from psst.adapters.base import ASRAdapter, Transcription
-from psst.prefetch import pinned_snapshot_directory
+from peste.adapters.base import ASRAdapter, Transcription
+from peste.prefetch import pinned_snapshot_directory
 
 LOGGER = logging.getLogger(__name__)
 

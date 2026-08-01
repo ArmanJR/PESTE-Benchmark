@@ -1180,6 +1180,33 @@ wheels = [
 ]
 
 [[package]]
+name = "peste-runtime-vibevoice"
+version = "1.0.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "datasets" },
+    { name = "huggingface-hub" },
+    { name = "numpy" },
+    { name = "pydantic" },
+    { name = "soundfile" },
+    { name = "transformers" },
+    { name = "typer" },
+    { name = "vibevoice" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "datasets", specifier = "==4.0.0" },
+    { name = "huggingface-hub", specifier = "==0.34.3" },
+    { name = "numpy", specifier = "==1.26.4" },
+    { name = "pydantic", specifier = "==2.11.7" },
+    { name = "soundfile", specifier = "==0.14.0" },
+    { name = "transformers", specifier = "==4.57.6" },
+    { name = "typer", specifier = "==0.16.0" },
+    { name = "vibevoice", git = "https://github.com/microsoft/VibeVoice.git?rev=94da20d98b2fa7688e9cbfaf7692ddb4954f7600" },
+]
+
+[[package]]
 name = "pillow"
 version = "12.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1243,33 +1270,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/61/7c/5c0d34aa3024694d6dcb9271cdbdd08c4e47c1c0ad95ec7e7bc74cdea145/propcache-0.5.2-cp312-cp312-win_amd64.whl", hash = "sha256:d9ee8826a7d47863a08ac44e1a5f611a462eefc3a194b492da242128bec75b42", size = 42322, upload-time = "2026-05-08T21:00:32.918Z" },
     { url = "https://files.pythonhosted.org/packages/4d/91/875812f1a3feb20ceba818ef39fbe4d92f1081e04ac815c822496d0d038b/propcache-0.5.2-cp312-cp312-win_arm64.whl", hash = "sha256:2800a4a8ead6b28cccd1ec54b59346f0def7922ee1c7598e8499c733cfbb7c84", size = 38172, upload-time = "2026-05-08T21:00:35.124Z" },
     { url = "https://files.pythonhosted.org/packages/3a/ed/1cdcab6ba3d6ab7feca11fc14f0eeea80755bb53ef4e892079f31b10a25f/propcache-0.5.2-py3-none-any.whl", hash = "sha256:be1ddfcbb376e3de5d2e2db1d58d6d67463e6b4f9f040c000de8e300295465fe", size = 14036, upload-time = "2026-05-08T21:02:10.673Z" },
-]
-
-[[package]]
-name = "psst-runtime-vibevoice"
-version = "1.0.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "datasets" },
-    { name = "huggingface-hub" },
-    { name = "numpy" },
-    { name = "pydantic" },
-    { name = "soundfile" },
-    { name = "transformers" },
-    { name = "typer" },
-    { name = "vibevoice" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "datasets", specifier = "==4.0.0" },
-    { name = "huggingface-hub", specifier = "==0.34.3" },
-    { name = "numpy", specifier = "==1.26.4" },
-    { name = "pydantic", specifier = "==2.11.7" },
-    { name = "soundfile", specifier = "==0.14.0" },
-    { name = "transformers", specifier = "==4.57.6" },
-    { name = "typer", specifier = "==0.16.0" },
-    { name = "vibevoice", git = "https://github.com/microsoft/VibeVoice.git?rev=94da20d98b2fa7688e9cbfaf7692ddb4954f7600" },
 ]
 
 [[package]]

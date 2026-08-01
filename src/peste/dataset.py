@@ -13,10 +13,10 @@ import numpy as np
 import soundfile as sf
 from datasets import Audio, load_dataset
 
-from psst.digests import canonical_json, sha256_bytes, sha256_file
-from psst.manifest import validate_manifest
-from psst.normalization import normalize
-from psst.schemas import ManifestRow, SuiteSpec
+from peste.digests import canonical_json, sha256_bytes, sha256_file
+from peste.manifest import validate_manifest
+from peste.normalization import normalize
+from peste.schemas import ManifestRow, SuiteSpec
 
 LOGGER = logging.getLogger(__name__)
 CANONICAL_SAMPLE_RATE = 16_000

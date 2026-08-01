@@ -1,201 +1,176 @@
-# PSST: Persian Speech-to-Script Test Benchmark
+<p align="center">
+  <img src="docs/peste-logo.png" alt="PESTE logo" width="520">
+</p>
 
-PSST v1 is a reproducible **FLEURS Persian leaderboard** for eight pinned automatic
-speech-recognition checkpoints. It evaluates the 871-row `test` split of the Persian `fa_ir`
-configuration with a fixed text normalizer and corpus-level WER/CER. It is not a definitive
-measure of Persian ASR: FLEURS is public read speech, may overlap model training data, and does
-not represent conversational, noisy, accented, domain-specific, or long-form Persian.
+# PESTE: Persian Speech to Text benchmark
 
-Version 1 deliberately excludes speed, timestamps, diarization, streaming, punctuation quality,
-robustness subsets, confidence intervals, parameter tuning, prompts, hotwords, quantization,
-offload, compilation, and alternative decoding searches. It publishes static Markdown, JSON,
-and CSV—not a web application.
+PESTE is a reproducible benchmark and static leaderboard for Persian automatic speech recognition
+(ASR). Official runs pin the dataset, checkpoint revision, decoding policy, dependencies, text
+normalization, and hardware profile. The repository publishes per-sample predictions, structured
+logs, environment fingerprints, and machine-readable results; it does not redistribute model
+weights or dataset audio.
+
+## Leaderboard
 
 <!-- LEADERBOARD:START -->
 
-## Normalized accuracy — FLEURS Persian test split
+### Normalized accuracy
+
+![Normalized accuracy leaderboard](generated/leaderboard-accuracy.svg)
 
 | Rank | Model | WER | CER | Word accuracy |
 |---:|---|---:|---:|---:|
-| 1 | `whisper-large-v3` | 0.1980 | 0.0599 | 80.20% |
-| 2 | `whisper-large-v3-turbo` | 0.2041 | 0.0650 | 79.59% |
-| 3 | `qwen3-asr-1-7b` | 0.2417 | 0.0892 | 75.83% |
-| 4 | `whisper-large-persian-steja` | 0.2648 | 0.0589 | 73.52% |
-| 5 | `vibevoice-asr` | 0.2704 | 0.1378 | 72.96% |
-| 6 | `qwen3-asr-0-6b` | 0.4803 | 0.2086 | 51.97% |
-| 7 | `whisper-persian-paulwalker` | 0.9430 | 1.4341 | 5.70% |
+| 1 | [`whisper-large-v3`](https://huggingface.co/openai/whisper-large-v3) | 0.1980 | 0.0599 | 80.20% |
+| 2 | [`whisper-large-v3-turbo`](https://huggingface.co/openai/whisper-large-v3-turbo) | 0.2041 | 0.0650 | 79.59% |
+| 3 | [`qwen3-asr-1-7b`](https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf) | 0.2417 | 0.0892 | 75.83% |
+| 4 | [`whisper-large-persian-steja`](https://huggingface.co/steja/whisper-large-persian) | 0.2648 | 0.0589 | 73.52% |
+| 5 | [`vibevoice-asr`](https://huggingface.co/microsoft/VibeVoice-ASR) | 0.2704 | 0.1378 | 72.96% |
+| 6 | [`qwen3-asr-0-6b`](https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf) | 0.4803 | 0.2086 | 51.97% |
+| 7 | [`whisper-persian-paulwalker`](https://huggingface.co/Paulwalker4884/whisper-persian) | 0.9430 | 1.4341 | 5.70% |
 
-## Accuracy per peak CUDA memory — Jetson AGX Orin 32GB
+### Accuracy per peak CUDA memory
+
+![Accuracy per peak CUDA memory leaderboard](generated/leaderboard-memory.svg)
 
 | Rank | Model | Accuracy / reserved GiB | WER | Peak CUDA reserved GiB |
 |---:|---|---:|---:|---:|
-| 1 | `whisper-large-v3-turbo` | 45.3785 | 0.2041 | 1.754 |
-| 2 | `whisper-large-v3` | 23.2527 | 0.1980 | 3.449 |
-| 3 | `whisper-large-persian-steja` | 22.8268 | 0.2648 | 3.221 |
-| 4 | `qwen3-asr-0-6b` | 18.6197 | 0.4803 | 2.791 |
-| 5 | `qwen3-asr-1-7b` | 14.8179 | 0.2417 | 5.117 |
-| 6 | `whisper-persian-paulwalker` | 14.8123 | 0.9430 | 0.385 |
-| 7 | `vibevoice-asr` | 3.8305 | 0.2704 | 19.047 |
+| 1 | [`whisper-large-v3-turbo`](https://huggingface.co/openai/whisper-large-v3-turbo) | 45.3785 | 0.2041 | 1.754 |
+| 2 | [`whisper-large-v3`](https://huggingface.co/openai/whisper-large-v3) | 23.2527 | 0.1980 | 3.449 |
+| 3 | [`whisper-large-persian-steja`](https://huggingface.co/steja/whisper-large-persian) | 22.8268 | 0.2648 | 3.221 |
+| 4 | [`qwen3-asr-0-6b`](https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf) | 18.6197 | 0.4803 | 2.791 |
+| 5 | [`qwen3-asr-1-7b`](https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf) | 14.8179 | 0.2417 | 5.117 |
+| 6 | [`whisper-persian-paulwalker`](https://huggingface.co/Paulwalker4884/whisper-persian) | 14.8123 | 0.9430 | 0.385 |
+| 7 | [`vibevoice-asr`](https://huggingface.co/microsoft/VibeVoice-ASR) | 3.8305 | 0.2704 | 19.047 |
 
 Peak CUDA memory is unified system/GPU memory and is not directly comparable with process VRAM reported on discrete GPUs.
 
 <!-- LEADERBOARD:END -->
 
-`nvidia-fastconformer-fa` is unranked: its official native-FP32 run exhausted CUDA
-memory during the default RNNT decoder CUDA-graph warmup before the first prediction. The
-benchmark contract forbids fallback decoding or precision changes, and the OOM bundle retains
-the full diagnostics.
+### Reading the results
 
-The accuracy board sorts normalized WER ascending, then normalized CER ascending, then stable
-model ID. CER removes whitespace. The efficiency board uses:
+- **WER** is corpus-level word error rate; lower is better.
+- **CER** is corpus-level character error rate after whitespace removal; lower is better.
+- **Word accuracy** is `100 × max(0, 1 − WER)`.
+- **Accuracy / reserved GiB** is word accuracy divided by peak CUDA reserved memory; higher is
+  better.
 
-```text
-word_accuracy_pct = 100 × max(0, 1 − WER)
-memory_efficiency = word_accuracy_pct / peak_cuda_reserved_gib
-```
+The accuracy board sorts by WER, CER, then stable model ID. The efficiency board sorts by memory
+efficiency, WER, then model ID. Only complete official result bundles whose suite and model
+digests match the current specifications are ranked. Failed and out-of-memory runs remain
+auditable but unranked.
 
-On Jetson, CUDA uses unified system/GPU memory. `torch.cuda.max_memory_reserved()` is measured
-from before checkpoint loading through the full batch-size-one test run. The result is not
-directly comparable with process VRAM measurements from discrete GPUs.
+## Documentation
 
-## Reproduce
+- [Propose a compatible model](docs/adding-a-model.md)
+- [Contribute source code](docs/contributing.md)
+- [Benchmark contract](docs/benchmark-contract.md)
+- [Maintainer guide](docs/maintainer-guide.md)
+- [Accuracy plot](generated/leaderboard-accuracy.svg),
+  [memory-efficiency plot](generated/leaderboard-memory.svg),
+  [JSON results](generated/leaderboard.json), and [CSV results](generated/leaderboard.csv)
 
-Prerequisites are Python 3.12, [`uv`](https://docs.astral.sh/uv/), Docker configured to reach the
-Jetson over SSH, and the three prebuilt runtime images described below. The official host alias is
-`jetson`; Docker communication uses `ssh://jetson`. Commands are non-interactive.
+## Current benchmark release: v1
+
+| Contract | Current value |
+|---|---|
+| Suite | [`fleurs-fa-ir-v1`](suites/fleurs-fa-ir-v1/suite.json) |
+| Dataset | [`google/fleurs`](https://huggingface.co/datasets/google/fleurs), Persian `fa_ir` configuration |
+| Evaluation split | `test` (871 recordings) |
+| Accuracy metrics | Corpus-level WER and CER after `fa-v1` normalization |
+| Efficiency metric | Word accuracy per peak CUDA reserved GiB |
+| Official hardware | Jetson AGX Orin 32GB, JetPack 6.2 / L4T R36.4.7, host CUDA 12.6, MAXN |
+| Inference policy | One CUDA device, batch size 1, checkpoint-native precision, deterministic decoding |
+
+FLEURS is a public read-speech corpus and may overlap model training data. It does not represent
+conversational, noisy, accented, domain-specific, or long-form Persian. These results do not
+establish production suitability or general robustness.
+
+This release measures normalized transcription accuracy and peak memory. It does not measure
+speed, latency, timestamps, diarization, streaming, punctuation quality, confidence intervals,
+or robustness subsets. It excludes prompts, hotwords, quantization, offload, compilation,
+external language models, and alternative decoding searches.
+
+`nvidia-fastconformer-fa` is unranked because its official native-FP32 run exhausted CUDA memory
+during RNNT decoder CUDA-graph warmup. The benchmark does not change precision or decoding policy
+after a failure.
+
+See the [benchmark contract](docs/benchmark-contract.md) for the pinned dataset revision,
+manifest, normalization rules, deterministic inference controls, result-bundle contents, and
+ranking eligibility.
+
+## How the benchmark works
+
+1. Dataset audio is materialized into canonical 16-kHz mono PCM-16 WAV files and verified against
+   an immutable manifest.
+2. Checkpoints and any required auxiliary artifacts are downloaded at pinned revisions.
+3. Official inference runs offline in framework-specific containers against read-only caches.
+4. Predictions are normalized and scored in manifest order using corpus-level WER and CER.
+5. Complete result bundles generate deterministic Markdown, SVG, JSON, and CSV leaderboards.
+
+## Reproduce the benchmark
+
+Official reproduction requires Python 3.12, [`uv`](https://docs.astral.sh/uv/), non-interactive
+Docker-over-SSH access to a Jetson matching the official profile, the NVIDIA container runtime,
+and at least 60 GiB of persistent cache storage. The commands below assume an SSH host alias named
+`jetson`.
+
+Install the host environment and build the isolated runtime images:
 
 ```bash
 uv sync --frozen --all-groups
-uv run --frozen psst doctor --host ssh://jetson
-uv run --frozen psst dataset prepare --suite fleurs-fa-ir-v1 --host ssh://jetson
-uv run --frozen psst model validate --model whisper-large-v3
-uv run --frozen psst model validate --model whisper-large-v3 --host ssh://jetson
-uv run --frozen psst run --suite fleurs-fa-ir-v1 --model whisper-large-v3 --host ssh://jetson
-uv run --frozen psst run --suite fleurs-fa-ir-v1 --model whisper-large-v3 --host ssh://jetson --resume
-uv run --frozen psst run-all --suite fleurs-fa-ir-v1 --host ssh://jetson
-uv run --frozen psst leaderboard --suite fleurs-fa-ir-v1
+docker --host ssh://jetson pull nvcr.io/nvidia/pytorch@sha256:90f3c17838fde28d5c7ae2d5bfbc8a4c587d3797767ea96cdd48fe82e3613f3b
+docker --host ssh://jetson build --file runtimes/modern/Dockerfile --tag peste-modern:1.0.0 .
+docker --host ssh://jetson build --file runtimes/vibevoice/Dockerfile --tag peste-vibevoice:1.0.0 .
+docker --host ssh://jetson build --file runtimes/nemo/Dockerfile --tag peste-nemo:1.0.0 .
 ```
 
-Set `HF_TOKEN` in the invoking environment for gated/private Hugging Face access and higher Hub
-rate limits. Never place tokens in model specifications, commands, logs, or committed files. The
-orchestrator passes the token only to network-enabled prefetch containers. Official inference runs
-with container networking disabled.
+Validate the host, prepare the dataset, validate a model, and run it:
 
-The NVIDIA base image is subject to the [NGC terms of use](https://www.nvidia.com/en-us/data-center/products/ngc/).
-It must be available on the Jetson before `doctor` can inspect CUDA. PSST never redistributes model
-weights or FLEURS audio.
+```bash
+uv run --frozen peste doctor --host ssh://jetson
+uv run --frozen peste dataset prepare --suite fleurs-fa-ir-v1 --host ssh://jetson
+uv run --frozen peste model validate --model whisper-large-v3
+uv run --frozen peste model validate --model whisper-large-v3 --host ssh://jetson
+uv run --frozen peste run --suite fleurs-fa-ir-v1 --model whisper-large-v3 --host ssh://jetson
+uv run --frozen peste leaderboard --suite fleurs-fa-ir-v1
+```
 
-## Immutable dataset contract
+Store `HF_TOKEN` in the ignored `.env` file when gated access or higher Hub rate limits are
+required, then add `--env-file .env` to `uv run`. Tokens are passed only to network-enabled
+preparation containers; official inference runs with networking disabled.
 
-[`suite.json`](suites/fleurs-fa-ir-v1/suite.json) pins `google/fleurs` to revision
-`70bb2e84b976b7e960aa89f1c648e09c59f894dd`. The checked
-[`manifest.jsonl`](suites/fleurs-fa-ir-v1/manifest.jsonl) has SHA-256
-`76e87e96769cd63ce5d5abbc7827563644e55c3ba3fdc4041f4359a67435c061` and records, in canonical
-split/index order, each upstream ID, transcript, duration, canonical audio hash, source revision,
-and license. It contains all 4,341 `fa_ir` rows:
+Use `--resume` only for the latest failed or killed run. OOM runs are not resumable. `run-all` is
+intended for a result set without existing successful bundles.
 
-| Split | Rows | Ranking use |
-|---|---:|---|
-| train | 3,101 | downloaded, not scored |
-| validation | 369 | downloaded, not scored |
-| test | 871 | official rankings |
+## Contributing
 
-Audio is decoded once into ignored persistent 16-kHz mono PCM-16 WAV storage. Preparation always
-checks the materialized data against the committed manifest. The reference is FLEURS’ exact
-`transcription` field. A transcript correction, source revision, normalization change, or audio
-change creates a new suite such as `fleurs-fa-ir-v2`; published v1 manifests and results are never
-edited. Future PSST-owned recordings likewise receive immutable suite IDs and separate
-leaderboards.
+PESTE accepts two categories of contribution:
 
-The `fa-v1` normalizer applies Unicode NFKC, unifies Arabic/Persian letter variants, removes
-tatweel and diacritics, converts Persian and Arabic-Indic digits to ASCII, converts ZWNJ,
-non-breaking spaces, punctuation, and symbols to spaces, then collapses whitespace. It is applied
-identically to references and predictions. Empty normalized references invalidate a suite; empty
-predictions are valid errors.
+1. **Propose a model for benchmarking.** Add a pinned Hugging Face checkpoint that is compatible
+   with an existing adapter. Contributors provide the model specification and open a pull request;
+   maintainers perform the official Jetson evaluation and publish the score. Follow
+   [Adding a model](docs/adding-a-model.md).
+2. **Improve the benchmark source.** Changes to orchestration, scoring, adapters, runtimes,
+   validation, generated outputs, tests, or documentation follow the
+   [source contribution guide](docs/contributing.md).
 
-FLEURS content is licensed under CC BY 4.0. PSST’s code and benchmark definitions are Apache-2.0.
-See [`NOTICE`](NOTICE) for attribution.
+Models that do not satisfy an existing adapter contract are not model-proposal PRs. Support for a
+new architecture or inference API is benchmark-maintainer work and is documented separately in
+the [maintainer guide](docs/maintainer-guide.md).
 
-## Pinned models
+## License and attribution
 
-| Stable ID | Hugging Face checkpoint | Revision | Adapter | Native dtype | License |
-|---|---|---|---|---|---|
-| `whisper-large-v3` | `openai/whisper-large-v3` | `06f233fe…` | Transformers Whisper | FP16 | Apache-2.0 |
-| `whisper-large-v3-turbo` | `openai/whisper-large-v3-turbo` | `41f01f3f…` | Transformers Whisper | FP16 | MIT |
-| `vibevoice-asr` | `microsoft/VibeVoice-ASR` | `d0c9efdb…` | VibeVoice | BF16 | MIT |
-| `qwen3-asr-0-6b` | `Qwen/Qwen3-ASR-0.6B-hf` | `7f1569a4…` | Transformers Qwen | BF16 | Apache-2.0 |
-| `qwen3-asr-1-7b` | `Qwen/Qwen3-ASR-1.7B-hf` | `bcd2b5b7…` | Transformers Qwen | BF16 | Apache-2.0 |
-| `nvidia-fastconformer-fa` | `nvidia/stt_fa_fastconformer_hybrid_large` | `249cf5bf…` | NeMo RNNT | FP32 | CC-BY-4.0 |
-| `whisper-persian-paulwalker` | `Paulwalker4884/whisper-persian` | `80f96e52…` | Transformers Whisper | FP32 | Apache-2.0 |
-| `whisper-large-persian-steja` | `steja/whisper-large-persian` | `4c8e5a01…` | Transformers Whisper | FP16 | Apache-2.0 |
-
-The full immutable revisions and generation policies live in [`models/`](models). Whisper uses
-Persian transcription with 444 generated tokens and no timestamp scoring. Whisper's four forced
-Persian/transcription start tokens plus those 444 tokens exactly fit its 448-position decoder;
-requesting 448 new tokens is rejected by Transformers 5.14.1. Qwen uses its recommended
-`apply_transcription_request`, language `fa`, and 256 generated tokens. VibeVoice uses automatic
-language detection, BF16/SDPA, deterministic one-beam generation, and 512 generated tokens; only
-the concatenated segment text is scored while raw and structured output are retained. NVIDIA uses
-the checkpoint’s default RNNT behavior without an external language model.
-
-## Isolated Jetson runtimes
-
-All images extend the JetPack-6.2-compatible NVIDIA PyTorch 25.06 iGPU ARM64 image pinned to
-`sha256:90f3c17838fde28d5c7ae2d5bfbc8a4c587d3797767ea96cdd48fe82e3613f3b`. Each Dockerfile copies
-`uv` 0.8.14 and installs from its own frozen lock:
-
-- `modern`: Transformers 5.14.1 and PEFT 0.20.0 for Whisper/Qwen.
-- `vibevoice`: Microsoft code commit `94da20d…`, Transformers 4.57.6, and the Qwen tokenizer at
-  `d1497293…`.
-- `nemo`: `nemo_toolkit[asr]` 2.7.3.
-
-Every run uses one CUDA device, batch size 1, checkpoint-native precision, deterministic seeds and
-strict deterministic algorithms with a fixed CUDA BLAS workspace, disabled TF32/autotuning,
-inference/evaluation mode, manifest order, and no fallback. An OOM or
-cgroup kill retains diagnostics and stays unranked. Persistent named volumes cache pinned Hub
-snapshots and canonical audio. Network-enabled preparation/prefetch is separated from offline
-official inference.
-
-The NVIDIA Jetson PyTorch wheel omits distributed-training support. Narrow, inference-only runtime
-compatibility modules make optional FSDP/DDP availability checks return false and bypass eager
-training imports; they do not emulate collectives or alter single-device model computation.
-
-`doctor` enforces the official profile: Jetson AGX Orin 32GB, Ubuntu 22.04, L4T R36.4.7 / JetPack
-6.2, CUDA 12.6, NVIDIA runtime, MAXN, adequate storage, and no competing NVIDIA containers. The
-profile is captured in every run bundle.
-
-## Results and contributions
-
-Each official result directory contains immutable `run.json`, append-only `predictions.jsonl`, and
-JSONL logs. Bundles record suite/model digests, PSST revision, image digest, dependencies,
-CUDA/PyTorch, hardware state, seed, measured parameters, checkpoint bytes, peak CUDA reserved and
-allocated memory, and peak process RSS. Resume validates the original request and append-only
-sample sequence and keeps the maximum memory observed across segments.
-
-Only successful, complete, committed 871-sample bundles enter generated leaderboards. Maintainers
-must rerun contributed model specs/adapters on `ssh://jetson`; contributor-provided scores are not
-official. A new model using an existing adapter normally needs only a declarative JSON spec. New
-adapters must include mocked contract tests and a real one-sample Jetson validation before a full
-evaluation.
-
-Before proposing a new immutable suite, document provenance and license, pin every source revision,
-materialize canonical audio, reject empty normalized references, generate a never-overwritten
-manifest, record its digest in the suite spec, and add an independent leaderboard. The maintainer
-sealer [`tools/freeze_suite.py`](tools/freeze_suite.py) refuses to overwrite an existing manifest.
-
-Standard JSON logging includes ISO timestamps, levels, and run/model/sample progress context. Full
-tracebacks are retained for failures. Credentials and private environment values must never be
-logged. See the CI workflow for the exact formatting, lint, type, test, spec, and generated-output
-checks required for contributions.
+PESTE code and benchmark definitions are licensed under Apache-2.0. FLEURS content is licensed
+under CC BY 4.0. See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE) for terms and attribution.
 
 ## Citation
 
 ```bibtex
-@software{jafarnezhad_psst_persian_speech_to_script_test_benchmark,
+@software{jafarnezhad_peste_persian_speech_to_text_benchmark,
   author  = {Jafarnezhad, Arman},
-  title   = {PSST: Persian Speech-to-Script Test Benchmark},
+  title   = {PESTE: Persian Speech to Text benchmark},
   year    = {2026},
-  url     = {https://github.com/ArmanJR/PSST-Benchmark},
+  url     = {https://github.com/ArmanJR/PESTE-Benchmark},
   version = {2026.07.31}
 }
 ```

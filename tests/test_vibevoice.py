@@ -1,6 +1,6 @@
 """VibeVoice structured segment scoring policy."""
 
-from psst.adapters.vibevoice import flatten_segments
+from peste.adapters.vibevoice import flatten_segments
 
 
 def test_flatten_segments_preserves_reported_order() -> None:

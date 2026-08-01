@@ -1,24 +1,25 @@
-"""PSST command-line interface."""
+"""PESTE command-line interface."""
 
 import filecmp
 import logging
 import os
+import shutil
 import tempfile
 from pathlib import Path
 
 import typer
 
-from psst.constants import DEFAULT_SEED, DEFAULT_SUITE_ID, PROJECT_ROOT
-from psst.dataset import prepare_dataset
-from psst.leaderboard import generate_leaderboards
-from psst.logging import configure_logging
-from psst.manifest import validate_manifest
-from psst.prefetch import prefetch_model
-from psst.runner import run_benchmark
-from psst.schemas import RunRequest
-from psst.smoke import smoke_adapter
-from psst.specs import discover_models, load_model, load_suite
-from psst.validation import validate_model_policy
+from peste.constants import DEFAULT_SEED, DEFAULT_SUITE_ID, PROJECT_ROOT
+from peste.dataset import prepare_dataset
+from peste.leaderboard import generate_leaderboards
+from peste.logging import configure_logging
+from peste.manifest import validate_manifest
+from peste.prefetch import prefetch_model
+from peste.runner import run_benchmark
+from peste.schemas import RunRequest
+from peste.smoke import smoke_adapter
+from peste.specs import discover_models, load_model, load_suite
+from peste.validation import validate_model_policy
 
 LOGGER = logging.getLogger(__name__)
 app = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=False)
@@ -29,13 +30,13 @@ app.add_typer(model_app, name="model")
 
 
 @app.callback()
-def main(log_level: str = typer.Option("INFO", envvar="PSST_LOG_LEVEL")) -> None:
+def main(log_level: str = typer.Option("INFO", envvar="PESTE_LOG_LEVEL")) -> None:
     configure_logging(log_level)
 
 
 @app.command()
 def doctor(host: str = typer.Option(..., help="Docker endpoint, for example ssh://jetson")) -> None:
-    from psst.orchestration import JetsonOrchestrator
+    from peste.orchestration import JetsonOrchestrator
 
     report = JetsonOrchestrator(host).doctor()
     LOGGER.info("Doctor report", extra={"host": host, "profile": report})
@@ -46,7 +47,7 @@ def dataset_prepare(
     suite: str = typer.Option(DEFAULT_SUITE_ID),
     host: str = typer.Option(..., help="Docker endpoint, for example ssh://jetson"),
 ) -> None:
-    from psst.orchestration import JetsonOrchestrator
+    from peste.orchestration import JetsonOrchestrator
 
     spec = load_suite(suite)
     JetsonOrchestrator(host).prepare_dataset(spec)
@@ -62,7 +63,7 @@ def model_validate(
     validate_model_policy(spec, PROJECT_ROOT)
     LOGGER.info("Model specification is valid", extra={"model": model})
     if host is not None:
-        from psst.orchestration import JetsonOrchestrator
+        from peste.orchestration import JetsonOrchestrator
 
         JetsonOrchestrator(host).smoke(load_suite(DEFAULT_SUITE_ID), spec)
 
@@ -74,7 +75,7 @@ def run_command(
     host: str = typer.Option(...),
     resume: bool = typer.Option(False, "--resume"),
 ) -> None:
-    from psst.orchestration import JetsonOrchestrator
+    from peste.orchestration import JetsonOrchestrator
 
     suite_spec = load_suite(suite)
     model_spec = load_model(model)
@@ -90,7 +91,7 @@ def run_all(
     suite: str = typer.Option(DEFAULT_SUITE_ID),
     host: str = typer.Option(...),
 ) -> None:
-    from psst.orchestration import JetsonOrchestrator
+    from peste.orchestration import JetsonOrchestrator
 
     suite_spec = load_suite(suite)
     orchestrator = JetsonOrchestrator(host)
@@ -128,11 +129,18 @@ def validate_specs() -> None:
 @app.command("check-generated", hidden=True)
 def check_generated() -> None:
     suite = load_suite(DEFAULT_SUITE_ID)
-    tracked_files = ("leaderboard.md", "leaderboard.json", "leaderboard.csv")
+    tracked_files = (
+        "leaderboard.md",
+        "leaderboard.json",
+        "leaderboard.csv",
+        "leaderboard-accuracy.svg",
+        "leaderboard-memory.svg",
+    )
     with tempfile.TemporaryDirectory() as temporary:
         temporary_root = Path(temporary)
         temporary_generated = temporary_root / "generated"
         temporary_readme = temporary_root / "README.md"
+        shutil.copytree(PROJECT_ROOT / "models", temporary_root / "models")
         temporary_readme.write_text(
             (PROJECT_ROOT / "README.md").read_text(encoding="utf-8"), encoding="utf-8"
         )
@@ -166,9 +174,9 @@ def prefetch_container(model: str = typer.Option(...)) -> None:
 
 @app.command("_run-container", hidden=True)
 def run_container() -> None:
-    raw_request = os.environ.get("PSST_RUN_REQUEST_JSON")
+    raw_request = os.environ.get("PESTE_RUN_REQUEST_JSON")
     if raw_request is None:
-        raise RuntimeError("PSST_RUN_REQUEST_JSON is required")
+        raise RuntimeError("PESTE_RUN_REQUEST_JSON is required")
     request = RunRequest.model_validate_json(raw_request)
     suite = load_suite(request.suite_id)
     model = load_model(request.model_id)

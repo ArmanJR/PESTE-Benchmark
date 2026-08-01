@@ -6,8 +6,8 @@ ENV UV_LINK_MODE=copy \
     UV_NO_PROGRESS=1 \
     VIRTUAL_ENV=/opt/venv \
     PATH=/opt/venv/bin:$PATH \
-    PSST_PROJECT_ROOT=/opt/psst \
-    PYTHONPATH=/opt/psst/runtimes/transformers-compat \
+    PESTE_PROJECT_ROOT=/opt/peste \
+    PYTHONPATH=/opt/peste/runtimes/transformers-compat \
     PYTHONUNBUFFERED=1
 WORKDIR /opt/runtime
 COPY runtimes/vibevoice/pyproject.toml runtimes/vibevoice/uv.lock ./
@@ -18,7 +18,7 @@ RUN uv venv --python /usr/bin/python3 --system-site-packages /opt/venv \
     && uv pip install --python /opt/venv/bin/python --no-deps \
       --requirement /tmp/runtime-requirements.txt \
     && /opt/venv/bin/python -c 'import numpy,torch; assert torch.__version__.startswith("2.8.0a0+5228986"); torch.from_numpy(numpy.zeros(1))'
-WORKDIR /opt/psst
+WORKDIR /opt/peste
 COPY pyproject.toml README.md LICENSE NOTICE ./
 COPY src ./src
 COPY models ./models
@@ -28,4 +28,4 @@ RUN uv pip install --python /opt/venv/bin/python --no-deps . \
     && /opt/venv/bin/python -c 'from transformers import AutoProcessor,GenerationMixin; assert all((AutoProcessor,GenerationMixin))'
 
 ENTRYPOINT []
-CMD ["psst", "--help"]
+CMD ["peste", "--help"]

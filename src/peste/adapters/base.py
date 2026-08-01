@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from psst.schemas import ModelSpec
+from peste.schemas import ModelSpec
 
 
 @dataclass(frozen=True, slots=True)

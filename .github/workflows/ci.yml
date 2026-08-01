@@ -30,6 +30,6 @@ jobs:
       - name: Pytest
         run: uv run --frozen pytest
       - name: Validate immutable specifications
-        run: uv run --frozen psst validate-specs
+        run: uv run --frozen peste validate-specs
       - name: Verify deterministic generated outputs
-        run: uv run --frozen psst check-generated
+        run: uv run --frozen peste check-generated

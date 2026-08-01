@@ -10,14 +10,14 @@ import numpy as np
 import soundfile as sf
 from conftest import make_model
 
-from psst.adapters.nemo import NemoRnntAdapter
-from psst.adapters.transformers import (
+from peste.adapters.nemo import NemoRnntAdapter
+from peste.adapters.transformers import (
     TransformersQwenAdapter,
     TransformersWhisperAdapter,
     _upgrade_legacy_whisper_generation_config,
 )
-from psst.adapters.vibevoice import VibeVoiceAdapter
-from psst.prefetch import VIBEVOICE_TOKENIZER_REPOSITORY, VIBEVOICE_TOKENIZER_REVISION
+from peste.adapters.vibevoice import VibeVoiceAdapter
+from peste.prefetch import VIBEVOICE_TOKENIZER_REPOSITORY, VIBEVOICE_TOKENIZER_REVISION
 
 
 class FakeTensor:

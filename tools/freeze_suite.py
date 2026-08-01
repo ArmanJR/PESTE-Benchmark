@@ -4,10 +4,10 @@ import argparse
 import logging
 from pathlib import Path
 
-from psst.constants import DEFAULT_SUITE_ID, PROJECT_ROOT
-from psst.dataset import write_initial_manifest
-from psst.logging import configure_logging
-from psst.specs import load_suite
+from peste.constants import DEFAULT_SUITE_ID, PROJECT_ROOT
+from peste.dataset import write_initial_manifest
+from peste.logging import configure_logging
+from peste.specs import load_suite
 
 LOGGER = logging.getLogger(__name__)
 

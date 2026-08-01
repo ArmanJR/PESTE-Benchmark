@@ -28,7 +28,7 @@ def _is_fsdp_managed_module(_module: Any) -> bool:
 
 def _unavailable_fsdp_operation(*_args: Any, **_kwargs: Any) -> Any:
     raise RuntimeError(
-        "FSDP is unavailable in the Jetson PyTorch build; PSST runs single-device inference"
+        "FSDP is unavailable in the Jetson PyTorch build; PESTE runs single-device inference"
     )
 
 
@@ -40,14 +40,14 @@ class _UnavailableDtensorShardOperation:
     def __init__(self, _parameter: Any) -> None:
         raise RuntimeError(
             "DTensor checkpoint sharding is unavailable in the Jetson PyTorch build; "
-            "PSST runs ordinary single-device checkpoint loading"
+            "PESTE runs ordinary single-device checkpoint loading"
         )
 
 
 def _unavailable_dtensor_from_local_like(_local_tensor: Any, _reference: Any) -> Any:
     raise RuntimeError(
         "DTensor conversion is unavailable in the Jetson PyTorch build; "
-        "PSST runs ordinary single-device checkpoint loading"
+        "PESTE runs ordinary single-device checkpoint loading"
     )
 
 
