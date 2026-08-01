@@ -4,7 +4,7 @@
 
 # PESTE: Persian Speech to Text benchmark
 
-PESTE (**PE**rsian **S**peech to **TE**xt) is a reproducible benchmark and leaderboard for Persian automatic speech recognition (ASR).
+PESTE (**PE**rsian **S**peech to **TE**xt) is a benchmark and leaderboard for Persian automatic speech recognition (ASR).
 
 ## At a glance
 
@@ -257,6 +257,6 @@ under CC BY 4.0. See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE) for terms and a
   title   = {PESTE: Persian Speech to Text benchmark},
   year    = {2026},
   url     = {https://github.com/ArmanJR/PESTE-Benchmark},
-  version = {2026.07.31}
+  version = {1.0.0}
 }
 ```
