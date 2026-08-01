@@ -23,6 +23,14 @@ def make_model(
             "return_timestamps": False,
         },
         "transformers-qwen": {"max_new_tokens": 256},
+        "transformers-ctc": {
+            "decoder": "greedy",
+            "batch_size": 1,
+            "external_language_model": False,
+            "group_tokens": True,
+            "skip_special_tokens": False,
+            "clean_up_tokenization_spaces": False,
+        },
         "vibevoice": {
             "max_new_tokens": 512,
             "temperature": 0.0,
@@ -34,6 +42,7 @@ def make_model(
     runtime_name = {
         "transformers-whisper": "modern",
         "transformers-qwen": "modern",
+        "transformers-ctc": "modern",
         "vibevoice": "vibevoice",
         "nemo-rnnt": "nemo",
     }[adapter]

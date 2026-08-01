@@ -50,7 +50,13 @@ class ModelSpec(ContractModel):
     model_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
     repository: str
     revision: str = Field(pattern=r"^[0-9a-f]{40}$")
-    adapter: Literal["transformers-whisper", "transformers-qwen", "vibevoice", "nemo-rnnt"]
+    adapter: Literal[
+        "transformers-whisper",
+        "transformers-qwen",
+        "transformers-ctc",
+        "vibevoice",
+        "nemo-rnnt",
+    ]
     native_dtype: Literal["float16", "bfloat16", "float32"]
     license: str
     language: str | None

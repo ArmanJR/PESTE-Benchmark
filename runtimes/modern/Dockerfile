@@ -25,7 +25,7 @@ COPY models ./models
 COPY suites ./suites
 COPY runtimes ./runtimes
 RUN uv pip install --python /opt/venv/bin/python --no-deps . \
-    && /opt/venv/bin/python -c 'from transformers import AutoModelForMultimodalLM,AutoProcessor,GenerationMixin; from peste.adapters.transformers import _configure_distributed_disabled_loading; _configure_distributed_disabled_loading(); assert all((AutoModelForMultimodalLM,AutoProcessor,GenerationMixin))'
+    && /opt/venv/bin/python -c 'from transformers import AutoModelForCTC,AutoModelForMultimodalLM,AutoProcessor,GenerationMixin; from peste.adapters.transformers import _configure_distributed_disabled_loading; _configure_distributed_disabled_loading(); assert all((AutoModelForCTC,AutoModelForMultimodalLM,AutoProcessor,GenerationMixin))'
 
 ENTRYPOINT []
 CMD ["peste", "--help"]

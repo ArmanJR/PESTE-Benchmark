@@ -94,11 +94,17 @@ Framework families run in separate images with frozen dependencies:
 
 | Runtime | Use |
 |---|---|
-| `modern` | Transformers-based Whisper and Qwen adapters |
+| `modern` | Transformers 5.14.1 Whisper, Qwen, and standard greedy CTC adapters |
 | `vibevoice` | VibeVoice ASR and its pinned compatible tokenizer stack |
 | `nemo` | NeMo ASR and the default RNNT adapter |
 
 Runtime Dockerfiles and lockfiles under [`runtimes/`](../runtimes) are authoritative.
+
+The `modern` runtime's `transformers-ctc` path uses the standard `AutoProcessor` and
+`AutoModelForCTC` interfaces with fixed batch-size-one greedy decoding. It groups repeated CTC
+tokens, preserves special tokens including `<unk>`, and does not use beam search or an external
+language model. The reference specification is
+[`wav2vec2-large-xlsr-53-persian.json`](../models/wav2vec2-large-xlsr-53-persian.json).
 
 ## Hardware contract
 
