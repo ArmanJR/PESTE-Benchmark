@@ -149,6 +149,12 @@ segmentation. The memory board sorts by memory efficiency descending, WER ascend
 because memory efficiency derives from word accuracy, that secondary board remains
 segmentation-sensitive.
 
+### Resource measurement
+
+Peak CUDA reserved and allocated memory are reset before checkpoint loading and measured through
+the complete run. Peak process RSS is also retained. Resumed runs carry forward the highest
+measurements from earlier segments.
+
 ### Statistical uncertainty
 
 Published CER and WER include deterministic 95% percentile-bootstrap intervals. Each replicate
@@ -172,10 +178,6 @@ model order. For example, `whisper-large-v3` changes from 0.1980 to 0.2882 WER, 
 `whisper-large-persian-steja` changes from 0.2648 to 0.1917 and moves from fourth to first under
 that alternative. These alternative values are diagnostic only; official `fleurs-fa-ir-v1`
 scores retain the immutable `fa-v1` policy.
-
-Peak CUDA reserved and allocated memory are reset before checkpoint loading and measured through
-the complete run. Peak process RSS is also retained. Resumed runs carry forward the highest
-measurements from earlier segments.
 
 ## Result bundles
 
