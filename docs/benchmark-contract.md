@@ -139,6 +139,21 @@ segmentation. The memory board sorts by memory efficiency descending, WER ascend
 because memory efficiency derives from word accuracy, that secondary board remains
 segmentation-sensitive.
 
+### Statistical uncertainty
+
+Published CER and WER include deterministic 95% percentile-bootstrap intervals. Each replicate
+resamples the 871 test utterances with replacement and recomputes the corpus error rate from the
+resampled edit-count and reference-unit totals. The generator uses 10,000 replicates and seed
+`20250731`.
+
+The numeric leaderboard order is based on point estimates; it is not a claim that every adjacent
+model differs significantly. To evaluate those gaps, the generator also publishes paired
+utterance-bootstrap intervals for the CER difference between each adjacent pair in point-estimate
+order. A difference is marked resolved at 95% only when its interval excludes zero. These are
+unadjusted pointwise intervals, not simultaneous family-wise guarantees. They quantify sampling
+uncertainty over this test set and do not capture model-training variation, speaker clustering,
+training-data overlap, dataset bias, or deployment-domain shift.
+
 ### ZWNJ-policy sensitivity
 
 In the current test manifest, 622 of 871 references (71.4%) contain ZWNJ. As a sensitivity check,

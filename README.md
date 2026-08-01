@@ -4,11 +4,23 @@
 
 # PESTE: Persian Speech to Text benchmark
 
-PESTE is a reproducible benchmark and static leaderboard for Persian automatic speech recognition
-(ASR). Official runs pin the dataset, checkpoint revision, decoding policy, dependencies, text
-normalization, and hardware profile. The repository publishes per-sample predictions, structured
-logs, environment fingerprints, and machine-readable results; it does not redistribute model
-weights or dataset audio.
+PESTE is a reproducible leaderboard for Persian automatic speech recognition (ASR). Official
+evaluations are fully pinned and publish predictions, logs, environment fingerprints, and
+machine-readable results without redistributing model weights or dataset audio.
+
+## At a glance
+
+- **Release:** `v1`
+- **Suite:** [`fleurs-fa-ir-v1`](suites/fleurs-fa-ir-v1/suite.json)
+- **Dataset:** [`google/fleurs`](https://huggingface.co/datasets/google/fleurs), Persian `fa_ir`
+  configuration
+- **Evaluation set:** `test` split, 871 recordings
+- **Accuracy metrics:** Corpus-level CER (primary) and WER with deterministic 95% bootstrap
+  intervals after `fa-v1` normalization
+- **Efficiency metric:** Word accuracy per peak CUDA reserved GiB
+- **Official hardware:** Jetson AGX Orin 32GB, JetPack 6.2 / L4T R36.4.7, host CUDA 12.6, MAXN
+- **Inference policy:** One CUDA device, batch size 1, checkpoint-native precision, deterministic
+  decoding
 
 ## Leaderboard
 
@@ -18,17 +30,30 @@ weights or dataset audio.
 
 ![Normalized accuracy leaderboard](generated/leaderboard-accuracy.svg)
 
-| Rank | Model | CER | WER | Word accuracy |
+| Order | Model | CER | WER | Word accuracy |
 |---:|---|---:|---:|---:|
-| 1 | [`whisper-large-persian-steja`](https://huggingface.co/steja/whisper-large-persian) | 0.0589 | 0.2648 | 73.52% |
-| 2 | [`whisper-large-v3`](https://huggingface.co/openai/whisper-large-v3) | 0.0599 | 0.1980 | 80.20% |
-| 3 | [`whisper-large-v3-turbo`](https://huggingface.co/openai/whisper-large-v3-turbo) | 0.0650 | 0.2041 | 79.59% |
-| 4 | [`qwen3-asr-1-7b`](https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf) | 0.0892 | 0.2417 | 75.83% |
-| 5 | [`vibevoice-asr`](https://huggingface.co/microsoft/VibeVoice-ASR) | 0.1378 | 0.2704 | 72.96% |
-| 6 | [`qwen3-asr-0-6b`](https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf) | 0.2086 | 0.4803 | 51.97% |
-| 7 | [`whisper-persian-paulwalker`](https://huggingface.co/Paulwalker4884/whisper-persian) | 1.4341 | 0.9430 | 5.70% |
+| 1 | [`whisper-large-persian-steja`](https://huggingface.co/steja/whisper-large-persian) | 0.0589<br><sub>95% CI: 0.0542–0.0640</sub> | 0.2648<br><sub>95% CI: 0.2560–0.2737</sub> | 73.52% |
+| 2 | [`whisper-large-v3`](https://huggingface.co/openai/whisper-large-v3) | 0.0599<br><sub>95% CI: 0.0552–0.0652</sub> | 0.1980<br><sub>95% CI: 0.1897–0.2064</sub> | 80.20% |
+| 3 | [`whisper-large-v3-turbo`](https://huggingface.co/openai/whisper-large-v3-turbo) | 0.0650<br><sub>95% CI: 0.0576–0.0740</sub> | 0.2041<br><sub>95% CI: 0.1949–0.2135</sub> | 79.59% |
+| 4 | [`qwen3-asr-1-7b`](https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf) | 0.0892<br><sub>95% CI: 0.0844–0.0942</sub> | 0.2417<br><sub>95% CI: 0.2332–0.2505</sub> | 75.83% |
+| 5 | [`vibevoice-asr`](https://huggingface.co/microsoft/VibeVoice-ASR) | 0.1378<br><sub>95% CI: 0.1266–0.1503</sub> | 0.2704<br><sub>95% CI: 0.2588–0.2823</sub> | 72.96% |
+| 6 | [`qwen3-asr-0-6b`](https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf) | 0.2086<br><sub>95% CI: 0.2013–0.2162</sub> | 0.4803<br><sub>95% CI: 0.4696–0.4907</sub> | 51.97% |
+| 7 | [`whisper-persian-paulwalker`](https://huggingface.co/Paulwalker4884/whisper-persian) | 1.4341<br><sub>95% CI: 1.3055–1.5698</sub> | 0.9430<br><sub>95% CI: 0.8961–1.0015</sub> | 5.70% |
 
 CER is the primary ranking metric because Persian WER is orthography-sensitive: fa-v1 converts ZWNJ to spaces, while CER ignores normalized whitespace. WER and derived word accuracy remain complementary, segmentation-sensitive measurements.
+
+Point-estimate order does not establish statistical significance. Intervals use a deterministic 10,000-replicate utterance-level percentile bootstrap at 95% confidence with seed 20250731. Paired intervals containing zero are reported as no clear difference; these intervals measure test-set sampling uncertainty only.
+
+#### Paired adjacent CER comparisons
+
+| Adjacent models | ΔCER | Paired 95% range | Evidence |
+|---|---:|---:|---|
+| [`whisper-large-persian-steja`](https://huggingface.co/steja/whisper-large-persian) − [`whisper-large-v3`](https://huggingface.co/openai/whisper-large-v3) | −0.11 pp | −0.53 to 0.29 pp | No clear difference |
+| [`whisper-large-v3`](https://huggingface.co/openai/whisper-large-v3) − [`whisper-large-v3-turbo`](https://huggingface.co/openai/whisper-large-v3-turbo) | −0.50 pp | −1.20 to 0.02 pp | No clear difference |
+| [`whisper-large-v3-turbo`](https://huggingface.co/openai/whisper-large-v3-turbo) − [`qwen3-asr-1-7b`](https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf) | −2.42 pp | −3.12 to −1.58 pp | First model has lower CER |
+| [`qwen3-asr-1-7b`](https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf) − [`vibevoice-asr`](https://huggingface.co/microsoft/VibeVoice-ASR) | −4.86 pp | −6.01 to −3.82 pp | First model has lower CER |
+| [`vibevoice-asr`](https://huggingface.co/microsoft/VibeVoice-ASR) − [`qwen3-asr-0-6b`](https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf) | −7.08 pp | −8.17 to −5.84 pp | First model has lower CER |
+| [`qwen3-asr-0-6b`](https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf) − [`whisper-persian-paulwalker`](https://huggingface.co/Paulwalker4884/whisper-persian) | −122.55 pp | −136.06 to −109.68 pp | First model has lower CER |
 
 ### Accuracy per peak CUDA memory
 
@@ -57,6 +82,23 @@ Peak CUDA memory is unified system/GPU memory and is not directly comparable wit
 - **Word accuracy** is `100 × max(0, 1 − WER)`.
 - **Accuracy / reserved GiB** is word accuracy divided by peak CUDA reserved memory; higher is
   better.
+
+#### Normalization and scoring example
+
+For an illustrative sample, the official normalizer replaces ZWNJ with a space and removes
+punctuation. CER then removes normalized whitespace before scoring, while WER preserves word
+boundaries.
+
+| Stage | Reference | Prediction |
+|---|---|---|
+| Raw text | `می‌روم خانه.` | `میروم خانه` |
+| After `fa-v1` | `می روم خانه` | `میروم خانه` |
+
+- Sample CER is `0 / 9 = 0.0000`: the character sequences match after whitespace removal.
+- Sample WER is `(1 substitution + 1 deletion) / 3 = 0.6667`: the token sequences differ.
+
+Official scores aggregate edit counts over all 871 recordings rather than averaging per-sample
+error rates.
 
 The accuracy board sorts by CER, WER, then stable model ID. The efficiency board sorts by memory
 efficiency, WER, then model ID. Only complete official result bundles whose suite and model
@@ -92,26 +134,17 @@ the following sensitivity analysis. These are diagnostic values, not alternative
   [memory-efficiency plot](generated/leaderboard-memory.svg),
   [JSON results](generated/leaderboard.json), and [CSV results](generated/leaderboard.csv)
 
-## Current benchmark release: v1
-
-| Contract | Current value |
-|---|---|
-| Suite | [`fleurs-fa-ir-v1`](suites/fleurs-fa-ir-v1/suite.json) |
-| Dataset | [`google/fleurs`](https://huggingface.co/datasets/google/fleurs), Persian `fa_ir` configuration |
-| Evaluation split | `test` (871 recordings) |
-| Accuracy metrics | Corpus-level WER and CER after `fa-v1` normalization |
-| Efficiency metric | Word accuracy per peak CUDA reserved GiB |
-| Official hardware | Jetson AGX Orin 32GB, JetPack 6.2 / L4T R36.4.7, host CUDA 12.6, MAXN |
-| Inference policy | One CUDA device, batch size 1, checkpoint-native precision, deterministic decoding |
+## Scope and limitations
 
 FLEURS is a public read-speech corpus and may overlap model training data. It does not represent
 conversational, noisy, accented, domain-specific, or long-form Persian. These results do not
 establish production suitability or general robustness.
 
-This release measures normalized transcription accuracy and peak memory. It does not measure
-speed, latency, timestamps, diarization, streaming, punctuation quality, confidence intervals,
-or robustness subsets. It excludes prompts, hotwords, quantization, offload, compilation,
-external language models, and alternative decoding searches.
+This release measures normalized transcription accuracy, test-set sampling uncertainty, and peak
+memory. It does not measure speed, latency, timestamps, diarization, streaming, punctuation
+quality, model-training uncertainty, dataset bias, or robustness subsets. It excludes prompts,
+hotwords, quantization, offload, compilation, external language models, and alternative decoding
+searches.
 
 `nvidia-fastconformer-fa` is unranked because its official native-FP32 run exhausted CUDA memory
 during RNNT decoder CUDA-graph warmup. The benchmark does not change precision or decoding policy
@@ -129,6 +162,28 @@ ranking eligibility.
 3. Official inference runs offline in framework-specific containers against read-only caches.
 4. Predictions are normalized and scored in manifest order using corpus-level WER and CER.
 5. Complete result bundles generate deterministic Markdown, SVG, JSON, and CSV leaderboards.
+
+Each successful bundle publishes one JSONL record per evaluation sample. This abbreviated
+[published record](results/fleurs-fa-ir-v1/fleurs-fa-ir-v1-whisper-large-v3-20260801T090117Z/predictions.jsonl)
+shows the raw and normalized text together with its edit counts:
+
+```json
+{
+  "sample_id": "test-000000",
+  "reference": "این سند بر اساس …",
+  "prediction": "این صند بر اساس …",
+  "normalized_reference": "این سند بر اساس …",
+  "normalized_prediction": "این صند بر اساس …",
+  "word_substitutions": 3,
+  "word_deletions": 1,
+  "word_insertions": 0,
+  "word_reference_units": 30,
+  "character_substitutions": 4,
+  "character_deletions": 5,
+  "character_insertions": 2,
+  "character_reference_units": 107
+}
+```
 
 ## Reproduce the benchmark
 

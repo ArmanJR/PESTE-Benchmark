@@ -82,6 +82,7 @@ Review the completed bundle before publication:
 - prediction sequence and sample IDs;
 - structured output retention where applicable;
 - WER/CER aggregates and edit totals;
+- deterministic WER/CER intervals and paired adjacent-model CER comparisons;
 - checkpoint bytes and parameter count;
 - peak CUDA reserved/allocated memory and process RSS; and
 - runner/container logs for warnings or fallbacks.
