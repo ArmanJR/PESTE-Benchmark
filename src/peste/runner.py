@@ -126,8 +126,14 @@ def _environment(seed: int) -> EnvironmentFingerprint:
     )
 
 
-def _record(sequence: int, sample_id: str, reference: str, transcription: Any) -> PredictionRecord:
-    score = score_sample(reference, transcription.text)
+def _record(
+    sequence: int,
+    sample_id: str,
+    reference: str,
+    transcription: Any,
+    normalization_version: str,
+) -> PredictionRecord:
+    score = score_sample(reference, transcription.text, normalization_version)
     return PredictionRecord(
         schema_version=1,
         sequence=sequence,
@@ -253,7 +259,13 @@ def run_benchmark(
                 if not audio_path.exists():
                     raise FileNotFoundError(f"Canonical audio is missing: {audio_path}")
                 transcription = active_adapter.transcribe(audio_path)
-                record = _record(sequence, row.sample_id, row.transcription, transcription)
+                record = _record(
+                    sequence,
+                    row.sample_id,
+                    row.transcription,
+                    transcription,
+                    suite.normalization_version,
+                )
                 prediction_log.write(record.model_dump_json() + "\n")
                 prediction_log.flush()
                 os.fsync(prediction_log.fileno())

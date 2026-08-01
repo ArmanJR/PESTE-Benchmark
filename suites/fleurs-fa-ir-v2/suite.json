@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "suite_id": "fleurs-fa-ir-v2",
+  "dataset": {
+    "repository": "google/fleurs",
+    "revision": "70bb2e84b976b7e960aa89f1c648e09c59f894dd",
+    "config": "fa_ir",
+    "license": "CC-BY-4.0"
+  },
+  "evaluation_split": "test",
+  "normalization_version": "fa-v2",
+  "manifest_path": "../fleurs-fa-ir-v1/manifest.jsonl",
+  "manifest_sha256": "76e87e96769cd63ce5d5abbc7827563644e55c3ba3fdc4041f4359a67435c061",
+  "expected_split_counts": {
+    "train": 3101,
+    "validation": 369,
+    "test": 871
+  }
+}

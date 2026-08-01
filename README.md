@@ -4,9 +4,7 @@
 
 # PESTE: Persian Speech to Text benchmark
 
-PESTE is a reproducible leaderboard for Persian automatic speech recognition (ASR). Official
-evaluations are fully pinned and publish predictions, logs, environment fingerprints, and
-machine-readable results without redistributing model weights or dataset audio.
+PESTE (**PE**rsian **S**peech to **TE**xt) is a reproducible benchmark and leaderboard for Persian automatic speech recognition (ASR).
 
 ## At a glance
 
@@ -15,8 +13,7 @@ machine-readable results without redistributing model weights or dataset audio.
 - **Dataset:** [`google/fleurs`](https://huggingface.co/datasets/google/fleurs), Persian `fa_ir`
   configuration
 - **Evaluation set:** `test` split, 871 recordings
-- **Accuracy metrics:** Corpus-level CER (primary) and WER with deterministic 95% bootstrap
-  intervals after `fa-v1` normalization
+- **Accuracy metrics:** Corpus-level CER (primary) and WER
 - **Efficiency metric:** Word accuracy per peak CUDA reserved GiB
 - **Official hardware:** Jetson AGX Orin 32GB, JetPack 6.2 / L4T R36.4.7, host CUDA 12.6, MAXN
 - **Inference policy:** One CUDA device, batch size 1, checkpoint-native precision, deterministic
@@ -124,12 +121,23 @@ the following sensitivity analysis. These are diagnostic values, not alternative
 | `qwen3-asr-0-6b` | 0.4803 | 0.5049 | 6 |
 | `whisper-persian-paulwalker` | 0.9430 | 0.9663 | 7 |
 
+### Number-format sensitivity
+
+The published `fleurs-fa-ir-v1` scores are sensitive to whether a model writes a spoken number as
+digits or Persian words. Its immutable `fa-v1` policy converts Persian and Arabic-Indic digit
+glyphs to ASCII, but does not perform inverse text normalization. Digits occur in 153 of the 871
+test references. For example, `۱۹۶۷` becomes `1967`, while the equivalent
+`هزار و نهصد و شصت و هفت` remains words and receives seven word-level edit operations in its
+reference sentence. This is a formatting bias in the published v1 results, not evidence of seven
+recognition errors.
+
 ## Documentation
 
 - [Propose a compatible model](docs/adding-a-model.md)
 - [Contribute source code](docs/contributing.md)
 - [Benchmark contract](docs/benchmark-contract.md)
 - [Maintainer guide](docs/maintainer-guide.md)
+- [Project roadmap](docs/roadmap.md)
 - [Accuracy plot](generated/leaderboard-accuracy.svg),
   [memory-efficiency plot](generated/leaderboard-memory.svg),
   [JSON results](generated/leaderboard.json), and [CSV results](generated/leaderboard.csv)

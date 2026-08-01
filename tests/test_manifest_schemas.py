@@ -6,9 +6,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from peste.constants import PROJECT_ROOT
 from peste.digests import sha256_file
 from peste.manifest import validate_manifest
 from peste.schemas import RunBundle, RunStatus
+from peste.specs import load_suite
 
 
 def test_manifest_digest_counts_and_order(
@@ -27,6 +29,14 @@ def test_manifest_tampering_is_rejected(
     assert sha256_file(path) != suite.manifest_sha256  # type: ignore[union-attr]
     with pytest.raises(ValueError, match="digest mismatch"):
         validate_manifest(suite, directory)  # type: ignore[arg-type]
+
+
+def test_fleurs_fa_ir_v2_reuses_the_pinned_manifest_with_fa_v2() -> None:
+    suite = load_suite("fleurs-fa-ir-v2")
+
+    assert suite.normalization_version == "fa-v2"
+    rows = validate_manifest(suite, PROJECT_ROOT / "suites" / suite.suite_id)
+    assert len(rows) == sum(suite.expected_split_counts.values())
 
 
 def test_success_requires_aggregates() -> None:

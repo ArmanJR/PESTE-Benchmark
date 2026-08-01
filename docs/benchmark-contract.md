@@ -50,6 +50,16 @@ quality is not a separate metric in the current suite. Replacing ZWNJ with a spa
 sensitive to Persian word-segmentation conventions: a model that emits joined compounds can
 receive word substitutions and deletions even when its letters match the reference.
 
+### Number-format sensitivity
+
+`fa-v1` canonicalizes digit glyphs but does not equate digits with spoken Persian number words.
+The `fleurs-fa-ir-v1` test split has digit glyphs in 153 of 871 references. Consequently, a model
+that emits `۱۹۶۷` matches a reference containing `۱۹۶۷` after glyph folding, while a model that
+emits the semantically equivalent `هزار و نهصد و شصت و هفت` does not. In the corresponding
+FLEURS reference sentence, that representation difference alone produces one substitution and six
+insertions under WER. Published v1 scores retain this known formatting bias because their suite and
+normalization contracts are immutable.
+
 ## Model contract
 
 Every checkpoint has an immutable JSON specification under [`models/`](../models) containing its

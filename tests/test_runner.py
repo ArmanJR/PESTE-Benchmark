@@ -73,6 +73,13 @@ class FakeAdapter(ASRAdapter):
         return 42
 
 
+class NumberWordAdapter(FakeAdapter):
+    def transcribe(self, audio_path: Path) -> Transcription:
+        transcription = Transcription(text=f"متن {('صفر', 'یک')[self.calls]}")
+        self.calls += 1
+        return transcription
+
+
 def _request(tmp_path: Path, suite: SuiteSpec, resume: ResumeState | None = None) -> RunRequest:
     model = make_model()
     return RunRequest(
@@ -139,6 +146,39 @@ def test_full_fake_adapter_orchestration(
     predictions = (request.output_directory / "predictions.jsonl").read_text(encoding="utf-8")
     assert len(predictions.splitlines()) == 2
     assert json.loads(predictions.splitlines()[0])["sample_id"] == "test-000000"
+
+
+def test_runner_scores_with_the_suite_normalization_version(
+    monkeypatch: Any,
+    tmp_path: Path,
+    tiny_suite: tuple[SuiteSpec, Path, list[Any]],
+) -> None:
+    suite, suite_directory, rows = tiny_suite
+    suite = suite.model_copy(update={"normalization_version": "fa-v2"})
+    _create_audio(tmp_path, rows)
+    _patch_runtime(monkeypatch, FakeCuda())
+    request = _request(tmp_path, suite)
+    model = make_model()
+
+    bundle = runner.run_benchmark(
+        request,
+        suite,
+        model,
+        suite_directory,
+        NumberWordAdapter(model, request.model_cache),
+    )
+
+    assert bundle.status == RunStatus.SUCCESS
+    assert bundle.aggregates is not None
+    assert bundle.aggregates.wer == 0
+    records = [
+        json.loads(line)
+        for line in (request.output_directory / "predictions.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
+    ]
+    assert records[0]["normalized_reference"] == "متن صفر"
+    assert records[0]["normalized_prediction"] == "متن صفر"
 
 
 def test_resume_validates_request_and_preserves_peak_memory(

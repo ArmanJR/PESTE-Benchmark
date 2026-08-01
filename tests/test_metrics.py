@@ -33,6 +33,17 @@ def test_cer_removes_whitespace() -> None:
     assert score.characters.errors == 0
 
 
+def test_fa_v2_scores_digit_and_word_number_styles_equally() -> None:
+    score = score_sample(
+        "جنگ شش\u200cروزه ۱۹۶۷ است",
+        "جنگ شش روزه هزار و نهصد و شصت و هفت است",
+        version="fa-v2",
+    )
+    assert score.normalized_reference == score.normalized_prediction
+    assert score.words.errors == 0
+    assert score.characters.errors == 0
+
+
 def test_empty_reference_rejected_and_empty_prediction_permitted() -> None:
     with pytest.raises(ValueError, match="Normalized reference"):
         score_sample("...", "متن")
