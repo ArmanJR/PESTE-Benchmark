@@ -20,8 +20,6 @@ from peste.adapters.transformers import (
     TransformersWhisperAdapter,
     _upgrade_legacy_whisper_generation_config,
 )
-from peste.adapters.vibevoice import VibeVoiceAdapter
-from peste.prefetch import VIBEVOICE_TOKENIZER_REPOSITORY, VIBEVOICE_TOKENIZER_REVISION
 
 
 class FakeTensor:
@@ -365,57 +363,6 @@ def test_transformers_ctc_registry_selection(tmp_path: Path) -> None:
     adapter = create_adapter(make_model("transformers-ctc", dtype="float32"), tmp_path)
 
     assert isinstance(adapter, TransformersCTCAdapter)
-
-
-def test_vibevoice_contract(monkeypatch: Any, tmp_path: Path) -> None:
-    _fake_torch(monkeypatch)
-    model = FakeModel()
-
-    class Processor:
-        pad_id = 0
-        tokenizer = SimpleNamespace(eos_token_id=1)
-
-        def __call__(self, **kwargs: Any) -> FakeBatch:
-            self.call_kwargs = kwargs
-            return FakeBatch(input_ids=FakeTensor(shape=(1, 3)), audio=FakeTensor())
-
-        def decode(self, output: Any, **kwargs: Any) -> str:
-            return "raw"
-
-        def post_process_transcription(self, value: str) -> list[dict[str, str]]:
-            return [{"text": "سلام"}, {"text": "دنیا"}]
-
-    processor = Processor()
-    model_module = ModuleType("vibevoice.modular.modeling_vibevoice_asr")
-    model_factory = Factory(model)
-    model_module.VibeVoiceASRForConditionalGeneration = model_factory  # type: ignore[attr-defined]
-    processor_module = ModuleType("vibevoice.processor.vibevoice_asr_processor")
-    processor_factory = Factory(processor)
-    processor_module.VibeVoiceASRProcessor = processor_factory  # type: ignore[attr-defined]
-    monkeypatch.setitem(sys.modules, "vibevoice", ModuleType("vibevoice"))
-    monkeypatch.setitem(sys.modules, "vibevoice.modular", ModuleType("vibevoice.modular"))
-    monkeypatch.setitem(sys.modules, "vibevoice.processor", ModuleType("vibevoice.processor"))
-    monkeypatch.setitem(sys.modules, model_module.__name__, model_module)
-    monkeypatch.setitem(sys.modules, processor_module.__name__, processor_module)
-    tokenizer = (
-        tmp_path
-        / f"models--{VIBEVOICE_TOKENIZER_REPOSITORY.replace('/', '--')}"
-        / "snapshots"
-        / VIBEVOICE_TOKENIZER_REVISION
-    )
-    tokenizer.mkdir(parents=True)
-    spec = make_model("vibevoice", dtype="bfloat16")
-    model_snapshot = _make_snapshot(spec, tmp_path)
-    adapter = VibeVoiceAdapter(spec, tmp_path)
-    adapter.load()
-    result = adapter.transcribe(tmp_path / "audio.wav")
-    assert result.text == "سلام دنیا"
-    assert processor_factory.kwargs["language_model_pretrained_name"] == str(tokenizer)
-    assert processor.call_kwargs["audio"] == [str(tmp_path / "audio.wav")]
-    assert model.generate_kwargs["max_new_tokens"] == 512
-    assert model.generate_kwargs["num_beams"] == 1
-    assert model_factory.kwargs["attn_implementation"] == "sdpa"
-    assert model_factory.args == (str(model_snapshot),)
 
 
 def test_nemo_contract(monkeypatch: Any, tmp_path: Path) -> None:

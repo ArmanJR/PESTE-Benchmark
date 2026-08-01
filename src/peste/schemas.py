@@ -40,7 +40,7 @@ class SuiteSpec(ContractModel):
 
 
 class RuntimeSpec(ContractModel):
-    name: Literal["modern", "vibevoice", "nemo"]
+    name: Literal["modern", "nemo"]
     image: str
     dockerfile: str
 
@@ -54,7 +54,6 @@ class ModelSpec(ContractModel):
         "transformers-whisper",
         "transformers-qwen",
         "transformers-ctc",
-        "vibevoice",
         "nemo-rnnt",
     ]
     native_dtype: Literal["float16", "bfloat16", "float32"]

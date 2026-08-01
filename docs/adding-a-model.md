@@ -19,7 +19,6 @@ its architecture name.
 | `transformers-whisper` | Loads with `AutoProcessor` and `AutoModelForSpeechSeq2Seq`; supports Persian, transcription, and no-timestamp decoder tokens; does not require custom remote code | [`whisper-large-v3.json`](../models/whisper-large-v3.json) |
 | `transformers-qwen` | Loads with `AutoProcessor` and `AutoModelForMultimodalLM`; processor implements `apply_transcription_request`; decoded output supports `transcription_only` | [`qwen3-asr-1-7b.json`](../models/qwen3-asr-1-7b.json) |
 | `transformers-ctc` | Loads a standard CTC checkpoint with `AutoProcessor` and `AutoModelForCTC`; supports single-sample greedy decoding without an external language model or custom remote code | [`wav2vec2-large-xlsr-53-persian.json`](../models/wav2vec2-large-xlsr-53-persian.json) |
-| `vibevoice` | Uses the supported VibeVoice ASR model and processor classes, pinned auxiliary tokenizer, BF16/SDPA, and fixed deterministic generation policy | [`vibevoice-asr.json`](../models/vibevoice-asr.json) |
 | `nemo-rnnt` | Hugging Face snapshot contains exactly one `.nemo` checkpoint loadable by `ASRModel.restore_from`; supports the default RNNT decoder at batch size 1 | [`nvidia-fastconformer-fa.json`](../models/nvidia-fastconformer-fa.json) |
 
 A checkpoint is not compatible when it requires any of the following:

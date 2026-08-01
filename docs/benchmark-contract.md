@@ -95,7 +95,6 @@ Framework families run in separate images with frozen dependencies:
 | Runtime | Use |
 |---|---|
 | `modern` | Transformers 5.14.1 Whisper, Qwen, and standard greedy CTC adapters |
-| `vibevoice` | VibeVoice ASR and its pinned compatible tokenizer stack |
 | `nemo` | NeMo ASR and the default RNNT adapter |
 
 Runtime Dockerfiles and lockfiles under [`runtimes/`](../runtimes) are authoritative.

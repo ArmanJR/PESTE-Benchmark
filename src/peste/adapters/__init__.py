@@ -9,14 +9,12 @@ from peste.adapters.transformers import (
     TransformersQwenAdapter,
     TransformersWhisperAdapter,
 )
-from peste.adapters.vibevoice import VibeVoiceAdapter
 from peste.schemas import ModelSpec
 
 ADAPTERS: dict[str, type[ASRAdapter]] = {
     "transformers-whisper": TransformersWhisperAdapter,
     "transformers-qwen": TransformersQwenAdapter,
     "transformers-ctc": TransformersCTCAdapter,
-    "vibevoice": VibeVoiceAdapter,
     "nemo-rnnt": NemoRnntAdapter,
 }
 

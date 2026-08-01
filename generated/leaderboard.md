@@ -10,9 +10,8 @@
 | 2 | [`whisper-large-v3`](https://huggingface.co/openai/whisper-large-v3) | 0.0599<br><sub>95% CI: 0.0552–0.0652</sub> | 0.1980<br><sub>95% CI: 0.1897–0.2064</sub> | 80.20% |
 | 3 | [`whisper-large-v3-turbo`](https://huggingface.co/openai/whisper-large-v3-turbo) | 0.0650<br><sub>95% CI: 0.0576–0.0740</sub> | 0.2041<br><sub>95% CI: 0.1949–0.2135</sub> | 79.59% |
 | 4 | [`qwen3-asr-1-7b`](https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf) | 0.0892<br><sub>95% CI: 0.0844–0.0942</sub> | 0.2417<br><sub>95% CI: 0.2332–0.2505</sub> | 75.83% |
-| 5 | [`vibevoice-asr`](https://huggingface.co/microsoft/VibeVoice-ASR) | 0.1378<br><sub>95% CI: 0.1266–0.1503</sub> | 0.2704<br><sub>95% CI: 0.2588–0.2823</sub> | 72.96% |
-| 6 | [`qwen3-asr-0-6b`](https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf) | 0.2086<br><sub>95% CI: 0.2013–0.2162</sub> | 0.4803<br><sub>95% CI: 0.4696–0.4907</sub> | 51.97% |
-| 7 | [`whisper-persian-paulwalker`](https://huggingface.co/Paulwalker4884/whisper-persian) | 1.4341<br><sub>95% CI: 1.3055–1.5698</sub> | 0.9430<br><sub>95% CI: 0.8961–1.0015</sub> | 5.70% |
+| 5 | [`qwen3-asr-0-6b`](https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf) | 0.2086<br><sub>95% CI: 0.2013–0.2162</sub> | 0.4803<br><sub>95% CI: 0.4696–0.4907</sub> | 51.97% |
+| 6 | [`whisper-persian-paulwalker`](https://huggingface.co/Paulwalker4884/whisper-persian) | 1.4341<br><sub>95% CI: 1.3055–1.5698</sub> | 0.9430<br><sub>95% CI: 0.8961–1.0015</sub> | 5.70% |
 
 CER is the primary ranking metric because Persian WER is orthography-sensitive: fa-v1 converts ZWNJ to spaces, while CER ignores normalized whitespace. WER and derived word accuracy remain complementary, segmentation-sensitive measurements.
 
@@ -25,8 +24,7 @@ Point-estimate order does not establish statistical significance. Intervals use 
 | [`whisper-large-persian-steja`](https://huggingface.co/steja/whisper-large-persian) − [`whisper-large-v3`](https://huggingface.co/openai/whisper-large-v3) | −0.11 pp | −0.53 to 0.29 pp | No clear difference |
 | [`whisper-large-v3`](https://huggingface.co/openai/whisper-large-v3) − [`whisper-large-v3-turbo`](https://huggingface.co/openai/whisper-large-v3-turbo) | −0.50 pp | −1.20 to 0.02 pp | No clear difference |
 | [`whisper-large-v3-turbo`](https://huggingface.co/openai/whisper-large-v3-turbo) − [`qwen3-asr-1-7b`](https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf) | −2.42 pp | −3.12 to −1.58 pp | First model has lower CER |
-| [`qwen3-asr-1-7b`](https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf) − [`vibevoice-asr`](https://huggingface.co/microsoft/VibeVoice-ASR) | −4.86 pp | −6.01 to −3.82 pp | First model has lower CER |
-| [`vibevoice-asr`](https://huggingface.co/microsoft/VibeVoice-ASR) − [`qwen3-asr-0-6b`](https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf) | −7.08 pp | −8.17 to −5.84 pp | First model has lower CER |
+| [`qwen3-asr-1-7b`](https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf) − [`qwen3-asr-0-6b`](https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf) | −11.94 pp | −12.57 to −11.34 pp | First model has lower CER |
 | [`qwen3-asr-0-6b`](https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf) − [`whisper-persian-paulwalker`](https://huggingface.co/Paulwalker4884/whisper-persian) | −122.55 pp | −136.06 to −109.68 pp | First model has lower CER |
 
 ## Accuracy per peak CUDA memory
@@ -41,6 +39,5 @@ Point-estimate order does not establish statistical significance. Intervals use 
 | 4 | [`qwen3-asr-0-6b`](https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf) | 18.6197 | 0.4803 | 2.791 |
 | 5 | [`qwen3-asr-1-7b`](https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf) | 14.8179 | 0.2417 | 5.117 |
 | 6 | [`whisper-persian-paulwalker`](https://huggingface.co/Paulwalker4884/whisper-persian) | 14.8123 | 0.9430 | 0.385 |
-| 7 | [`vibevoice-asr`](https://huggingface.co/microsoft/VibeVoice-ASR) | 3.8305 | 0.2704 | 19.047 |
 
 Peak CUDA memory is unified system/GPU memory and is not directly comparable with process VRAM reported on discrete GPUs.

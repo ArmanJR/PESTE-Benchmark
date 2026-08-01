@@ -15,7 +15,6 @@ def make_model(
     model_id: str = "fake-model",
     dtype: str = "float16",
 ) -> ModelSpec:
-    language = None if adapter == "vibevoice" else "fa"
     generations: dict[str, dict[str, str | int | float | bool]] = {
         "transformers-whisper": {
             "task": "transcribe",
@@ -31,19 +30,12 @@ def make_model(
             "skip_special_tokens": False,
             "clean_up_tokenization_spaces": False,
         },
-        "vibevoice": {
-            "max_new_tokens": 512,
-            "temperature": 0.0,
-            "top_p": 1.0,
-            "num_beams": 1,
-        },
         "nemo-rnnt": {"decoder": "rnnt", "batch_size": 1, "external_language_model": False},
     }
     runtime_name = {
         "transformers-whisper": "modern",
         "transformers-qwen": "modern",
         "transformers-ctc": "modern",
-        "vibevoice": "vibevoice",
         "nemo-rnnt": "nemo",
     }[adapter]
     return ModelSpec.model_validate(
@@ -55,7 +47,7 @@ def make_model(
             "adapter": adapter,
             "native_dtype": dtype,
             "license": "Apache-2.0",
-            "language": language,
+            "language": "fa",
             "generation": generations[adapter],
             "runtime": RuntimeSpec(
                 name=runtime_name,

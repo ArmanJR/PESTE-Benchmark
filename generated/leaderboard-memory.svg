@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="336" viewBox="0 0 900 336" role="img" aria-labelledby="leaderboard-plot-title leaderboard-plot-description">
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="300" viewBox="0 0 900 300" role="img" aria-labelledby="leaderboard-plot-title leaderboard-plot-description">
 <title id="leaderboard-plot-title">PESTE accuracy per peak CUDA memory leaderboard</title>
-<desc id="leaderboard-plot-description">7 ranked models from fleurs-fa-ir-v1. Compared by peak CUDA reserved memory and word accuracy per reserved GiB.</desc>
+<desc id="leaderboard-plot-description">6 ranked models from fleurs-fa-ir-v1. Compared by peak CUDA reserved memory and word accuracy per reserved GiB.</desc>
 <style>
   :root { color-scheme: light dark; --plot-text: #111827; --plot-muted: #6b7280;
     --plot-grid: #d1d5db; --plot-track: #e5e7eb; --wer: #d97706;
@@ -31,25 +31,25 @@
 <text class="metric-title" x="24" y="24">Model</text>
 <text class="metric-title" x="259.0" y="24">Peak CUDA reserved ↓</text>
 <text class="metric-unit" x="259.0" y="40">GiB</text>
-<line class="grid" x1="259.0" y1="45" x2="259.0" y2="318" />
+<line class="grid" x1="259.0" y1="45" x2="259.0" y2="282" />
 <text class="tick" x="259.0" y="59" text-anchor="start">0</text>
-<line class="grid" x1="378.2" y1="45" x2="378.2" y2="318" />
-<text class="tick" x="378.2" y="59" text-anchor="middle">10</text>
-<line class="grid" x1="497.5" y1="45" x2="497.5" y2="318" />
-<text class="tick" x="497.5" y="59" text-anchor="end">20</text>
+<line class="grid" x1="378.2" y1="45" x2="378.2" y2="282" />
+<text class="tick" x="378.2" y="59" text-anchor="middle">5</text>
+<line class="grid" x1="497.5" y1="45" x2="497.5" y2="282" />
+<text class="tick" x="497.5" y="59" text-anchor="end">10</text>
 <text class="metric-title" x="579.5" y="24">Word accuracy / GiB ↑</text>
 <text class="metric-unit" x="579.5" y="40">score</text>
-<line class="grid" x1="579.5" y1="45" x2="579.5" y2="318" />
+<line class="grid" x1="579.5" y1="45" x2="579.5" y2="282" />
 <text class="tick" x="579.5" y="59" text-anchor="start">0</text>
-<line class="grid" x1="698.8" y1="45" x2="698.8" y2="318" />
+<line class="grid" x1="698.8" y1="45" x2="698.8" y2="282" />
 <text class="tick" x="698.8" y="59" text-anchor="middle">25</text>
-<line class="grid" x1="818.0" y1="45" x2="818.0" y2="318" />
+<line class="grid" x1="818.0" y1="45" x2="818.0" y2="282" />
 <text class="tick" x="818.0" y="59" text-anchor="end">50</text>
 <line class="row-line" x1="24" y1="66" x2="876" y2="66" />
 <text class="rank" x="24" y="88.0">1</text>
 <a href="https://huggingface.co/openai/whisper-large-v3-turbo"><text class="model-label" x="48" y="88.0"><title>whisper-large-v3-turbo</title>whisper-large-v3-turbo</text></a>
 <rect class="track" x="259.0" y="76.0" width="238.5" height="16" rx="3" />
-<rect class="bar memory" x="259.0" y="76.0" width="20.9" height="16" rx="3" />
+<rect class="bar memory" x="259.0" y="76.0" width="41.8" height="16" rx="3" />
 <text class="value" x="505.5" y="88.0">1.75</text>
 <rect class="track" x="579.5" y="76.0" width="238.5" height="16" rx="3" />
 <rect class="bar efficiency" x="579.5" y="76.0" width="216.5" height="16" rx="3" />
@@ -58,7 +58,7 @@
 <text class="rank" x="24" y="124.0">2</text>
 <a href="https://huggingface.co/openai/whisper-large-v3"><text class="model-label" x="48" y="124.0"><title>whisper-large-v3</title>whisper-large-v3</text></a>
 <rect class="track" x="259.0" y="112.0" width="238.5" height="16" rx="3" />
-<rect class="bar memory" x="259.0" y="112.0" width="41.1" height="16" rx="3" />
+<rect class="bar memory" x="259.0" y="112.0" width="82.3" height="16" rx="3" />
 <text class="value" x="505.5" y="124.0">3.45</text>
 <rect class="track" x="579.5" y="112.0" width="238.5" height="16" rx="3" />
 <rect class="bar efficiency" x="579.5" y="112.0" width="110.9" height="16" rx="3" />
@@ -67,7 +67,7 @@
 <text class="rank" x="24" y="160.0">3</text>
 <a href="https://huggingface.co/steja/whisper-large-persian"><text class="model-label" x="48" y="160.0"><title>whisper-large-persian-steja</title>whisper-large-persian-steja</text></a>
 <rect class="track" x="259.0" y="148.0" width="238.5" height="16" rx="3" />
-<rect class="bar memory" x="259.0" y="148.0" width="38.4" height="16" rx="3" />
+<rect class="bar memory" x="259.0" y="148.0" width="76.8" height="16" rx="3" />
 <text class="value" x="505.5" y="160.0">3.22</text>
 <rect class="track" x="579.5" y="148.0" width="238.5" height="16" rx="3" />
 <rect class="bar efficiency" x="579.5" y="148.0" width="108.9" height="16" rx="3" />
@@ -76,7 +76,7 @@
 <text class="rank" x="24" y="196.0">4</text>
 <a href="https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf"><text class="model-label" x="48" y="196.0"><title>qwen3-asr-0-6b</title>qwen3-asr-0-6b</text></a>
 <rect class="track" x="259.0" y="184.0" width="238.5" height="16" rx="3" />
-<rect class="bar memory" x="259.0" y="184.0" width="33.3" height="16" rx="3" />
+<rect class="bar memory" x="259.0" y="184.0" width="66.6" height="16" rx="3" />
 <text class="value" x="505.5" y="196.0">2.79</text>
 <rect class="track" x="579.5" y="184.0" width="238.5" height="16" rx="3" />
 <rect class="bar efficiency" x="579.5" y="184.0" width="88.8" height="16" rx="3" />
@@ -85,7 +85,7 @@
 <text class="rank" x="24" y="232.0">5</text>
 <a href="https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf"><text class="model-label" x="48" y="232.0"><title>qwen3-asr-1-7b</title>qwen3-asr-1-7b</text></a>
 <rect class="track" x="259.0" y="220.0" width="238.5" height="16" rx="3" />
-<rect class="bar memory" x="259.0" y="220.0" width="61.0" height="16" rx="3" />
+<rect class="bar memory" x="259.0" y="220.0" width="122.0" height="16" rx="3" />
 <text class="value" x="505.5" y="232.0">5.12</text>
 <rect class="track" x="579.5" y="220.0" width="238.5" height="16" rx="3" />
 <rect class="bar efficiency" x="579.5" y="220.0" width="70.7" height="16" rx="3" />
@@ -94,19 +94,10 @@
 <text class="rank" x="24" y="268.0">6</text>
 <a href="https://huggingface.co/Paulwalker4884/whisper-persian"><text class="model-label" x="48" y="268.0"><title>whisper-persian-paulwalker</title>whisper-persian-paulwalker</text></a>
 <rect class="track" x="259.0" y="256.0" width="238.5" height="16" rx="3" />
-<rect class="bar memory" x="259.0" y="256.0" width="4.6" height="16" rx="3" />
+<rect class="bar memory" x="259.0" y="256.0" width="9.2" height="16" rx="3" />
 <text class="value" x="505.5" y="268.0">0.38</text>
 <rect class="track" x="579.5" y="256.0" width="238.5" height="16" rx="3" />
 <rect class="bar efficiency" x="579.5" y="256.0" width="70.7" height="16" rx="3" />
 <text class="value" x="826.0" y="268.0">14.8</text>
 <line class="row-line" x1="24" y1="282" x2="876" y2="282" />
-<text class="rank" x="24" y="304.0">7</text>
-<a href="https://huggingface.co/microsoft/VibeVoice-ASR"><text class="model-label" x="48" y="304.0"><title>vibevoice-asr</title>vibevoice-asr</text></a>
-<rect class="track" x="259.0" y="292.0" width="238.5" height="16" rx="3" />
-<rect class="bar memory" x="259.0" y="292.0" width="227.1" height="16" rx="3" />
-<text class="value" x="505.5" y="304.0">19.05</text>
-<rect class="track" x="579.5" y="292.0" width="238.5" height="16" rx="3" />
-<rect class="bar efficiency" x="579.5" y="292.0" width="18.3" height="16" rx="3" />
-<text class="value" x="826.0" y="304.0">3.8</text>
-<line class="row-line" x1="24" y1="318" x2="876" y2="318" />
 </svg>

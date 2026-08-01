@@ -27,10 +27,6 @@ def validate_model_policy(model: ModelSpec, root: Path) -> None:
         }
         if model.language != "fa" or model.runtime.name != "modern" or model.generation != expected:
             raise ValueError(f"Transformers CTC policy mismatch for {model.model_id}")
-    elif model.adapter == "vibevoice":
-        expected = {"max_new_tokens": 512, "temperature": 0.0, "top_p": 1.0, "num_beams": 1}
-        if model.language is not None or model.generation != expected:
-            raise ValueError(f"VibeVoice policy mismatch for {model.model_id}")
     elif model.adapter == "nemo-rnnt":
         expected = {"decoder": "rnnt", "batch_size": 1, "external_language_model": False}
         if model.generation != expected:

@@ -8,8 +8,6 @@ from huggingface_hub import snapshot_download
 from peste.schemas import ModelSpec
 
 LOGGER = logging.getLogger(__name__)
-VIBEVOICE_TOKENIZER_REPOSITORY = "Qwen/Qwen2.5-7B"
-VIBEVOICE_TOKENIZER_REVISION = "d149729398750b98c0af14eb82c78cfe92750796"
 
 
 def pinned_snapshot_directory(model: ModelSpec, cache_directory: Path) -> Path:
@@ -33,9 +31,3 @@ def prefetch_model(model: ModelSpec, cache_directory: Path) -> None:
     )
     snapshot_download(repo_id=model.repository, revision=model.revision, cache_dir=cache_directory)
     pinned_snapshot_directory(model, cache_directory)
-    if model.adapter == "vibevoice":
-        snapshot_download(
-            repo_id=VIBEVOICE_TOKENIZER_REPOSITORY,
-            revision=VIBEVOICE_TOKENIZER_REVISION,
-            cache_dir=cache_directory,
-        )
