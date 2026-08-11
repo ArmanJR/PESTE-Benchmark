@@ -22,7 +22,20 @@ RUN uv venv --python /usr/bin/python3 --system-site-packages /opt/venvs/modern \
       --output-file /tmp/modern-requirements.txt \
     && uv pip install --python /opt/venvs/modern/bin/python --no-deps \
       --requirement /tmp/modern-requirements.txt \
-    && uv venv --python /usr/bin/python3 --system-site-packages /opt/venvs/nemo \
+    && uv venv --python /usr/bin/python3 /opt/venvs/nemo \
+    && test -d /usr/local/lib/python3.12/dist-packages/torch \
+    && ln -s /usr/local/lib/python3.12/dist-packages/torch \
+      /opt/venvs/nemo/lib/python3.12/site-packages/torch \
+    && for peste_path in /usr/local/lib/python3.12/dist-packages/torch-*.dist-info; do \
+      test -d "$peste_path"; \
+      ln -s "$peste_path" /opt/venvs/nemo/lib/python3.12/site-packages/; \
+    done \
+    && for peste_package in functorch torchgen; do \
+      if test -d "/usr/local/lib/python3.12/dist-packages/$peste_package"; then \
+        ln -s "/usr/local/lib/python3.12/dist-packages/$peste_package" \
+          "/opt/venvs/nemo/lib/python3.12/site-packages/$peste_package"; \
+      fi; \
+    done \
     && uv export --directory /opt/runtime/nemo --quiet --frozen --no-dev --no-emit-project \
       --prune torch --prune torchaudio --prune torchvision --prune torchcodec \
       --output-file /tmp/nemo-requirements.txt \
