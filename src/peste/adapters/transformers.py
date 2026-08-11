@@ -266,8 +266,24 @@ class TransformersCTCAdapter(ASRAdapter):
         with torch.inference_mode():
             logits = self.model(**model_inputs).logits
         predicted_ids = torch.argmax(logits, dim=-1)
+        attention_mask = model_inputs.get("attention_mask")
+        if attention_mask is None:
+            raise TransformersCTCOutputError(
+                f"Transformers CTC model {self.spec.model_id} requires an attention mask "
+                "for padding-safe batched decoding"
+            )
+        output_lengths = (
+            self.model._get_feat_extract_output_lengths(attention_mask.sum(dim=-1))
+            .detach()
+            .cpu()
+            .tolist()
+        )
+        token_sequences = [
+            row[: int(output_length)].detach().cpu().tolist()
+            for row, output_length in zip(predicted_ids, output_lengths, strict=True)
+        ]
         decoded = self.processor.batch_decode(
-            predicted_ids,
+            token_sequences,
             group_tokens=True,
             skip_special_tokens=False,
             clean_up_tokenization_spaces=False,

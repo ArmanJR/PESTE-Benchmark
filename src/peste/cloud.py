@@ -15,6 +15,9 @@ from typing import Any
 
 LOGGER = logging.getLogger(__name__)
 VAST_LABEL = "peste-official"
+INSTANCE_STARTUP_TIMEOUT_SECONDS = 60 * 60
+SSH_AUTH_TIMEOUT_SECONDS = 5 * 60
+SSH_AUTH_POLL_SECONDS = 5
 VAST_GPU_ENUM = "RTX_6000Ada"
 VAST_DISK_GB = 200
 VAST_IMAGE_REPOSITORY = "ghcr.io/armanjr/peste-benchmark"
@@ -62,6 +65,46 @@ def _require_instance_image(instance: Mapping[str, Any], image_reference: str) -
         raise RuntimeError(
             f"Vast.ai instance image {actual or 'missing'} differs from {image_reference}"
         )
+
+
+def _is_transient_ssh_error(error: RuntimeError) -> bool:
+    message = str(error).casefold()
+    return any(
+        fragment in message
+        for fragment in (
+            "connection closed",
+            "connection refused",
+            "connection reset",
+            "connection timed out",
+            "no route to host",
+            "operation timed out",
+            "permission denied (publickey)",
+        )
+    )
+
+
+def _doctor_when_ssh_ready(
+    doctor_factory: Callable[[str], Any],
+    host: str,
+    *,
+    timeout_seconds: float = SSH_AUTH_TIMEOUT_SECONDS,
+    poll_interval_seconds: float = SSH_AUTH_POLL_SECONDS,
+    clock: Callable[[], float] = time.monotonic,
+    sleep: Callable[[float], None] = time.sleep,
+) -> Any:
+    """Retry only transient SSH readiness failures before running the hardware doctor."""
+    deadline = clock() + timeout_seconds
+    while True:
+        try:
+            return doctor_factory(host).doctor()
+        except RuntimeError as error:
+            if not _is_transient_ssh_error(error) or clock() >= deadline:
+                raise
+            LOGGER.warning(
+                "SSH transport is not authenticated yet; retrying hardware doctor",
+                extra={"host": host, "retry_seconds": poll_interval_seconds, "error": str(error)},
+            )
+            sleep(poll_interval_seconds)
 
 
 class VastClient:
@@ -181,7 +224,7 @@ class VastClient:
         self,
         instance_id: int,
         *,
-        timeout_seconds: float = 900,
+        timeout_seconds: float = INSTANCE_STARTUP_TIMEOUT_SECONDS,
         poll_interval_seconds: float = 5,
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], None] = time.sleep,
@@ -284,7 +327,7 @@ def provision_official_container(
             instance = client.wait_until_running(existing_id)
             _require_instance_image(instance, image_reference)
             host = client.ssh_url(instance)
-            doctor_factory(host).doctor()
+            _doctor_when_ssh_ready(doctor_factory, host)
             return ProvisionedInstance(
                 instance_id=existing_id,
                 offer_id=int(instance.get("ask_contract_id", existing_id)),
@@ -317,7 +360,7 @@ def provision_official_container(
             instance = client.wait_until_running(instance_id)
             _require_instance_image(instance, image_reference)
             host = client.ssh_url(instance)
-            doctor_factory(host).doctor()
+            _doctor_when_ssh_ready(doctor_factory, host)
             return ProvisionedInstance(instance_id, offer_id, dph_total, host, image_reference)
         except Exception as error:
             failures.append(f"offer {offer_id}: {type(error).__name__}: {error}")

@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 
+from peste import cloud
 from peste.cloud import (
     CONTAINER_ONSTART,
     VAST_IMAGE_REPOSITORY,
@@ -152,6 +153,28 @@ def test_wait_fails_immediately_for_terminal_container_state(
         client.wait_until_running(123, clock=lambda: 0)
 
 
+def test_wait_uses_one_hour_startup_timeout_by_default(monkeypatch: Any, tmp_path: Path) -> None:
+    client = _configured_client(tmp_path, RecordedRun([]))
+    calls = 0
+
+    def show_instances() -> list[dict[str, Any]]:
+        nonlocal calls
+        calls += 1
+        return [{"id": 123, "actual_status": "loading"}]
+
+    clock_values = iter([0.0, 3599.0, 3600.0])
+    monkeypatch.setattr(client, "show_instances", show_instances)
+
+    with pytest.raises(TimeoutError, match="last state=loading"):
+        client.wait_until_running(
+            123,
+            clock=lambda: next(clock_values),
+            sleep=lambda seconds: None,
+        )
+
+    assert calls == 1
+
+
 def test_destroy_is_noninteractive(tmp_path: Path) -> None:
     commands: list[list[str]] = []
 
@@ -244,6 +267,46 @@ def test_provisioning_failure_destroys_created_instance() -> None:
             maximum_attempts=1,
         )
     assert client.destroyed == [101]
+
+
+def test_transient_ssh_auth_failure_is_retried_before_doctor_rejection() -> None:
+    attempts = 0
+    sleeps: list[float] = []
+
+    class Doctor:
+        def doctor(self) -> dict[str, bool]:
+            nonlocal attempts
+            attempts += 1
+            if attempts < 3:
+                raise RuntimeError("Remote command failed (255): Permission denied (publickey)")
+            return {"accepted": True}
+
+    result = cloud._doctor_when_ssh_ready(
+        lambda host: Doctor(),
+        "ssh://root@host:22",
+        clock=lambda: 0,
+        sleep=sleeps.append,
+    )
+
+    assert result == {"accepted": True}
+    assert attempts == 3
+    assert sleeps == [cloud.SSH_AUTH_POLL_SECONDS, cloud.SSH_AUTH_POLL_SECONDS]
+
+
+def test_hardware_doctor_failure_is_not_retried() -> None:
+    sleeps: list[float] = []
+
+    with pytest.raises(RuntimeError, match="wrong ECC"):
+        cloud._doctor_when_ssh_ready(
+            lambda host: SimpleNamespace(
+                doctor=lambda: (_ for _ in ()).throw(RuntimeError("wrong ECC"))
+            ),
+            "ssh://root@host:22",
+            clock=lambda: 0,
+            sleep=sleeps.append,
+        )
+
+    assert sleeps == []
 
 
 def test_provisioning_skips_explicitly_excluded_offer() -> None:

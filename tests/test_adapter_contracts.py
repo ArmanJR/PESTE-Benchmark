@@ -48,7 +48,18 @@ class FakeTensor:
         return self.floating
 
     def __getitem__(self, key: Any) -> "FakeTensor":
+        if isinstance(self.value, list):
+            return FakeTensor(value=self.value[key])
         return self
+
+    def detach(self) -> "FakeTensor":
+        return self
+
+    def cpu(self) -> "FakeTensor":
+        return self
+
+    def tolist(self) -> Any:
+        return self.value
 
 
 class FakeBatch(dict[str, FakeTensor]):
@@ -292,11 +303,13 @@ def test_transformers_ctc_pads_masks_moves_dtype_and_decodes_in_order(
         finally:
             inference_state["active"] = False
 
-    predicted_ids = FakeTensor(value="predicted")
+    predicted_rows = [FakeTensor(value=[10, 11, 12, 13]), FakeTensor(value=[20, 21, 22, 23])]
+    predicted_ids = predicted_rows
     torch.inference_mode = inference_mode  # type: ignore[attr-defined]
     torch.argmax = lambda tensor, dim: predicted_ids  # type: ignore[attr-defined]
     input_values = FakeTensor(dtype="source-fp32")
-    attention_mask = FakeTensor(floating=False, dtype="int64")
+    attention_mask = FakeTensor(value=[4, 2], floating=False, dtype="int64")
+    attention_mask.sum = lambda dim: FakeTensor(value=[4, 2])  # type: ignore[attr-defined]
 
     class Model(FakeModel):
         def __init__(self) -> None:
@@ -307,6 +320,10 @@ def test_transformers_ctc_pads_masks_moves_dtype_and_decodes_in_order(
             self.call_kwargs = kwargs
             self.inference_seen = inference_state["active"]
             return SimpleNamespace(logits=FakeTensor(value="logits"))
+
+        def _get_feat_extract_output_lengths(self, lengths: FakeTensor) -> FakeTensor:
+            self.input_lengths = lengths
+            return FakeTensor(value=[4, 2])
 
     class Processor:
         def __call__(self, audio: Any, **kwargs: Any) -> dict[str, FakeTensor]:
@@ -347,7 +364,7 @@ def test_transformers_ctc_pads_masks_moves_dtype_and_decodes_in_order(
         "attention_mask": attention_mask,
     }
     assert model.inference_seen is True
-    assert processor.decode_args == (predicted_ids,)
+    assert processor.decode_args == ([[10, 11, 12, 13], [20, 21]],)
     assert adapter.transcribe_batch(_audio_batch(tmp_path)[:1]) == results[:1]
 
 
@@ -356,7 +373,7 @@ def test_transformers_ctc_rejects_invalid_output_cardinality(
     monkeypatch: Any, tmp_path: Path, decoded: list[str]
 ) -> None:
     torch = _fake_torch(monkeypatch)
-    torch.argmax = lambda tensor, dim: FakeTensor()  # type: ignore[attr-defined]
+    torch.argmax = lambda tensor, dim: [FakeTensor(value=[1]), FakeTensor(value=[2])]  # type: ignore[attr-defined]
     adapter = TransformersCTCAdapter(make_model("transformers-ctc", dtype="float32"), tmp_path)
     adapter.model = SimpleNamespace(
         device="cuda",
@@ -371,11 +388,16 @@ def test_transformers_ctc_rejects_invalid_output_cardinality(
         def __call__(self, **kwargs: Any) -> Any:
             return SimpleNamespace(logits=FakeTensor())
 
+        def _get_feat_extract_output_lengths(self, lengths: FakeTensor) -> FakeTensor:
+            return FakeTensor(value=[1, 1])
+
     adapter.model = CallableModel()
 
     class Processor:
         def __call__(self, *args: Any, **kwargs: Any) -> dict[str, FakeTensor]:
-            return {"input_values": FakeTensor()}
+            attention_mask = FakeTensor(floating=False)
+            attention_mask.sum = lambda dim: FakeTensor(value=[1, 1])  # type: ignore[attr-defined]
+            return {"input_values": FakeTensor(), "attention_mask": attention_mask}
 
         def batch_decode(self, *args: Any, **kwargs: Any) -> list[str]:
             return decoded
@@ -396,11 +418,22 @@ def test_nemo_uses_native_batch_and_checks_cardinality(monkeypatch: Any, tmp_pat
     checkpoint.touch()
 
     class NemoModel(FakeModel):
+        def __init__(self) -> None:
+            super().__init__()
+            self.disable_cuda_graphs_called = False
+            self.decoding = SimpleNamespace(
+                decoding=SimpleNamespace(disable_cuda_graphs=self.disable_cuda_graphs)
+            )
+
+        def disable_cuda_graphs(self) -> bool:
+            self.disable_cuda_graphs_called = True
+            return True
+
         def change_decoding_strategy(self, **kwargs: Any) -> None:
             self.decoder_kwargs = kwargs
 
-        def transcribe(self, paths: list[str], batch_size: int) -> list[Any]:
-            self.transcribe_args = (paths, batch_size)
+        def transcribe(self, paths: list[str], batch_size: int, verbose: bool) -> list[Any]:
+            self.transcribe_args = (paths, batch_size, verbose)
             return [SimpleNamespace(text="اول"), SimpleNamespace(text="دوم")][: len(paths)]
 
     model = NemoModel()
@@ -425,9 +458,10 @@ def test_nemo_uses_native_batch_and_checks_cardinality(monkeypatch: Any, tmp_pat
 
     assert [result.text for result in results] == ["اول", "دوم"]
     assert model.decoder_kwargs == {"decoder_type": "rnnt"}
-    assert model.transcribe_args == ([str(path) for path in paths], 2)
+    assert model.disable_cuda_graphs_called
+    assert model.transcribe_args == ([str(path) for path in paths], 2, False)
     assert factory.kwargs["map_location"] == "cuda"
     assert adapter.transcribe_batch(paths[:1]) == results[:1]
-    model.transcribe = lambda paths, batch_size: [SimpleNamespace(text="only")]
+    model.transcribe = lambda paths, batch_size, verbose: [SimpleNamespace(text="only")]
     with pytest.raises(AdapterOutputError, match="2 audio paths but returned 1"):
         adapter.transcribe_batch(paths)

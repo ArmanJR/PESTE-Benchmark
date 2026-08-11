@@ -125,8 +125,9 @@ uv run peste cloud status
 ```
 
 `cloud up` preselects one verified RTX 6000 Ada offer with driver 580 or newer, allocates 200 GB,
-destroys every rejected attempt, and prints the instance ID, accepted price, image digest, and a
-direct `ssh://root@<ip>:<port>` URL. Use that URL unchanged with the existing commands:
+allows up to one hour for the large carrier to become SSH-ready, destroys every rejected attempt,
+and prints the instance ID, accepted price, image digest, and a direct
+`ssh://root@<ip>:<port>` URL. Use that URL unchanged with the existing commands:
 
 ```bash
 uv run peste doctor --host <ssh-url>

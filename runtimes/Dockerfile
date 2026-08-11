@@ -53,7 +53,7 @@ COPY suites ./suites
 COPY runtimes ./runtimes
 RUN uv pip install --python /opt/venvs/modern/bin/python --no-deps . \
     && uv pip install --python /opt/venvs/nemo/bin/python --no-deps . \
-    && /opt/venvs/modern/bin/python -c 'import numpy,torch; from transformers import AutoModelForCTC,AutoModelForMultimodalLM,AutoProcessor,GenerationMixin; assert torch.__version__.startswith("2.8.0a0+5228986c39"); assert torch.distributed.is_available(); assert all((AutoModelForCTC,AutoModelForMultimodalLM,AutoProcessor,GenerationMixin)); torch.from_numpy(numpy.zeros(1))' \
+    && /opt/venvs/modern/bin/python -c 'import numpy,torch; from peft.import_utils import is_torchao_available; from transformers import AutoModelForCTC,AutoModelForMultimodalLM,AutoProcessor,GenerationMixin; assert torch.__version__.startswith("2.8.0a0+5228986c39"); assert torch.distributed.is_available(); assert is_torchao_available(); assert all((AutoModelForCTC,AutoModelForMultimodalLM,AutoProcessor,GenerationMixin)); torch.from_numpy(numpy.zeros(1))' \
     && /opt/venvs/nemo/bin/python -c 'import numpy,torch,torchaudio; from nemo.collections.asr.models import ASRModel; assert torch.__version__.startswith("2.8.0a0+5228986c39"); assert torch.distributed.is_available(); assert torchaudio.__version__.startswith("2.8.0"); assert ASRModel; torch.from_numpy(numpy.zeros(1))'
 
 COPY runtimes/offline_guard.c /tmp/offline_guard.c

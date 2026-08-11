@@ -41,7 +41,8 @@ uv run peste cloud up --image "$image_ref" --max-dph <cap>
 The search policy preselects verified, reliable `RTX_6000Ada` offers with one GPU, driver
 `>=580.0.0`, direct networking, sufficient CPU/RAM/disk, and 300 W capability. Provisioning
 allocates 200 GB. `cloud up` tries a bounded number of offers; every rejected or failed instance is
-destroyed before the next offer, and only the doctor defines acceptance.
+destroyed before the next offer, and only the doctor defines acceptance. Because the carrier is
+large, a continuously loading instance gets up to one hour to become SSH-ready.
 
 If Vast reports a host-side provisioning failure before SSH or doctor execution, record its offer
 ID and exclude it from the next attempt rather than paying to reproduce the same failure:
