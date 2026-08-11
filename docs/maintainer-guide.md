@@ -40,6 +40,13 @@ three-component driver versions and cannot represent the pinned `580.142` value,
 equality remains a doctor-only check. `cloud up` tries a bounded number of offers. Every rejected
 or failed instance is destroyed before the next offer; only the doctor defines acceptance.
 
+If Vast reports a host-side provisioning failure before SSH or doctor execution, record its offer
+ID and exclude it from the next attempt rather than paying to reproduce the same failure:
+
+```bash
+uv run peste cloud up --exclude-offer <offer-id>
+```
+
 Use the printed direct SSH URL:
 
 ```bash

@@ -290,6 +290,10 @@ def profile_speed_container(
 def cloud_up(
     max_dph: float | None = typer.Option(None, min=0),
     maximum_attempts: int = typer.Option(3, min=1, max=10, hidden=True),
+    exclude_offer: Annotated[
+        list[int] | None,
+        typer.Option("--exclude-offer", min=1, help="Skip a known-broken offer ID; repeatable"),
+    ] = None,
 ) -> None:
     from peste.cloud import VastClient, provision_official_vm
     from peste.orchestration import GpuOrchestrator
@@ -299,6 +303,7 @@ def cloud_up(
         GpuOrchestrator,
         max_dph=max_dph,
         maximum_attempts=maximum_attempts,
+        excluded_offer_ids=frozenset(exclude_offer or []),
     )
     LOGGER.info(
         "Provisioned doctor-approved Vast.ai VM",

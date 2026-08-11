@@ -234,3 +234,15 @@ def test_provisioning_failure_destroys_created_instance() -> None:
             bootstrap=lambda host: None,
         )
     assert client.destroyed == [101]
+
+
+def test_provisioning_skips_explicitly_excluded_offer() -> None:
+    client = LifecycleClient()
+    result = provision_official_vm(
+        client,  # type: ignore[arg-type]
+        lambda host: SimpleNamespace(doctor=lambda: None),
+        excluded_offer_ids=frozenset({1}),
+        bootstrap=lambda host: None,
+    )
+    assert result.offer_id == 2
+    assert client.created == [2]

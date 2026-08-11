@@ -267,6 +267,7 @@ def provision_official_vm(
     *,
     max_dph: float | None = None,
     maximum_attempts: int = 3,
+    excluded_offer_ids: frozenset[int] | None = None,
     bootstrap: Callable[[str], None] = bootstrap_vm,
 ) -> ProvisionedInstance:
     """Provision a doctor-approved VM, destroying every rejected attempt."""
@@ -293,9 +294,14 @@ def provision_official_vm(
             )
             client.destroy_instance(existing_id)
 
-    offers = client.search_offers(max_dph=max_dph)
+    excluded = excluded_offer_ids or frozenset()
+    offers = [
+        offer for offer in client.search_offers(max_dph=max_dph) if int(offer["id"]) not in excluded
+    ]
     if not offers:
-        raise RuntimeError("No Vast.ai offers satisfy the RTX 6000 Ada preselection policy")
+        raise RuntimeError(
+            "No non-excluded Vast.ai offers satisfy the RTX 6000 Ada preselection policy"
+        )
     failures: list[str] = []
     for offer in offers[:maximum_attempts]:
         offer_id = int(offer["id"])
