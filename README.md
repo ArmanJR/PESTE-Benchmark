@@ -1,3 +1,5 @@
+
+
 <p align="center">
   <img src="docs/peste-logo.png" alt="PESTE logo" width="520">
 </p>
@@ -82,7 +84,7 @@ size. Maintainers determine it with:
 uv run peste model profile-speed --model <model-id> --host <ssh-url>
 ```
 
-Calibration uses 128 duration-quantile recordings, candidates from 1 through 128, two warmups and
+Calibration uses 128 duration-quantile recordings, candidates 1, 2, 4, 8, 16, 32, 64, and 128, two warmups and
 three measured passes. It rejects OOM, more than 85% VRAM use on the longest-duration stress batch,
 output cardinality/order failures, and normalized divergence from a fixed singleton conformance
 set. The smallest safe candidate reaching at least 95% of the best throughput is selected. Full
