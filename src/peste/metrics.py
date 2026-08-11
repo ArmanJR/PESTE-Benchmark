@@ -1,4 +1,4 @@
-"""Corpus-level ASR error and memory-efficiency metrics."""
+"""Corpus-level ASR error metrics."""
 
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -108,9 +108,3 @@ def aggregate_scores(samples: Sequence[SampleScore]) -> CorpusScore:
 
 def word_accuracy_pct(wer: float) -> float:
     return 100.0 * max(0.0, 1.0 - wer)
-
-
-def memory_efficiency(wer: float, peak_cuda_reserved_gib: float) -> float:
-    if peak_cuda_reserved_gib <= 0:
-        raise ValueError("Peak CUDA reserved memory must be greater than zero")
-    return word_accuracy_pct(wer) / peak_cuda_reserved_gib

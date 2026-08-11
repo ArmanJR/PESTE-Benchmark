@@ -94,7 +94,7 @@ def materialize_rows(spec: SuiteSpec, cache_directory: Path) -> list[ManifestRow
                 raise ValueError(f"Empty normalized reference for {sample_id}")
             rows.append(
                 ManifestRow(
-                    schema_version=1,
+                    schema_version=2,
                     sample_id=sample_id,
                     split=split,
                     upstream_row_index=index,

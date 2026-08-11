@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "model_id": "whisper-large-persian-steja",
   "repository": "steja/whisper-large-persian",
   "revision": "4c8e5a01a1a684aa59b36a70b2ce408ad780af11",
@@ -8,5 +8,6 @@
   "license": "Apache-2.0",
   "language": "fa",
   "generation": {"task": "transcribe", "max_new_tokens": 444, "return_timestamps": false},
-  "runtime": {"name": "modern", "image": "peste-modern:1.0.0", "dockerfile": "runtimes/modern/Dockerfile"}
+  "runtime": {"name": "modern", "image": "peste-modern:2.0.0", "dockerfile": "runtimes/modern/Dockerfile"},
+  "speed_profile": {"hardware_profile_id": "rtx-6000-ada-v1", "batch_size": 1}
 }

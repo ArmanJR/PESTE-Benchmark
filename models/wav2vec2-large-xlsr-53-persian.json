@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "model_id": "wav2vec2-large-xlsr-53-persian",
   "repository": "jonatasgrosman/wav2vec2-large-xlsr-53-persian",
   "revision": "234714078a1398a9db88194c5a40fefe6f376dc1",
@@ -7,6 +7,7 @@
   "native_dtype": "float32",
   "license": "Apache-2.0",
   "language": "fa",
-  "generation": {"decoder": "greedy", "batch_size": 1, "external_language_model": false, "group_tokens": true, "skip_special_tokens": false, "clean_up_tokenization_spaces": false},
-  "runtime": {"name": "modern", "image": "peste-modern:1.0.0", "dockerfile": "runtimes/modern/Dockerfile"}
+  "generation": {"decoder": "greedy", "external_language_model": false, "group_tokens": true, "skip_special_tokens": false, "clean_up_tokenization_spaces": false},
+  "runtime": {"name": "modern", "image": "peste-modern:2.0.0", "dockerfile": "runtimes/modern/Dockerfile"},
+  "speed_profile": {"hardware_profile_id": "rtx-6000-ada-v1", "batch_size": 1}
 }

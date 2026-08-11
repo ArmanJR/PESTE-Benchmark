@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "suite_id": "fleurs-fa-ir-v2",
   "dataset": {
     "repository": "google/fleurs",
@@ -10,7 +10,7 @@
   "evaluation_split": "test",
   "normalization_version": "fa-v2",
   "manifest_path": "../fleurs-fa-ir-v1/manifest.jsonl",
-  "manifest_sha256": "76e87e96769cd63ce5d5abbc7827563644e55c3ba3fdc4041f4359a67435c061",
+  "manifest_sha256": "031a6871898bfb6b994164da49739ca6d50b79af91c7af59e6883ae820520488",
   "expected_split_counts": {
     "train": 3101,
     "validation": 369,

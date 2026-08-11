@@ -1,14 +1,8 @@
-"""Corpus WER/CER and efficiency contract tests."""
+"""Corpus WER/CER contract tests."""
 
 import pytest
 
-from peste.metrics import (
-    aggregate_scores,
-    edit_counts,
-    memory_efficiency,
-    score_sample,
-    word_accuracy_pct,
-)
+from peste.metrics import aggregate_scores, edit_counts, score_sample, word_accuracy_pct
 
 
 def test_edit_operation_counts() -> None:
@@ -51,9 +45,6 @@ def test_empty_reference_rejected_and_empty_prediction_permitted() -> None:
     assert score.words.deletions == 2
 
 
-def test_memory_efficiency_formula_and_floor() -> None:
+def test_word_accuracy_floor() -> None:
     assert word_accuracy_pct(0.25) == 75.0
-    assert memory_efficiency(0.25, 5.0) == 15.0
-    assert memory_efficiency(1.5, 2.0) == 0.0
-    with pytest.raises(ValueError, match="greater than zero"):
-        memory_efficiency(0.1, 0)
+    assert word_accuracy_pct(1.5) == 0.0

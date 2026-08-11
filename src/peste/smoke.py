@@ -29,7 +29,6 @@ def smoke_adapter(
         raise FileNotFoundError(f"Smoke-test audio is missing: {audio_path}")
     torch = _seed_runtime(seed)
     torch.cuda.empty_cache()
-    torch.cuda.reset_peak_memory_stats()
     adapter = create_adapter(model, model_cache)
     try:
         LOGGER.info(
@@ -38,9 +37,13 @@ def smoke_adapter(
         )
         adapter.load()
         _seed_runtime(seed)
-        first = normalize(adapter.transcribe(audio_path).text, suite.normalization_version)
+        first = normalize(
+            adapter.transcribe_batch([audio_path])[0].text, suite.normalization_version
+        )
         _seed_runtime(seed)
-        second = normalize(adapter.transcribe(audio_path).text, suite.normalization_version)
+        second = normalize(
+            adapter.transcribe_batch([audio_path])[0].text, suite.normalization_version
+        )
         if first != second:
             LOGGER.error(
                 "Repeated smoke transcriptions diverged",
@@ -63,8 +66,6 @@ def smoke_adapter(
                 "normalized_characters": len(first),
                 "normalized_sha256": output_digest,
                 "parameter_count": adapter.parameter_count,
-                "peak_cuda_reserved_bytes": torch.cuda.max_memory_reserved(),
-                "peak_cuda_allocated_bytes": torch.cuda.max_memory_allocated(),
             },
         )
     except Exception:

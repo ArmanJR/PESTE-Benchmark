@@ -25,10 +25,13 @@ class LeaderboardPlotRow(Protocol):
     def cer(self) -> float: ...
 
     @property
-    def memory_efficiency(self) -> float: ...
+    def audio_throughput_x(self) -> float: ...
 
     @property
-    def peak_cuda_reserved_gib(self) -> float: ...
+    def rtf(self) -> float: ...
+
+    @property
+    def speed_valid(self) -> bool: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,20 +47,20 @@ ACCURACY_METRICS = (
     MetricSpec("CER ↓", "percent", "cer", lambda row: row.cer * 100, lambda value: f"{value:.1f}%"),
     MetricSpec("WER ↓", "percent", "wer", lambda row: row.wer * 100, lambda value: f"{value:.1f}%"),
 )
-MEMORY_METRICS = (
+SPEED_METRICS = (
     MetricSpec(
-        "Peak CUDA reserved ↓",
-        "GiB",
-        "memory",
-        lambda row: row.peak_cuda_reserved_gib,
-        lambda value: f"{value:.2f}",
+        "Audio throughput ↑",
+        "× real time",
+        "throughput",
+        lambda row: row.audio_throughput_x,
+        lambda value: f"{value:.2f}×",
     ),
     MetricSpec(
-        "Word accuracy / GiB ↑",
-        "score",
-        "efficiency",
-        lambda row: row.memory_efficiency,
-        lambda value: f"{value:.1f}",
+        "RTF ↓",
+        "processing / audio",
+        "rtf",
+        lambda row: row.rtf,
+        lambda value: f"{value:.4f}",
     ),
 )
 
@@ -132,11 +135,11 @@ def _render_leaderboard_svg(
         "<style>",
         "  :root { color-scheme: light dark; --plot-text: #111827; --plot-muted: #6b7280;",
         "    --plot-grid: #d1d5db; --plot-track: #e5e7eb; --wer: #d97706;",
-        "    --cer: #2563eb; --memory: #7c3aed; --efficiency: #059669; }",
+        "    --cer: #2563eb; --throughput: #059669; --rtf: #7c3aed; }",
         "  @media (prefers-color-scheme: dark) { :root {",
         "    --plot-text: #f3f4f6; --plot-muted: #9ca3af; --plot-grid: #374151;",
         "    --plot-track: #1f2937; --wer: #fbbf24; --cer: #60a5fa;",
-        "    --memory: #c084fc; --efficiency: #34d399; } }",
+        "    --throughput: #34d399; --rtf: #c084fc; } }",
         (
             "  text { fill: #111827; fill: var(--plot-text); font-family: ui-sans-serif, "
             'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }'
@@ -155,8 +158,8 @@ def _render_leaderboard_svg(
         "  .track { fill: #e5e7eb; fill: var(--plot-track); }",
         "  .bar.wer { fill: #d97706; fill: var(--wer); }",
         "  .bar.cer { fill: #2563eb; fill: var(--cer); }",
-        "  .bar.memory { fill: #7c3aed; fill: var(--memory); }",
-        "  .bar.efficiency { fill: #059669; fill: var(--efficiency); }",
+        "  .bar.throughput { fill: #059669; fill: var(--throughput); }",
+        "  .bar.rtf { fill: #7c3aed; fill: var(--rtf); }",
         "  a:hover .model-label { text-decoration: underline; }",
         "</style>",
     ]
@@ -283,21 +286,22 @@ def render_accuracy_svg(
     )
 
 
-def render_memory_svg(
+def render_speed_svg(
     suite_id: str,
     rows: Sequence[LeaderboardPlotRow],
     repositories: dict[str, str] | None = None,
 ) -> str:
-    """Render the memory-efficiency plot in leaderboard order."""
-    ordered = sorted(rows, key=lambda row: (-row.memory_efficiency, row.wer, row.model_id))
+    """Render valid steady-state speed results in leaderboard order."""
+    ordered = sorted(
+        (row for row in rows if row.speed_valid),
+        key=lambda row: (-row.audio_throughput_x, row.cer, row.wer, row.model_id),
+    )
     return _render_leaderboard_svg(
         suite_id,
         ordered,
-        MEMORY_METRICS,
-        board="memory_efficiency",
-        accessible_title="PESTE accuracy per peak CUDA memory leaderboard",
-        accessible_description=(
-            "Compared by peak CUDA reserved memory and word accuracy per reserved GiB."
-        ),
+        SPEED_METRICS,
+        board="speed",
+        accessible_title="PESTE steady-state speed leaderboard",
+        accessible_description="Ranked by audio throughput; real-time factor is also shown.",
         repositories=repositories,
     )

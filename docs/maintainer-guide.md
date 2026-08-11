@@ -1,143 +1,112 @@
 # Maintainer guide
 
-This guide covers administrator-owned work: supporting checkpoints outside existing adapter
-contracts, changing runtime stacks, executing official evaluations, publishing results, and
-creating benchmark suites. Model contributors should use [Adding a model](adding-a-model.md).
+This guide covers adapter/runtime changes, speed calibration, official cloud sessions, result
+review, publication, and suite creation. Model contributors should use
+[Adding a model](adding-a-model.md).
 
-## Supporting an unsupported model
+## Adapter and runtime work
 
-Before implementing support, decide whether the checkpoint needs:
+An `ASRAdapter` implementation must:
 
-1. a small extension to an existing adapter without changing benchmark policy;
-2. a new adapter in an existing runtime; or
-3. a new runtime and adapter.
+- load the pinned checkpoint at native precision;
+- implement `transcribe_batch(audio_paths)` with real framework batching;
+- return exactly one ordered transcription per input;
+- report parameter count; and
+- release resources without hiding failures.
 
-Do not route a checkpoint through an adapter merely because it uses the same framework. Loading,
-audio preparation, prompting, decoding, output extraction, precision, and auxiliary artifacts must
-all satisfy a documented deterministic contract.
+Coordinate schema/registry, adapter, semantic policy, prefetch, runtime Dockerfile/lock, contract
+tests, and documentation. Use another runtime when dependency stacks conflict. Never add silent
+precision, decoder, batch, or dependency fallback.
 
-An adapter implementation must provide the interface in
-[`ASRAdapter`](../src/peste/adapters/base.py):
+Qualification requires mocked multi-item contracts, real offline smoke runs, singleton
+equivalence, output-order/cardinality checks, and an x86-64 runtime build using the pinned NGC
+digest. Runtime image builds assert distributed support and the expected PyTorch build, so no
+host-specific compatibility shim is allowed.
 
-- `load()` loads the exact pinned checkpoint at benchmark precision;
-- `transcribe()` accepts one canonical WAV and returns scoreable text plus optional structured
-  output;
-- `parameter_count` reports loaded checkpoint parameters; and
-- `close()` releases resources without hiding failures.
+## Reference Vast.ai session
 
-## Adapter integration checklist
-
-Adding an adapter normally requires coordinated changes to:
-
-- [`src/peste/schemas.py`](../src/peste/schemas.py) for allowed adapter/runtime identifiers;
-- [`src/peste/adapters/`](../src/peste/adapters) for the implementation;
-- [`src/peste/adapters/__init__.py`](../src/peste/adapters/__init__.py) for registration;
-- [`src/peste/validation.py`](../src/peste/validation.py) for fixed semantic policy;
-- [`src/peste/prefetch.py`](../src/peste/prefetch.py) for pinned auxiliary artifacts;
-- [`runtimes/`](../runtimes) for the Dockerfile, dependency manifest, and frozen lock;
-- [`tests/test_adapter_contracts.py`](../tests/test_adapter_contracts.py) for mocked loading and
-  inference contracts; and
-- documentation describing compatibility and policy.
-
-Use a separate runtime when dependency requirements conflict with existing frozen stacks or when
-framework initialization requires isolated compatibility work. Runtime images must pin their base
-image and dependencies and must install PESTE from the evaluated source tree.
-
-Never add silent fallback behavior. Unsupported precision, missing artifacts, incompatible APIs,
-nondeterminism, and OOM conditions must fail with structured diagnostics.
-
-## Adapter qualification
-
-Before a complete evaluation:
-
-1. validate schema and semantic policy;
-2. run mocked contract tests for loading arguments, device, dtype, generation, and output
-   extraction;
-3. build the ARM64 Jetson runtime image from the intended source revision;
-4. prefetch all checkpoint and auxiliary artifacts at immutable revisions;
-5. run the real one-sample smoke test twice and require identical normalized output; and
-6. inspect parameter count and peak memory reported by the smoke test.
-
-A smoke test establishes basic compatibility and determinism; it is not a benchmark score.
-
-## Official model evaluation
-
-Run official evaluations from a source revision containing the accepted model specification and
-adapter/runtime implementation.
+Configure the key once, then provision a VM:
 
 ```bash
-uv run --frozen peste doctor --host ssh://jetson
-uv run --frozen peste dataset prepare --suite fleurs-fa-ir-v1 --host ssh://jetson
-uv run --frozen peste model validate --model <model-id>
-uv run --frozen peste model validate --model <model-id> --host ssh://jetson
-uv run --frozen peste run --suite fleurs-fa-ir-v1 --model <model-id> --host ssh://jetson
+uv sync --frozen --all-groups
+uv run vastai set api-key <key>
+uv run peste cloud up --max-dph <cap>
+uv run peste cloud build
 ```
 
-Review the completed bundle before publication:
+The search policy preselects verified, reliable `RTX_6000Ada` offers with one GPU, VM support,
+direct networking, sufficient CPU/RAM/disk, 300 W capability, and the pinned driver. `cloud up`
+tries a bounded number of offers. Every rejected or failed instance is destroyed before the next
+offer; only the doctor defines acceptance.
 
-- status and complete sample count;
-- suite/model digests and source revision;
-- runtime image digest and hardware profile;
-- dependency, CUDA, and PyTorch fingerprints;
-- prediction sequence and sample IDs;
-- structured output retention where applicable;
-- WER/CER aggregates and edit totals;
-- deterministic WER/CER intervals and paired adjacent-model CER comparisons;
-- checkpoint bytes and parameter count;
-- peak CUDA reserved/allocated memory and process RSS; and
-- runner/container logs for warnings or fallbacks.
-
-Do not publish a score from a contributor's hardware or from an altered decoding/precision policy.
-
-## Publishing results
-
-The generator ignores a completely untracked `run.json`. After review, track the complete intended
-result bundle and regenerate the outputs:
+Use the printed direct SSH URL:
 
 ```bash
-uv run --frozen peste leaderboard --suite fleurs-fa-ir-v1
-uv run --frozen peste check-generated
+uv run peste dataset prepare --suite fleurs-fa-ir-v1 --host <ssh-url>
+uv run peste model validate --model <model-id> --host <ssh-url>
+uv run peste model profile-speed --model <model-id> --host <ssh-url>
 ```
 
-Review changes to the Markdown tables, SVG plot, JSON, CSV, and README block together. Publish the
-bundle and generated artifacts as one coherent result update. Do not edit derived scores or chart
-values manually.
+Commit the calibrated `speed_profile.batch_size` only after reviewing all candidates, the 85%
+headroom stress result, singleton conformance, and the 95% knee decision. Because it changes the
+model digest, perform calibration for every model before full runs. Rebuild both runtime images
+after committing the profiles: the images contain the model JSON files, and a stale image will not
+match the updated request digest.
 
-Only one successful official bundle may exist for a model ID within a suite. Do not overwrite a
-published bundle. A checkpoint revision or benchmark-policy change requires an explicit immutable
-identity/version decision before another result is published.
+```bash
+uv run peste validate-specs
+uv run peste cloud build
+```
 
-OOM and other failed official attempts may be retained with diagnostics, but they remain unranked.
-Do not change precision, decoder, or runtime policy after observing a failure merely to obtain a
-ranked score.
+Run exactly one fresh evaluation per model:
+
+```bash
+uv run peste run --suite fleurs-fa-ir-v1 --model <model-id> --host <ssh-url>
+```
+
+Resume exists for prediction recovery and accuracy only. A resumed bundle must show
+`speed.valid=false`; rerun from scratch for speed publication.
+
+Review status, spec/source/image digests, exact doctor facts, cloud provenance when available,
+prediction order/count, journal batch plan, two warmups, timing reciprocity, model facts, WER/CER
+aggregates, uncertainty, and structured logs. Confirm networking was disabled and caches read-only
+during inference.
+
+Finish every session with:
+
+```bash
+uv run peste cloud down
+```
+
+Destroying the VM erases remote state. Result copy-back must be complete first. Stopping is not a
+substitute because disk remains billable.
+
+## Publishing
+
+Track one complete successful bundle per model and regenerate all derived outputs together:
+
+```bash
+uv run peste leaderboard --suite fleurs-fa-ir-v1
+uv run peste check-generated
+```
+
+Review Markdown, accuracy/speed SVGs, JSON, CSV, and the README block. Do not edit derived metrics
+or plots directly. Failed attempts may remain as diagnostics but never rank.
 
 ## Creating a suite
 
-A new dataset or material change to an existing suite requires a new immutable suite ID and
-independent leaderboard. Before sealing a suite:
-
-- document source provenance and license;
-- pin every source revision;
-- define split counts and the evaluation split;
-- select and version the normalization policy;
-- materialize canonical audio;
-- reject empty normalized references;
-- generate and review the complete manifest; and
-- record the manifest SHA-256 in the suite specification.
-
-Use [`tools/freeze_suite.py`](../tools/freeze_suite.py) only for initial manifest creation. It
-refuses to overwrite an existing manifest. Published suite specifications, manifests, and results
-are immutable.
+A source, transcript, audio, split, or normalization change requires a new immutable suite ID and
+independent results. Pin provenance/license, define split counts, materialize canonical audio,
+reject empty normalized references, review the complete manifest, and store its SHA-256. Use
+[`tools/freeze_suite.py`](../tools/freeze_suite.py) only for initial creation; it refuses overwrite.
 
 ## Required validation
 
-Run the complete CI-equivalent validation before publishing source or result changes:
-
 ```bash
-uv run --frozen ruff format --check src tests tools runtimes/nemo/compat runtimes/transformers-compat
-uv run --frozen ruff check src tests tools runtimes/nemo/compat runtimes/transformers-compat
-uv run --frozen mypy
-uv run --frozen pytest
-uv run --frozen peste validate-specs
-uv run --frozen peste check-generated
+uv run ruff format --check src tests tools
+uv run ruff check src tests tools
+uv run mypy
+uv run pytest
+uv run peste validate-specs
+uv run peste check-generated
 ```

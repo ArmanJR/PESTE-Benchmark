@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from peste.adapters.base import ASRAdapter, Transcription
+from peste.adapters.base import ASRAdapter, Transcription, require_batch_cardinality
 
 LOGGER = logging.getLogger(__name__)
 
@@ -33,11 +33,17 @@ class NemoRnntAdapter(ASRAdapter):
         self.model.change_decoding_strategy(decoder_type="rnnt")
         self.model.eval()
 
-    def transcribe(self, audio_path: Path) -> Transcription:
-        hypotheses = self.model.transcribe([str(audio_path)], batch_size=1)
-        first = hypotheses[0]
-        text = first.text if hasattr(first, "text") else str(first)
-        return Transcription(text=text)
+    def transcribe_batch(self, audio_paths: list[Path]) -> list[Transcription]:
+        if not audio_paths:
+            raise ValueError("NeMo batch must contain at least one audio path")
+        hypotheses = self.model.transcribe(
+            [str(audio_path) for audio_path in audio_paths], batch_size=len(audio_paths)
+        )
+        transcriptions = [
+            Transcription(text=hypothesis.text if hasattr(hypothesis, "text") else str(hypothesis))
+            for hypothesis in hypotheses
+        ]
+        return require_batch_cardinality(self.spec.model_id, audio_paths, transcriptions)
 
     def close(self) -> None:
         self.model = None

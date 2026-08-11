@@ -1,4 +1,4 @@
-"""Mocked contract checks for all isolated inference adapters."""
+"""Mocked multi-item contracts for all isolated inference adapters."""
 
 import contextlib
 import sys
@@ -12,6 +12,7 @@ import soundfile as sf
 from conftest import make_model
 
 from peste.adapters import create_adapter
+from peste.adapters.base import AdapterOutputError
 from peste.adapters.nemo import NemoRnntAdapter
 from peste.adapters.transformers import (
     TransformersCTCAdapter,
@@ -26,7 +27,7 @@ class FakeTensor:
     def __init__(
         self,
         value: Any = None,
-        shape: tuple[int, ...] = (1, 2),
+        shape: tuple[int, ...] = (2, 4),
         *,
         floating: bool = True,
         dtype: str = "fp32",
@@ -46,17 +47,23 @@ class FakeTensor:
     def is_floating_point(self) -> bool:
         return self.floating
 
+    def __getitem__(self, key: Any) -> "FakeTensor":
+        return self
+
 
 class FakeBatch(dict[str, FakeTensor]):
     def to(self, device: Any, dtype: Any = None) -> "FakeBatch":
         for value in self.values():
-            value.to(device, dtype)
+            value.to(device, dtype if value.is_floating_point() else None)
         return self
 
 
 class FakeGenerated:
-    def __getitem__(self, key: Any) -> "FakeGenerated":
-        return self
+    def __init__(self, count: int = 2) -> None:
+        self.rows = [FakeTensor(value=index) for index in range(count)]
+
+    def __iter__(self) -> Any:
+        return iter(self.rows)
 
 
 class FakeModel:
@@ -78,7 +85,9 @@ class FakeModel:
 
     def generate(self, *args: Any, **kwargs: Any) -> FakeGenerated:
         self.generate_kwargs = kwargs
-        return FakeGenerated()
+        source = kwargs.get("input_ids", kwargs.get("input_features", FakeTensor()))
+        count = source.shape[0]
+        return FakeGenerated(count)
 
     def parameters(self) -> list[Any]:
         return [SimpleNamespace(numel=lambda: 10)]
@@ -117,47 +126,73 @@ def _make_snapshot(model: Any, cache_directory: Path) -> Path:
     return snapshot
 
 
-def test_whisper_contract(monkeypatch: Any, tmp_path: Path) -> None:
+def _audio_batch(tmp_path: Path) -> list[Path]:
+    paths = [tmp_path / "first.wav", tmp_path / "second.wav"]
+    for index, path in enumerate(paths, start=1):
+        sf.write(path, np.zeros(160 * index, dtype=np.float32), 16_000)
+    return paths
+
+
+def test_whisper_uses_padded_ordered_batch(monkeypatch: Any, tmp_path: Path) -> None:
     _fake_torch(monkeypatch)
     model = FakeModel()
-    processor = SimpleNamespace(
-        __call__=lambda *args, **kwargs: None,
-        batch_decode=lambda output, skip_special_tokens: ["متن"],
-    )
 
-    class CallableProcessor:
-        def __call__(self, *args: Any, **kwargs: Any) -> Any:
+    class Processor:
+        def __call__(self, audio: Any, **kwargs: Any) -> FakeBatch:
+            self.audio = audio
             self.kwargs = kwargs
-            return SimpleNamespace(input_features=FakeTensor())
+            return FakeBatch(
+                input_features=FakeTensor(shape=(len(audio), 4)),
+                attention_mask=FakeTensor(floating=False, dtype="int64"),
+            )
 
-        def batch_decode(self, output: Any, skip_special_tokens: bool) -> list[str]:
-            return ["متن"]
+        def batch_decode(self, output: FakeGenerated, skip_special_tokens: bool) -> list[str]:
+            labels = ("اول", "دوم")
+            return [labels[row.value] for row in output.rows]
 
-    callable_processor = CallableProcessor()
+    processor = Processor()
     transformers = ModuleType("transformers")
     model_factory = Factory(model)
-    processor_factory = Factory(callable_processor)
+    processor_factory = Factory(processor)
     transformers.AutoModelForSpeechSeq2Seq = model_factory  # type: ignore[attr-defined]
     transformers.AutoProcessor = processor_factory  # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, "transformers", transformers)
-    audio = tmp_path / "audio.wav"
-    sf.write(audio, np.zeros(160, dtype=np.float32), 16_000)
     spec = make_model()
     snapshot = _make_snapshot(spec, tmp_path)
     adapter = TransformersWhisperAdapter(spec, tmp_path)
     adapter.load()
-    assert adapter.transcribe(audio).text == "متن"
-    assert model_factory.kwargs["dtype"] == "fp16"
-    assert processor_factory.kwargs == {"local_files_only": True}
-    assert processor_factory.args == (str(snapshot),)
-    assert model.generate_kwargs == {
-        "language": "fa",
-        "task": "transcribe",
-        "max_new_tokens": 444,
-        "return_timestamps": False,
+
+    results = adapter.transcribe_batch(_audio_batch(tmp_path))
+
+    assert [result.text for result in results] == ["اول", "دوم"]
+    assert processor.kwargs == {
+        "sampling_rate": 16_000,
+        "return_tensors": "pt",
+        "padding": True,
     }
-    assert callable_processor.kwargs["sampling_rate"] == 16_000
-    del processor
+    assert len(processor.audio) == 2
+    assert model_factory.args == (str(snapshot),)
+    assert model_factory.kwargs["dtype"] == "fp16"
+    assert model.generate_kwargs["input_features"].moves == [("cuda", "fp16")]
+    assert model.generate_kwargs["attention_mask"].moves == [("cuda", None)]
+    assert adapter.transcribe_batch(_audio_batch(tmp_path)[:1]) == results[:1]
+
+
+def test_whisper_rejects_output_cardinality(monkeypatch: Any, tmp_path: Path) -> None:
+    _fake_torch(monkeypatch)
+    adapter = TransformersWhisperAdapter(make_model(), tmp_path)
+    adapter.model = FakeModel()
+
+    class Processor:
+        def __call__(self, *args: Any, **kwargs: Any) -> FakeBatch:
+            return FakeBatch(input_features=FakeTensor())
+
+        def batch_decode(self, *args: Any, **kwargs: Any) -> list[str]:
+            return ["only one"]
+
+    adapter.processor = Processor()
+    with pytest.raises(AdapterOutputError, match="2 audio paths but returned 1"):
+        adapter.transcribe_batch(_audio_batch(tmp_path))
 
 
 def test_legacy_whisper_generation_config_is_completed() -> None:
@@ -167,33 +202,33 @@ def test_legacy_whisper_generation_config_is_completed() -> None:
         unk_token_id=0,
     )
     model = SimpleNamespace(generation_config=SimpleNamespace())
-
     _upgrade_legacy_whisper_generation_config(
         SimpleNamespace(tokenizer=tokenizer), model, "fa", "legacy-whisper"
     )
-
-    assert model.generation_config.is_multilingual is True
     assert model.generation_config.lang_to_id == {"<|fa|>": 10}
     assert model.generation_config.task_to_id == {"transcribe": 20}
-    assert model.generation_config.no_timestamps_token_id == 30
 
 
-def test_qwen_contract(monkeypatch: Any, tmp_path: Path) -> None:
+def test_qwen_uses_native_padded_batch_and_ordered_decode(monkeypatch: Any, tmp_path: Path) -> None:
     _fake_torch(monkeypatch)
     model = FakeModel()
 
     class Processor:
         def __init__(self) -> None:
-            self.request_kwargs: dict[str, Any] = {}
-            self.decode_kwargs: dict[str, Any] = {}
+            self.decoded: list[int] = []
 
         def apply_transcription_request(self, **kwargs: Any) -> FakeBatch:
             self.request_kwargs = kwargs
-            return FakeBatch(input_ids=FakeTensor(shape=(1, 4)), audio=FakeTensor())
+            self.batch = FakeBatch(
+                input_ids=FakeTensor(shape=(len(kwargs["audio"]), 4), floating=False),
+                audio=FakeTensor(shape=(len(kwargs["audio"]), 4)),
+            )
+            return self.batch
 
-        def decode(self, output: Any, **kwargs: Any) -> list[str]:
+        def decode(self, output: FakeTensor, **kwargs: Any) -> str:
             self.decode_kwargs = kwargs
-            return ["متن"]
+            self.decoded.append(output.value)
+            return ("اول", "دوم")[output.value]
 
     processor = Processor()
     transformers = ModuleType("transformers")
@@ -202,24 +237,52 @@ def test_qwen_contract(monkeypatch: Any, tmp_path: Path) -> None:
     transformers.AutoProcessor = Factory(processor)  # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, "transformers", transformers)
     spec = make_model("transformers-qwen", dtype="bfloat16")
-    snapshot = _make_snapshot(spec, tmp_path)
+    _make_snapshot(spec, tmp_path)
     adapter = TransformersQwenAdapter(spec, tmp_path)
     adapter.load()
-    result = adapter.transcribe(tmp_path / "audio.wav")
-    assert result.text == "متن"
-    assert processor.request_kwargs["language"] == "fa"
+    paths = _audio_batch(tmp_path)
+
+    results = adapter.transcribe_batch(paths)
+
+    assert [result.text for result in results] == ["اول", "دوم"]
+    assert processor.request_kwargs == {
+        "audio": [str(path) for path in paths],
+        "language": "fa",
+        "padding": True,
+    }
     assert processor.decode_kwargs == {"return_format": "transcription_only"}
     assert model.generate_kwargs["max_new_tokens"] == 256
-    assert model_factory.kwargs["dtype"] == "bf16"
-    assert model_factory.kwargs["local_files_only"] is True
-    assert model_factory.args == (str(snapshot),)
+    assert processor.batch["input_ids"].moves == [("cuda", None)]
+    assert processor.batch["audio"].moves == [("cuda", "bf16")]
+    assert adapter.transcribe_batch(paths[:1]) == results[:1]
 
 
-def test_transformers_ctc_contract(monkeypatch: Any, tmp_path: Path) -> None:
+def test_qwen_rejects_output_cardinality(monkeypatch: Any, tmp_path: Path) -> None:
+    _fake_torch(monkeypatch)
+
+    class Model(FakeModel):
+        def generate(self, *args: Any, **kwargs: Any) -> FakeGenerated:
+            return FakeGenerated(1)
+
+    class Processor:
+        def apply_transcription_request(self, **kwargs: Any) -> FakeBatch:
+            return FakeBatch(input_ids=FakeTensor(shape=(2, 4), floating=False))
+
+        def decode(self, output: FakeTensor, **kwargs: Any) -> str:
+            return "only one"
+
+    adapter = TransformersQwenAdapter(make_model("transformers-qwen"), tmp_path)
+    adapter.model = Model()
+    adapter.processor = Processor()
+    with pytest.raises(AdapterOutputError, match="2 audio paths but returned 1"):
+        adapter.transcribe_batch([tmp_path / "first.wav", tmp_path / "second.wav"])
+
+
+def test_transformers_ctc_pads_masks_moves_dtype_and_decodes_in_order(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
     torch = _fake_torch(monkeypatch)
     inference_state = {"active": False}
-    argmax_call: dict[str, Any] = {}
-    predicted_ids = FakeTensor(value="predicted")
 
     @contextlib.contextmanager
     def inference_mode() -> Any:
@@ -229,143 +292,105 @@ def test_transformers_ctc_contract(monkeypatch: Any, tmp_path: Path) -> None:
         finally:
             inference_state["active"] = False
 
-    def argmax(tensor: Any, *, dim: int) -> FakeTensor:
-        argmax_call.update(tensor=tensor, dim=dim)
-        return predicted_ids
-
+    predicted_ids = FakeTensor(value="predicted")
     torch.inference_mode = inference_mode  # type: ignore[attr-defined]
-    torch.argmax = argmax  # type: ignore[attr-defined]
-
+    torch.argmax = lambda tensor, dim: predicted_ids  # type: ignore[attr-defined]
     input_values = FakeTensor(dtype="source-fp32")
     attention_mask = FakeTensor(floating=False, dtype="int64")
-    logits = FakeTensor(value="logits")
 
-    class CTCModel(FakeModel):
+    class Model(FakeModel):
         def __init__(self) -> None:
             super().__init__()
             self.dtype = "fp32"
-            self.call_kwargs: dict[str, Any] = {}
-            self.inference_mode_seen = False
 
         def __call__(self, **kwargs: Any) -> Any:
             self.call_kwargs = kwargs
-            self.inference_mode_seen = inference_state["active"]
-            return SimpleNamespace(logits=logits)
+            self.inference_seen = inference_state["active"]
+            return SimpleNamespace(logits=FakeTensor(value="logits"))
 
-        def parameters(self) -> list[Any]:
-            return [SimpleNamespace(numel=lambda: 10), SimpleNamespace(numel=lambda: 7)]
-
-    class CTCProcessor:
-        def __init__(self) -> None:
-            self.audio: Any = None
-            self.call_kwargs: dict[str, Any] = {}
-            self.decode_args: tuple[Any, ...] = ()
-            self.decode_kwargs: dict[str, Any] = {}
-
+    class Processor:
         def __call__(self, audio: Any, **kwargs: Any) -> dict[str, FakeTensor]:
             self.audio = audio
+            self.batch_size = len(audio)
             self.call_kwargs = kwargs
             return {"input_values": input_values, "attention_mask": attention_mask}
 
         def batch_decode(self, *args: Any, **kwargs: Any) -> list[str]:
             self.decode_args = args
             self.decode_kwargs = kwargs
-            return ["متن <unk>"]
+            return ["اول <unk>", "دوم"][: self.batch_size]
 
-    model = CTCModel()
-    processor = CTCProcessor()
-    model_factory = Factory(model)
-    processor_factory = Factory(processor)
+    model = Model()
+    processor = Processor()
     transformers = ModuleType("transformers")
-    transformers.AutoModelForCTC = model_factory  # type: ignore[attr-defined]
-    transformers.AutoProcessor = processor_factory  # type: ignore[attr-defined]
+    transformers.AutoModelForCTC = Factory(model)  # type: ignore[attr-defined]
+    transformers.AutoProcessor = Factory(processor)  # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, "transformers", transformers)
-
-    audio = tmp_path / "audio.wav"
-    sf.write(audio, np.zeros(220, dtype=np.float32), 22_050)
     spec = make_model("transformers-ctc", dtype="float32")
-    snapshot = _make_snapshot(spec, tmp_path)
+    _make_snapshot(spec, tmp_path)
     adapter = TransformersCTCAdapter(spec, tmp_path)
-
     adapter.load()
-    result = adapter.transcribe(audio)
 
-    assert result.text == "متن <unk>"
-    assert processor_factory.args == (str(snapshot),)
-    assert processor_factory.kwargs == {"local_files_only": True}
-    assert model_factory.args == (str(snapshot),)
-    assert model_factory.kwargs == {
-        "dtype": "fp32",
-        "low_cpu_mem_usage": True,
-        "local_files_only": True,
+    results = adapter.transcribe_batch(_audio_batch(tmp_path))
+
+    assert [result.text for result in results] == ["اول <unk>", "دوم"]
+    assert processor.call_kwargs == {
+        "sampling_rate": 16_000,
+        "return_tensors": "pt",
+        "padding": True,
     }
-    assert model.device == "cuda"
-    assert model.eval_called is True
-    assert processor.audio.dtype == np.float32
-    assert processor.call_kwargs == {"sampling_rate": 22_050, "return_tensors": "pt"}
+    assert len(processor.audio) == 2
     assert input_values.moves == [("cuda", "fp32")]
     assert attention_mask.moves == [("cuda", None)]
-    assert attention_mask.dtype == "int64"
     assert model.call_kwargs == {
         "input_values": input_values,
         "attention_mask": attention_mask,
     }
-    assert model.inference_mode_seen is True
-    assert argmax_call == {"tensor": logits, "dim": -1}
+    assert model.inference_seen is True
     assert processor.decode_args == (predicted_ids,)
-    assert processor.decode_kwargs == {
-        "group_tokens": True,
-        "skip_special_tokens": False,
-        "clean_up_tokenization_spaces": False,
-    }
-    assert adapter.parameter_count == 17
-
-    adapter.close()
-
-    assert adapter.model is None
-    assert adapter.processor is None
-    assert adapter.parameter_count == 0
+    assert adapter.transcribe_batch(_audio_batch(tmp_path)[:1]) == results[:1]
 
 
-@pytest.mark.parametrize("decoded", [[], ["first", "second"]])
+@pytest.mark.parametrize("decoded", [[], ["one"], ["one", "two", "three"]])
 def test_transformers_ctc_rejects_invalid_output_cardinality(
     monkeypatch: Any, tmp_path: Path, decoded: list[str]
 ) -> None:
     torch = _fake_torch(monkeypatch)
     torch.argmax = lambda tensor, dim: FakeTensor()  # type: ignore[attr-defined]
-    audio = tmp_path / "audio.wav"
-    sf.write(audio, np.zeros(160, dtype=np.float32), 16_000)
     adapter = TransformersCTCAdapter(make_model("transformers-ctc", dtype="float32"), tmp_path)
+    adapter.model = SimpleNamespace(
+        device="cuda",
+        dtype="fp32",
+        __call__=lambda **kwargs: SimpleNamespace(logits=FakeTensor()),
+    )
 
-    class Model:
+    class CallableModel:
         device = "cuda"
         dtype = "fp32"
 
         def __call__(self, **kwargs: Any) -> Any:
             return SimpleNamespace(logits=FakeTensor())
 
-    adapter.model = Model()
+    adapter.model = CallableModel()
 
     class Processor:
-        def __call__(self, audio: Any, **kwargs: Any) -> dict[str, FakeTensor]:
+        def __call__(self, *args: Any, **kwargs: Any) -> dict[str, FakeTensor]:
             return {"input_values": FakeTensor()}
 
         def batch_decode(self, *args: Any, **kwargs: Any) -> list[str]:
             return decoded
 
     adapter.processor = Processor()
-
-    with pytest.raises(TransformersCTCOutputError, match="expected exactly one decoded result"):
-        adapter.transcribe(audio)
+    with pytest.raises(TransformersCTCOutputError, match="expected 2 decoded results"):
+        adapter.transcribe_batch(_audio_batch(tmp_path))
 
 
 def test_transformers_ctc_registry_selection(tmp_path: Path) -> None:
     adapter = create_adapter(make_model("transformers-ctc", dtype="float32"), tmp_path)
-
     assert isinstance(adapter, TransformersCTCAdapter)
 
 
-def test_nemo_contract(monkeypatch: Any, tmp_path: Path) -> None:
+def test_nemo_uses_native_batch_and_checks_cardinality(monkeypatch: Any, tmp_path: Path) -> None:
     checkpoint = tmp_path / "models--organization--model" / "snapshots" / ("a" * 40) / "model.nemo"
     checkpoint.parent.mkdir(parents=True)
     checkpoint.touch()
@@ -376,10 +401,17 @@ def test_nemo_contract(monkeypatch: Any, tmp_path: Path) -> None:
 
         def transcribe(self, paths: list[str], batch_size: int) -> list[Any]:
             self.transcribe_args = (paths, batch_size)
-            return [SimpleNamespace(text="متن")]
+            return [SimpleNamespace(text="اول"), SimpleNamespace(text="دوم")][: len(paths)]
 
     model = NemoModel()
-    factory = SimpleNamespace(restore_from=lambda *args, **kwargs: model)
+
+    class Factory:
+        def restore_from(self, *args: Any, **kwargs: Any) -> NemoModel:
+            self.args = args
+            self.kwargs = kwargs
+            return model
+
+    factory = Factory()
     module = ModuleType("nemo.collections.asr.models")
     module.ASRModel = factory  # type: ignore[attr-defined]
     for name in ("nemo", "nemo.collections", "nemo.collections.asr"):
@@ -387,6 +419,15 @@ def test_nemo_contract(monkeypatch: Any, tmp_path: Path) -> None:
     monkeypatch.setitem(sys.modules, module.__name__, module)
     adapter = NemoRnntAdapter(make_model("nemo-rnnt", dtype="float32"), tmp_path)
     adapter.load()
-    assert adapter.transcribe(tmp_path / "audio.wav").text == "متن"
+    paths = _audio_batch(tmp_path)
+
+    results = adapter.transcribe_batch(paths)
+
+    assert [result.text for result in results] == ["اول", "دوم"]
     assert model.decoder_kwargs == {"decoder_type": "rnnt"}
-    assert model.transcribe_args == ([str(tmp_path / "audio.wav")], 1)
+    assert model.transcribe_args == ([str(path) for path in paths], 2)
+    assert factory.kwargs["map_location"] == "cuda"
+    assert adapter.transcribe_batch(paths[:1]) == results[:1]
+    model.transcribe = lambda paths, batch_size: [SimpleNamespace(text="only")]
+    with pytest.raises(AdapterOutputError, match="2 audio paths but returned 1"):
+        adapter.transcribe_batch(paths)

@@ -22,9 +22,9 @@ jobs:
       - name: Sync frozen environment
         run: uv sync --frozen --all-groups
       - name: Ruff format
-        run: uv run --frozen ruff format --check src tests tools runtimes/nemo/compat runtimes/transformers-compat
+        run: uv run --frozen ruff format --check src tests tools
       - name: Ruff lint
-        run: uv run --frozen ruff check src tests tools runtimes/nemo/compat runtimes/transformers-compat
+        run: uv run --frozen ruff check src tests tools
       - name: Mypy
         run: uv run --frozen mypy
       - name: Pytest

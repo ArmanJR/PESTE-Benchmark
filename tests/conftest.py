@@ -6,7 +6,14 @@ from pathlib import Path
 import pytest
 
 from peste.digests import canonical_json, sha256_bytes
-from peste.schemas import DatasetSource, ManifestRow, ModelSpec, RuntimeSpec, SuiteSpec
+from peste.schemas import (
+    DatasetSource,
+    ManifestRow,
+    ModelSpec,
+    RuntimeSpec,
+    SpeedProfile,
+    SuiteSpec,
+)
 
 
 def make_model(
@@ -24,13 +31,12 @@ def make_model(
         "transformers-qwen": {"max_new_tokens": 256},
         "transformers-ctc": {
             "decoder": "greedy",
-            "batch_size": 1,
             "external_language_model": False,
             "group_tokens": True,
             "skip_special_tokens": False,
             "clean_up_tokenization_spaces": False,
         },
-        "nemo-rnnt": {"decoder": "rnnt", "batch_size": 1, "external_language_model": False},
+        "nemo-rnnt": {"decoder": "rnnt", "external_language_model": False},
     }
     runtime_name = {
         "transformers-whisper": "modern",
@@ -40,7 +46,7 @@ def make_model(
     }[adapter]
     return ModelSpec.model_validate(
         {
-            "schema_version": 1,
+            "schema_version": 2,
             "model_id": model_id,
             "repository": "organization/model",
             "revision": "a" * 40,
@@ -53,6 +59,10 @@ def make_model(
                 name=runtime_name,
                 image=f"peste-{runtime_name}:test",
                 dockerfile=f"runtimes/{runtime_name}/Dockerfile",
+            ),
+            "speed_profile": SpeedProfile(
+                hardware_profile_id="rtx-6000-ada-v1",
+                batch_size=2,
             ),
         }
     )
@@ -67,7 +77,7 @@ def tiny_suite(tmp_path: Path) -> tuple[SuiteSpec, Path, list[ManifestRow]]:
         for index in range(count):
             rows.append(
                 ManifestRow(
-                    schema_version=1,
+                    schema_version=2,
                     sample_id=f"{split}-{index:06d}",
                     split=split,
                     upstream_row_index=index,
@@ -84,7 +94,7 @@ def tiny_suite(tmp_path: Path) -> tuple[SuiteSpec, Path, list[ManifestRow]]:
     encoded = b"".join(canonical_json(row.model_dump(mode="json")) for row in rows)
     (suite_directory / "manifest.jsonl").write_bytes(encoded)
     suite = SuiteSpec(
-        schema_version=1,
+        schema_version=2,
         suite_id="tiny-suite-v1",
         dataset=DatasetSource(
             repository="google/fleurs",

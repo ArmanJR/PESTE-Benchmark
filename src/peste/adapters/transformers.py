@@ -6,14 +6,19 @@ from typing import Any
 
 import soundfile as sf
 
-from peste.adapters.base import ASRAdapter, Transcription
+from peste.adapters.base import (
+    AdapterOutputError,
+    ASRAdapter,
+    Transcription,
+    require_batch_cardinality,
+)
 from peste.prefetch import pinned_snapshot_directory
 
 LOGGER = logging.getLogger(__name__)
 
 
-class TransformersCTCOutputError(RuntimeError):
-    """Raised when a CTC processor violates the single-sample decode contract."""
+class TransformersCTCOutputError(AdapterOutputError):
+    """Raised when a CTC processor violates the batched decode contract."""
 
 
 def _torch_dtype(name: str) -> Any:
@@ -24,22 +29,6 @@ def _torch_dtype(name: str) -> Any:
         "bfloat16": torch.bfloat16,
         "float32": torch.float32,
     }[name]
-
-
-def _configure_distributed_disabled_loading() -> None:
-    """Complete the narrow runtime shim used by distributed-disabled Jetson wheels."""
-    import torch
-
-    distributed = getattr(torch, "distributed", None)
-    if distributed is None or distributed.is_available():
-        return
-
-    from transformers import core_model_loading
-    from transformers.distributed.sharding_utils import DTensor
-
-    if not hasattr(core_model_loading, "DTensor"):
-        core_model_loading.DTensor = DTensor
-        LOGGER.debug("Configured Transformers for non-distributed checkpoint loading")
 
 
 def _upgrade_legacy_whisper_generation_config(
@@ -78,7 +67,6 @@ class TransformersWhisperAdapter(ASRAdapter):
     def load(self) -> None:
         from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
 
-        _configure_distributed_disabled_loading()
         LOGGER.info("Loading Whisper checkpoint", extra={"model": self.spec.model_id})
         snapshot = pinned_snapshot_directory(self.spec, self.cache_directory)
         common = {"local_files_only": True}
@@ -96,24 +84,39 @@ class TransformersWhisperAdapter(ASRAdapter):
             self.processor, self.model, self.spec.language, self.spec.model_id
         )
 
-    def transcribe(self, audio_path: Path) -> Transcription:
+    def transcribe_batch(self, audio_paths: list[Path]) -> list[Transcription]:
         import torch
 
-        audio, sample_rate = sf.read(audio_path, dtype="float32")
-        inputs = self.processor(audio, sampling_rate=sample_rate, return_tensors="pt")
-        input_features = inputs.input_features.to(
-            "cuda", dtype=_torch_dtype(self.spec.native_dtype)
+        if not audio_paths:
+            raise ValueError("Whisper batch must contain at least one audio path")
+        decoded_audio = [sf.read(path, dtype="float32") for path in audio_paths]
+        sample_rates = {sample_rate for _, sample_rate in decoded_audio}
+        if len(sample_rates) != 1:
+            raise ValueError("Whisper batch audio must use one sample rate")
+        sample_rate = sample_rates.pop()
+        inputs = self.processor(
+            [audio for audio, _ in decoded_audio],
+            sampling_rate=sample_rate,
+            return_tensors="pt",
+            padding=True,
         )
+        model_inputs = {
+            name: tensor.to("cuda", dtype=_torch_dtype(self.spec.native_dtype))
+            if tensor.is_floating_point()
+            else tensor.to("cuda")
+            for name, tensor in inputs.items()
+        }
         with torch.inference_mode():
             generated = self.model.generate(
-                input_features,
+                **model_inputs,
                 language=self.spec.language,
                 task="transcribe",
                 max_new_tokens=int(self.spec.generation["max_new_tokens"]),
                 return_timestamps=False,
             )
-        text = self.processor.batch_decode(generated, skip_special_tokens=True)[0]
-        return Transcription(text=text)
+        decoded = self.processor.batch_decode(generated, skip_special_tokens=True)
+        transcriptions = [Transcription(text=text) for text in decoded]
+        return require_batch_cardinality(self.spec.model_id, audio_paths, transcriptions)
 
     def close(self) -> None:
         self.model = None
@@ -135,7 +138,6 @@ class TransformersQwenAdapter(ASRAdapter):
     def load(self) -> None:
         from transformers import AutoModelForMultimodalLM, AutoProcessor
 
-        _configure_distributed_disabled_loading()
         LOGGER.info("Loading Qwen3-ASR checkpoint", extra={"model": self.spec.model_id})
         snapshot = pinned_snapshot_directory(self.spec, self.cache_directory)
         common = {"local_files_only": True}
@@ -148,11 +150,15 @@ class TransformersQwenAdapter(ASRAdapter):
         ).to("cuda")
         self.model.eval()
 
-    def transcribe(self, audio_path: Path) -> Transcription:
+    def transcribe_batch(self, audio_paths: list[Path]) -> list[Transcription]:
         import torch
 
+        if not audio_paths:
+            raise ValueError("Qwen batch must contain at least one audio path")
         request = self.processor.apply_transcription_request(
-            audio=str(audio_path), language=self.spec.language
+            audio=[str(path) for path in audio_paths],
+            language=self.spec.language,
+            padding=True,
         ).to(self.model.device, self.model.dtype)
         with torch.inference_mode():
             generated = self.model.generate(
@@ -160,10 +166,14 @@ class TransformersQwenAdapter(ASRAdapter):
                 max_new_tokens=int(self.spec.generation["max_new_tokens"]),
             )
         input_length = request["input_ids"].shape[-1]
-        decoded = self.processor.decode(
-            generated[:, input_length:], return_format="transcription_only"
-        )[0]
-        return Transcription(text=decoded)
+        decoded = [
+            self.processor.decode(output[input_length:], return_format="transcription_only")
+            for output in generated
+        ]
+        if not all(isinstance(text, str) for text in decoded):
+            raise AdapterOutputError(f"Qwen model {self.spec.model_id} returned non-text output")
+        transcriptions = [Transcription(text=text) for text in decoded]
+        return require_batch_cardinality(self.spec.model_id, audio_paths, transcriptions)
 
     def close(self) -> None:
         self.model = None
@@ -177,7 +187,7 @@ class TransformersQwenAdapter(ASRAdapter):
 
 
 class TransformersCTCAdapter(ASRAdapter):
-    """Standard Transformers CTC inference with fixed single-sample greedy decoding."""
+    """Standard Transformers CTC inference with fixed batched greedy decoding."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -187,7 +197,6 @@ class TransformersCTCAdapter(ASRAdapter):
     def load(self) -> None:
         from transformers import AutoModelForCTC, AutoProcessor
 
-        _configure_distributed_disabled_loading()
         LOGGER.info(
             "Loading Transformers CTC checkpoint",
             extra={
@@ -220,18 +229,29 @@ class TransformersCTCAdapter(ASRAdapter):
             },
         )
 
-    def transcribe(self, audio_path: Path) -> Transcription:
+    def transcribe_batch(self, audio_paths: list[Path]) -> list[Transcription]:
         import torch
 
-        audio, sample_rate = sf.read(audio_path, dtype="float32")
+        if not audio_paths:
+            raise ValueError("CTC batch must contain at least one audio path")
+        decoded_audio = [sf.read(path, dtype="float32") for path in audio_paths]
+        sample_rates = {sample_rate for _, sample_rate in decoded_audio}
+        if len(sample_rates) != 1:
+            raise ValueError("CTC batch audio must use one sample rate")
+        sample_rate = sample_rates.pop()
         LOGGER.debug(
             "Preparing Transformers CTC inference",
-            extra={"model": self.spec.model_id, "sample_rate": sample_rate},
+            extra={
+                "model": self.spec.model_id,
+                "sample_rate": sample_rate,
+                "batch_size": len(audio_paths),
+            },
         )
         processor_inputs = self.processor(
-            audio,
+            [audio for audio, _ in decoded_audio],
             sampling_rate=sample_rate,
             return_tensors="pt",
+            padding=True,
         )
         model_inputs = {
             name: tensor.to(self.model.device, dtype=self.model.dtype)
@@ -252,22 +272,22 @@ class TransformersCTCAdapter(ASRAdapter):
             skip_special_tokens=False,
             clean_up_tokenization_spaces=False,
         )
-        if not isinstance(decoded, list | tuple) or len(decoded) != 1:
+        if not isinstance(decoded, list | tuple) or len(decoded) != len(audio_paths):
             output_count = len(decoded) if isinstance(decoded, list | tuple) else "non-sequence"
             raise TransformersCTCOutputError(
-                f"Transformers CTC model {self.spec.model_id} expected exactly one decoded "
-                f"result, received {output_count}"
+                f"Transformers CTC model {self.spec.model_id} expected {len(audio_paths)} "
+                f"decoded results, received {output_count}"
             )
-        text = decoded[0]
-        if not isinstance(text, str):
+        if not all(isinstance(text, str) for text in decoded):
             raise TransformersCTCOutputError(
-                f"Transformers CTC model {self.spec.model_id} returned a non-text decoded result"
+                f"Transformers CTC model {self.spec.model_id} returned non-text decoded results"
             )
         LOGGER.debug(
             "Completed Transformers CTC inference",
             extra={"model": self.spec.model_id, "decoded_results": len(decoded)},
         )
-        return Transcription(text=text)
+        transcriptions = [Transcription(text=text) for text in decoded]
+        return require_batch_cardinality(self.spec.model_id, audio_paths, transcriptions)
 
     def close(self) -> None:
         LOGGER.info("Closing Transformers CTC adapter", extra={"model": self.spec.model_id})

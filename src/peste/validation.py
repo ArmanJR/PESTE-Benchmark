@@ -19,7 +19,6 @@ def validate_model_policy(model: ModelSpec, root: Path) -> None:
     elif model.adapter == "transformers-ctc":
         expected = {
             "decoder": "greedy",
-            "batch_size": 1,
             "external_language_model": False,
             "group_tokens": True,
             "skip_special_tokens": False,
@@ -28,6 +27,6 @@ def validate_model_policy(model: ModelSpec, root: Path) -> None:
         if model.language != "fa" or model.runtime.name != "modern" or model.generation != expected:
             raise ValueError(f"Transformers CTC policy mismatch for {model.model_id}")
     elif model.adapter == "nemo-rnnt":
-        expected = {"decoder": "rnnt", "batch_size": 1, "external_language_model": False}
+        expected = {"decoder": "rnnt", "external_language_model": False}
         if model.generation != expected:
             raise ValueError(f"NeMo policy mismatch for {model.model_id}")

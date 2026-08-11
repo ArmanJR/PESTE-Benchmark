@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "model_id": "nvidia-fastconformer-fa",
   "repository": "nvidia/stt_fa_fastconformer_hybrid_large",
   "revision": "249cf5bf70dda7220a60ddeeecff2f6aad8e1784",
@@ -7,6 +7,7 @@
   "native_dtype": "float32",
   "license": "CC-BY-4.0",
   "language": "fa",
-  "generation": {"decoder": "rnnt", "batch_size": 1, "external_language_model": false},
-  "runtime": {"name": "nemo", "image": "peste-nemo:1.0.0", "dockerfile": "runtimes/nemo/Dockerfile"}
+  "generation": {"decoder": "rnnt", "external_language_model": false},
+  "runtime": {"name": "nemo", "image": "peste-nemo:2.0.0", "dockerfile": "runtimes/nemo/Dockerfile"},
+  "speed_profile": {"hardware_profile_id": "rtx-6000-ada-v1", "batch_size": 1}
 }

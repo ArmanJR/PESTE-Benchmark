@@ -1,17 +1,27 @@
 # Version roadmap
 
-## Version 1
+## Version 1 — completed
 
-- [x] Pin the `google/fleurs` Persian `fa_ir` dataset revision.
-- [x] Seal the 4,341-row manifest and 871-recording evaluation split.
-- [x] Implement and register the immutable `fa-v1` normalization policy.
-- [x] Run the supported models on the official Jetson hardware profile.
-- [x] Publish CER, WER, uncertainty intervals, resource measurements, predictions, and logs.
-- [x] Rank accuracy primarily by CER to reduce Persian spacing sensitivity.
-- [x] Document ZWNJ-policy sensitivity.
-- [x] Document the known digit-versus-spelled-number formatting bias.
+- [x] Pin the FLEURS Persian dataset revision and seal the 4,341-row manifest.
+- [x] Publish the 871-recording `fa-v1` accuracy benchmark and uncertainty analysis.
+- [x] Preserve the release and retired results at git tag `1.0.0`.
 
-## Version 2
+## Version 2 — current release
+
+- [x] Rebase the hardware contract on one NVIDIA RTX 6000 Ada Generation 48 GB GPU.
+- [x] Replace singleton adapter calls with deterministic per-model native batching.
+- [x] Replace resource ranking with steady-state throughput and RTF.
+- [x] Add batch calibration, timing journals, and resumed-speed invalidation.
+- [x] Add the Vast.ai VM reference acquisition/build lifecycle.
+- [x] Move persisted specifications, manifests, requests, predictions, bundles, and generated JSON
+  to schema 2.
+- [x] Preserve `fleurs-fa-ir-v1`, `fa-v1`, checkpoint revisions, accuracy metrics, uncertainty, and
+  paired comparisons.
+- [ ] Calibrate all eight model batch sizes on an official host.
+- [ ] Produce one fresh uninterrupted schema-2 bundle for every model.
+- [ ] Publish the complete RTX accuracy and speed boards.
+
+## Version 3 — `fa-v2` normalization milestone
 
 ### Implemented groundwork
 
@@ -22,8 +32,8 @@
 - [x] Normalize clock-like `HH:MM` expressions and remaining colon-separated ratios.
 - [x] Normalize slash fractions with denominators from 2 through 10.
 - [x] Normalize the vulgar fractions `¼`, `½`, and `¾`.
-- [x] Retain digit sequences at or above 10^18 as one ASCII-canonical token and emit a
-  structured warning.
+- [x] Retain digit sequences at or above 10^18 as one ASCII-canonical token and emit a structured
+  warning.
 - [x] Make the runner score with the normalization version declared by its suite.
 - [x] Add a `fleurs-fa-ir-v2` suite declaration that reuses the pinned v1 manifest.
 - [x] Add regression tests for normalization, metric equivalence, manifest reuse, and runner
@@ -44,8 +54,8 @@
 
 ## Notes
 
-- Published suite, normalization, and result contracts are immutable.
-- Scores from different normalization versions must not be mixed in one leaderboard.
+- Published suite, normalization, model, hardware-profile, and result contracts are immutable.
+- Scores from different normalization or hardware-profile versions must not share a leaderboard.
 - Hyphen-separated numbers are currently spelled independently without an inferred connector.
-- The existing v2 suite declaration points to the exact v1 manifest and changes only the
-  normalization version.
+- The experimental `fleurs-fa-ir-v2` declaration changes normalization only and is not the active
+  release suite.

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="900" height="92" viewBox="0 0 900 92" role="img" aria-labelledby="leaderboard-plot-title leaderboard-plot-description">
-<title id="leaderboard-plot-title">PESTE normalized accuracy leaderboard</title>
-<desc id="leaderboard-plot-description">0 ranked models from fleurs-fa-ir-v1. Ranked by whitespace-insensitive character error rate; word error rate is also shown.</desc>
+<title id="leaderboard-plot-title">PESTE steady-state speed leaderboard</title>
+<desc id="leaderboard-plot-description">0 ranked models from fleurs-fa-ir-v1. Ranked by audio throughput; real-time factor is also shown.</desc>
 <style>
   :root { color-scheme: light dark; --plot-text: #111827; --plot-muted: #6b7280;
     --plot-grid: #d1d5db; --plot-track: #e5e7eb; --wer: #d97706;

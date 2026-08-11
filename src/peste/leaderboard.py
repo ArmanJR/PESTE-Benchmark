@@ -11,7 +11,7 @@ from pathlib import Path
 
 from peste.constants import DEFAULT_SEED, PROJECT_ROOT
 from peste.digests import canonical_json
-from peste.plotting import render_accuracy_svg, render_memory_svg
+from peste.plotting import render_accuracy_svg, render_speed_svg
 from peste.schemas import PredictionRecord, RunBundle, RunStatus, SuiteSpec
 from peste.specs import discover_models, spec_digest
 from peste.uncertainty import (
@@ -22,7 +22,6 @@ from peste.uncertainty import (
 )
 
 LOGGER = logging.getLogger(__name__)
-GIB = 1024**3
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,10 +35,12 @@ class LeaderboardRow:
     cer_ci_lower: float
     cer_ci_upper: float
     word_accuracy_pct: float
-    memory_efficiency: float
-    peak_cuda_reserved_gib: float
-    peak_cuda_allocated_gib: float
-    peak_process_rss_gib: float
+    speed_valid: bool
+    batch_size: int
+    audio_throughput_x: float
+    rtf: float
+    processing_seconds: float
+    total_audio_seconds: float
     checkpoint_gib: float
     parameter_count: int
     native_dtype: str
@@ -171,7 +172,8 @@ def collect_rows(
             raise ValueError(f"WER aggregate does not match predictions for {bundle.run_id}")
         if not math.isclose(cer_estimate.point, bundle.aggregates.cer, rel_tol=0.0, abs_tol=1e-12):
             raise ValueError(f"CER aggregate does not match predictions for {bundle.run_id}")
-        memory = bundle.memory
+        speed = bundle.speed
+        facts = bundle.model_facts
         rows.append(
             LeaderboardRow(
                 model_id=bundle.model_id,
@@ -183,13 +185,15 @@ def collect_rows(
                 cer_ci_lower=cer_estimate.lower,
                 cer_ci_upper=cer_estimate.upper,
                 word_accuracy_pct=bundle.aggregates.word_accuracy_pct,
-                memory_efficiency=bundle.aggregates.memory_efficiency,
-                peak_cuda_reserved_gib=memory.peak_cuda_reserved_bytes / GIB,
-                peak_cuda_allocated_gib=memory.peak_cuda_allocated_bytes / GIB,
-                peak_process_rss_gib=memory.peak_process_rss_bytes / GIB,
-                checkpoint_gib=memory.checkpoint_bytes / GIB,
-                parameter_count=memory.parameter_count,
-                native_dtype=memory.native_dtype,
+                speed_valid=speed.valid,
+                batch_size=speed.batch_size,
+                audio_throughput_x=speed.audio_throughput_x,
+                rtf=speed.rtf,
+                processing_seconds=speed.processing_seconds,
+                total_audio_seconds=speed.total_audio_seconds,
+                checkpoint_gib=facts.checkpoint_bytes / 1024**3,
+                parameter_count=facts.parameter_count,
+                native_dtype=facts.native_dtype,
             )
         )
     successful_by_model: dict[str, list[LeaderboardRow]] = {}
@@ -205,8 +209,11 @@ def accuracy_order(rows: list[LeaderboardRow]) -> list[LeaderboardRow]:
     return sorted(rows, key=lambda row: (row.cer, row.wer, row.model_id))
 
 
-def efficiency_order(rows: list[LeaderboardRow]) -> list[LeaderboardRow]:
-    return sorted(rows, key=lambda row: (-row.memory_efficiency, row.wer, row.model_id))
+def speed_order(rows: list[LeaderboardRow]) -> list[LeaderboardRow]:
+    return sorted(
+        (row for row in rows if row.speed_valid),
+        key=lambda row: (-row.audio_throughput_x, row.cer, row.wer, row.model_id),
+    )
 
 
 def paired_cer_comparisons(
@@ -267,14 +274,14 @@ def _percentage_points(value: float) -> str:
     return f"{value * 100:.2f}".replace("-", "−")
 
 
-def _table(rows: list[LeaderboardRow], efficiency: bool, repositories: dict[str, str]) -> str:
-    if efficiency:
-        headings = "| Rank | Model | Accuracy / reserved GiB | WER | Peak CUDA reserved GiB |"
-        separator = "|---:|---|---:|---:|---:|"
+def _table(rows: list[LeaderboardRow], speed: bool, repositories: dict[str, str]) -> str:
+    if speed:
+        headings = "| Rank | Model | Batch | Throughput | RTF | Processing s | Audio s |"
+        separator = "|---:|---|---:|---:|---:|---:|---:|"
         values = [
             f"| {rank} | {_model_cell(row.model_id, repositories)} | "
-            f"{row.memory_efficiency:.4f} | "
-            f"{row.wer:.4f} | {row.peak_cuda_reserved_gib:.3f} |"
+            f"{row.batch_size} | {row.audio_throughput_x:.3f}× | {row.rtf:.5f} | "
+            f"{row.processing_seconds:.3f} | {row.total_audio_seconds:.3f} |"
             for rank, row in enumerate(rows, start=1)
         ]
     else:
@@ -288,7 +295,12 @@ def _table(rows: list[LeaderboardRow], efficiency: bool, repositories: dict[str,
             for rank, row in enumerate(rows, start=1)
         ]
     if not values:
-        values = ["| — | No complete official results yet | — | — | — |"]
+        columns = 7 if speed else 5
+        values = [
+            "| — | No complete official results yet | "
+            + " | ".join("—" for _ in range(columns - 2))
+            + " |"
+        ]
     return "\n".join([headings, separator, *values])
 
 
@@ -330,7 +342,7 @@ def render_markdown(
         f"# PESTE leaderboard — `{suite.suite_id}`\n\n"
         f"{heading} Normalized accuracy\n\n"
         f"![Normalized accuracy leaderboard]({image_prefix}leaderboard-accuracy.svg)\n\n"
-        + _table(accuracy_order(rows), efficiency=False, repositories=model_repositories)
+        + _table(accuracy_order(rows), speed=False, repositories=model_repositories)
         + "\n\nCER is the primary ranking metric because Persian WER is orthography-sensitive: "
         "fa-v1 converts ZWNJ to spaces, while CER ignores normalized whitespace. WER and "
         "derived word accuracy remain complementary, segmentation-sensitive measurements."
@@ -340,11 +352,11 @@ def render_markdown(
         "Paired intervals containing zero are reported as no clear difference; these intervals "
         "measure test-set sampling uncertainty only."
         + comparison_section
-        + f"\n\n{heading} Accuracy per peak CUDA memory\n\n"
-        f"![Accuracy per peak CUDA memory leaderboard]({image_prefix}leaderboard-memory.svg)\n\n"
-        + _table(efficiency_order(rows), efficiency=True, repositories=model_repositories)
-        + "\n\nPeak CUDA memory is unified system/GPU memory and is not directly comparable "
-        "with process VRAM reported on discrete GPUs.\n"
+        + f"\n\n{heading} Steady-state speed\n\n"
+        f"![Steady-state speed leaderboard]({image_prefix}leaderboard-speed.svg)\n\n"
+        + _table(speed_order(rows), speed=True, repositories=model_repositories)
+        + "\n\nThroughput is total audio seconds divided by measured processing seconds; "
+        "RTF is its reciprocal. Resumed runs retain accuracy but are excluded here.\n"
     )
 
 
@@ -362,7 +374,7 @@ def generate_leaderboards(
 ) -> None:
     rows = collect_rows(suite, results_directory, require_tracked=require_tracked, root=root)
     accuracy = accuracy_order(rows)
-    efficiency = efficiency_order(rows)
+    speed = speed_order(rows)
     comparisons = paired_cer_comparisons(
         accuracy,
         results_directory,
@@ -375,11 +387,11 @@ def generate_leaderboards(
     (generated_directory / "leaderboard-accuracy.svg").write_text(
         render_accuracy_svg(suite.suite_id, rows, repositories), encoding="utf-8"
     )
-    (generated_directory / "leaderboard-memory.svg").write_text(
-        render_memory_svg(suite.suite_id, rows, repositories), encoding="utf-8"
+    (generated_directory / "leaderboard-speed.svg").write_text(
+        render_speed_svg(suite.suite_id, rows, repositories), encoding="utf-8"
     )
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "suite_id": suite.suite_id,
         "uncertainty": {
             "method": "utterance-level percentile bootstrap",
@@ -389,14 +401,14 @@ def generate_leaderboards(
         },
         "accuracy": [_as_dict(row, rank) for rank, row in enumerate(accuracy, start=1)],
         "adjacent_cer_comparisons": [asdict(comparison) for comparison in comparisons],
-        "memory_efficiency": [_as_dict(row, rank) for rank, row in enumerate(efficiency, start=1)],
+        "speed": [_as_dict(row, rank) for rank, row in enumerate(speed, start=1)],
     }
     (generated_directory / "leaderboard.json").write_bytes(canonical_json(payload))
     columns = ["board", "rank", *LeaderboardRow.__dataclass_fields__]
     buffer = io.StringIO(newline="")
     writer = csv.DictWriter(buffer, fieldnames=columns, lineterminator="\n")
     writer.writeheader()
-    for board, ordered in (("accuracy", accuracy), ("memory_efficiency", efficiency)):
+    for board, ordered in (("accuracy", accuracy), ("speed", speed)):
         for rank, row in enumerate(ordered, start=1):
             writer.writerow({"board": board, **_as_dict(row, rank)})
     (generated_directory / "leaderboard.csv").write_text(buffer.getvalue(), encoding="utf-8")

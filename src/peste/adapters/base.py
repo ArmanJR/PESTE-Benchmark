@@ -14,8 +14,24 @@ class Transcription:
     structured_output: dict[str, Any] | list[Any] | None = None
 
 
+class AdapterOutputError(RuntimeError):
+    """Raised when an adapter violates the ordered batch output contract."""
+
+
+def require_batch_cardinality(
+    model_id: str, audio_paths: list[Path], transcriptions: list[Transcription]
+) -> list[Transcription]:
+    """Require exactly one ordered transcription for every input path."""
+    if len(transcriptions) != len(audio_paths):
+        raise AdapterOutputError(
+            f"Adapter for {model_id} received {len(audio_paths)} audio paths but returned "
+            f"{len(transcriptions)} transcriptions"
+        )
+    return transcriptions
+
+
 class ASRAdapter(ABC):
-    """Minimal interface for batch-size-one ASR inference."""
+    """Minimal interface for real, ordered batched ASR inference."""
 
     def __init__(self, spec: ModelSpec, cache_directory: Path) -> None:
         self.spec = spec
@@ -26,8 +42,8 @@ class ASRAdapter(ABC):
         """Load the pinned checkpoint in its native benchmark precision."""
 
     @abstractmethod
-    def transcribe(self, audio_path: Path) -> Transcription:
-        """Transcribe one canonical 16-kHz mono WAV."""
+    def transcribe_batch(self, audio_paths: list[Path]) -> list[Transcription]:
+        """Transcribe canonical WAVs with one ordered output per input."""
 
     @abstractmethod
     def close(self) -> None:

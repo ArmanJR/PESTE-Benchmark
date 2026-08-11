@@ -21,8 +21,8 @@ class SmokeAdapter(ASRAdapter):
     def load(self) -> None:
         pass
 
-    def transcribe(self, audio_path: Path) -> Transcription:
-        return Transcription(next(self.outputs))
+    def transcribe_batch(self, audio_paths: list[Path]) -> list[Transcription]:
+        return [Transcription(next(self.outputs)) for _ in audio_paths]
 
     def close(self) -> None:
         pass

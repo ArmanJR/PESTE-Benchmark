@@ -1,8 +1,8 @@
-"""Deterministic, data-driven leaderboard plot tests."""
+"""Deterministic, data-driven accuracy and speed plot tests."""
 
 from dataclasses import dataclass
 
-from peste.plotting import render_accuracy_svg, render_memory_svg
+from peste.plotting import render_accuracy_svg, render_speed_svg
 
 
 @dataclass(frozen=True, slots=True)
@@ -10,58 +10,49 @@ class PlotRow:
     model_id: str
     wer: float
     cer: float
-    memory_efficiency: float
-    peak_cuda_reserved_gib: float
+    audio_throughput_x: float
+    rtf: float
+    speed_valid: bool = True
 
 
 def test_accuracy_plot_adapts_to_models_and_metric_ranges() -> None:
     rows = [
-        PlotRow("model-beta", 0.95, 1.43, 3.8, 19.05),
-        PlotRow("model-alpha", 0.20, 0.06, 45.4, 1.75),
+        PlotRow("model-beta", 0.95, 1.43, 3.8, 1 / 3.8),
+        PlotRow("model-alpha", 0.20, 0.06, 45.4, 1 / 45.4),
     ]
-
-    svg = render_accuracy_svg(
-        "future-suite",
-        rows,
-        {"model-alpha": "organization/model-alpha"},
-    )
-
+    svg = render_accuracy_svg("future-suite", rows, {"model-alpha": "organization/model-alpha"})
     assert 'width="900" height="156"' in svg
     assert "PESTE normalized accuracy leaderboard" in svg
     assert svg.index(">model-alpha</text>") < svg.index(">model-beta</text>")
     assert "150%" in svg
-    assert ">95.0%</text>" in svg
     assert "https://huggingface.co/organization/model-alpha" in svg
 
 
 def test_accuracy_plot_uses_cer_ranking_and_presents_cer_first() -> None:
     rows = [
-        PlotRow("wer-leader", 0.10, 0.20, 10.0, 2.0),
-        PlotRow("cer-leader", 0.20, 0.10, 10.0, 2.0),
+        PlotRow("wer-leader", 0.10, 0.20, 10.0, 0.1),
+        PlotRow("cer-leader", 0.20, 0.10, 10.0, 0.1),
     ]
-
     svg = render_accuracy_svg("future-suite", rows)
-
     assert svg.index(">cer-leader</text>") < svg.index(">wer-leader</text>")
     assert svg.index("CER ↓") < svg.index("WER ↓")
 
 
-def test_memory_plot_uses_efficiency_ranking() -> None:
+def test_speed_plot_ranks_throughput_and_excludes_invalid_runs() -> None:
     rows = [
-        PlotRow("accuracy-leader", 0.10, 0.05, 2.0, 2.0),
-        PlotRow("efficiency-leader", 0.20, 0.10, 20.0, 1.0),
+        PlotRow("accuracy-leader", 0.10, 0.05, 2.0, 0.5),
+        PlotRow("speed-leader", 0.20, 0.10, 20.0, 0.05),
+        PlotRow("resumed", 0.01, 0.01, 100.0, 0.01, speed_valid=False),
     ]
-
-    svg = render_memory_svg("future-suite", rows)
-
-    assert "PESTE accuracy per peak CUDA memory leaderboard" in svg
-    assert svg.index(">efficiency-leader</text>") < svg.index(">accuracy-leader</text>")
-    assert "Peak CUDA reserved ↓" in svg
-    assert "Word accuracy / GiB ↑" in svg
+    svg = render_speed_svg("future-suite", rows)
+    assert "PESTE steady-state speed leaderboard" in svg
+    assert svg.index(">speed-leader</text>") < svg.index(">accuracy-leader</text>")
+    assert ">resumed</text>" not in svg
+    assert "Audio throughput ↑" in svg
+    assert "RTF ↓" in svg
 
 
 def test_empty_plot_has_an_accessible_state() -> None:
     svg = render_accuracy_svg("empty-suite", [])
-
     assert "0 ranked models from empty-suite" in svg
     assert "No complete official results yet" in svg

@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "model_id": "qwen3-asr-1-7b",
   "repository": "Qwen/Qwen3-ASR-1.7B-hf",
   "revision": "bcd2b5b7f32b480ab5790554cfa8347f246a14f3",
@@ -8,5 +8,6 @@
   "license": "Apache-2.0",
   "language": "fa",
   "generation": {"max_new_tokens": 256},
-  "runtime": {"name": "modern", "image": "peste-modern:1.0.0", "dockerfile": "runtimes/modern/Dockerfile"}
+  "runtime": {"name": "modern", "image": "peste-modern:2.0.0", "dockerfile": "runtimes/modern/Dockerfile"},
+  "speed_profile": {"hardware_profile_id": "rtx-6000-ada-v1", "batch_size": 1}
 }

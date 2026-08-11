@@ -13,6 +13,20 @@ class ContractModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
 
+class SchemaV2Model(ContractModel):
+    """Base for persisted v2 contracts with an actionable version error."""
+
+    schema_version: Literal[2]
+
+    @model_validator(mode="before")
+    @classmethod
+    def reject_unsupported_schema_version(cls, value: Any) -> Any:
+        if isinstance(value, dict) and value.get("schema_version") != 2:
+            version = value.get("schema_version", "missing")
+            raise ValueError(f"Unsupported schema_version {version}; expected 2")
+        return value
+
+
 class DatasetSource(ContractModel):
     repository: str
     revision: str = Field(pattern=r"^[0-9a-f]{40}$")
@@ -20,8 +34,7 @@ class DatasetSource(ContractModel):
     license: str
 
 
-class SuiteSpec(ContractModel):
-    schema_version: Literal[1]
+class SuiteSpec(SchemaV2Model):
     suite_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
     dataset: DatasetSource
     evaluation_split: str
@@ -45,8 +58,12 @@ class RuntimeSpec(ContractModel):
     dockerfile: str
 
 
-class ModelSpec(ContractModel):
-    schema_version: Literal[1]
+class SpeedProfile(ContractModel):
+    hardware_profile_id: Literal["rtx-6000-ada-v1"]
+    batch_size: int = Field(gt=0)
+
+
+class ModelSpec(SchemaV2Model):
     model_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
     repository: str
     revision: str = Field(pattern=r"^[0-9a-f]{40}$")
@@ -61,10 +78,10 @@ class ModelSpec(ContractModel):
     language: str | None
     generation: dict[str, str | int | float | bool]
     runtime: RuntimeSpec
+    speed_profile: SpeedProfile
 
 
-class ManifestRow(ContractModel):
-    schema_version: Literal[1]
+class ManifestRow(SchemaV2Model):
     sample_id: str
     split: Literal["train", "validation", "test"]
     upstream_row_index: int = Field(ge=0)
@@ -79,14 +96,11 @@ class ManifestRow(ContractModel):
 
 
 class ResumeState(ContractModel):
+    completed_batches: int = Field(ge=0)
     completed_samples: int = Field(ge=0)
-    peak_cuda_reserved_bytes: int = Field(ge=0)
-    peak_cuda_allocated_bytes: int = Field(ge=0)
-    peak_process_rss_bytes: int = Field(ge=0)
 
 
-class RunRequest(ContractModel):
-    schema_version: Literal[1]
+class RunRequest(SchemaV2Model):
     run_id: str = Field(pattern=r"^[a-zA-Z0-9][a-zA-Z0-9._-]*$")
     suite_id: str
     suite_digest: Sha256 = Field(pattern=r"^[0-9a-f]{64}$")
@@ -117,20 +131,68 @@ class EnvironmentFingerprint(ContractModel):
     pytorch_version: str
     cuda_version: str
     hardware_profile: dict[str, str | int | float | bool]
+    gpu_product_name: str
+    driver_version: str
+    ecc_state: str
+    power_limit_watts: float = Field(ge=0)
+    cpu_model: str
+    gpu_uuid: str
+    cloud_provenance: str | None = None
     seed: int
 
 
-class MemoryStatistics(ContractModel):
-    peak_cuda_reserved_bytes: int = Field(ge=0)
-    peak_cuda_allocated_bytes: int = Field(ge=0)
-    peak_process_rss_bytes: int = Field(ge=0)
+class ModelFacts(ContractModel):
     checkpoint_bytes: int = Field(ge=0)
     parameter_count: int = Field(ge=0)
-    native_dtype: str
+    native_dtype: Literal["float16", "bfloat16", "float32"]
 
 
-class PredictionRecord(ContractModel):
-    schema_version: Literal[1]
+class SpeedStatistics(ContractModel):
+    valid: bool
+    batch_size: int = Field(gt=0)
+    warmup_batches: int = Field(ge=0)
+    measured_batches: int = Field(ge=0)
+    total_audio_seconds: float = Field(ge=0, allow_inf_nan=False)
+    processing_seconds: float = Field(ge=0, allow_inf_nan=False)
+    audio_throughput_x: float = Field(ge=0, allow_inf_nan=False)
+    rtf: float = Field(ge=0, allow_inf_nan=False)
+    timing_artifact: str = Field(min_length=1)
+    invalidity_reason: str | None = None
+
+    @model_validator(mode="after")
+    def timing_is_consistent(self) -> Self:
+        import math
+
+        has_audio = self.total_audio_seconds > 0
+        has_processing = self.processing_seconds > 0
+        if has_audio != has_processing:
+            raise ValueError("Audio and processing times must both be zero or both be positive")
+        if has_audio:
+            throughput = self.total_audio_seconds / self.processing_seconds
+            rtf = self.processing_seconds / self.total_audio_seconds
+            if not math.isclose(self.audio_throughput_x, throughput, rel_tol=1e-12):
+                raise ValueError("audio_throughput_x does not match audio/processing time")
+            if not math.isclose(self.rtf, rtf, rel_tol=1e-12):
+                raise ValueError("RTF does not match processing/audio time")
+            if not math.isclose(self.audio_throughput_x * self.rtf, 1.0, rel_tol=1e-12):
+                raise ValueError("audio throughput and RTF must be reciprocal")
+        elif self.audio_throughput_x != 0 or self.rtf != 0:
+            raise ValueError("Zero timing values require zero throughput and RTF")
+        if self.valid:
+            if self.invalidity_reason is not None:
+                raise ValueError("Valid speed statistics cannot have an invalidity reason")
+            if self.measured_batches == 0:
+                raise ValueError("Valid speed statistics require at least one measured batch")
+            if self.total_audio_seconds <= 0 or self.processing_seconds <= 0:
+                raise ValueError(
+                    "Valid speed statistics require positive audio and processing time"
+                )
+        elif not self.invalidity_reason:
+            raise ValueError("Invalid speed statistics require an invalidity reason")
+        return self
+
+
+class PredictionRecord(SchemaV2Model):
     sequence: int = Field(ge=0)
     sample_id: str
     reference: str
@@ -157,7 +219,6 @@ class AggregateMetrics(ContractModel):
     character_errors: int = Field(ge=0)
     character_reference_units: int = Field(gt=0)
     word_accuracy_pct: float = Field(ge=0, le=100)
-    memory_efficiency: float = Field(ge=0)
 
 
 class LogReferences(ContractModel):
@@ -166,8 +227,7 @@ class LogReferences(ContractModel):
     diagnostics: str | None = None
 
 
-class RunBundle(ContractModel):
-    schema_version: Literal[1]
+class RunBundle(SchemaV2Model):
     run_id: str
     suite_id: str
     suite_digest: Sha256 = Field(pattern=r"^[0-9a-f]{64}$")
@@ -175,7 +235,8 @@ class RunBundle(ContractModel):
     model_digest: Sha256 = Field(pattern=r"^[0-9a-f]{64}$")
     status: RunStatus
     environment: EnvironmentFingerprint
-    memory: MemoryStatistics
+    speed: SpeedStatistics
+    model_facts: ModelFacts
     predictions_path: str
     aggregates: AggregateMetrics | None
     logs: LogReferences
@@ -187,4 +248,6 @@ class RunBundle(ContractModel):
             raise ValueError("A successful run requires aggregate metrics")
         if self.status != RunStatus.SUCCESS and self.aggregates is not None:
             raise ValueError("Failed, OOM, killed, and running runs cannot be ranked")
+        if self.status != RunStatus.SUCCESS and self.speed.valid:
+            raise ValueError("Only a successful run can contain valid speed statistics")
         return self

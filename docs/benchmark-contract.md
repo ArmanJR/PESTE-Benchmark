@@ -1,218 +1,168 @@
 # Benchmark contract
 
-This document defines the inputs, execution policy, metrics, artifacts, and publication rules for
-the current PESTE benchmark. A result is comparable only when it follows the same suite, model,
-normalization, inference, and hardware contracts.
+This document defines PESTE 2.0.0 inputs, execution policy, metrics, artifacts, and ranking rules.
+A result is comparable only when its suite, normalization, model, speed profile, runtime, and
+hardware contracts match.
 
-## Dataset contract
+## Dataset and normalization
 
-The current suite is [`fleurs-fa-ir-v1`](../suites/fleurs-fa-ir-v1/suite.json), derived from the
-Persian `fa_ir` configuration of `google/fleurs`.
+The active suite is [`fleurs-fa-ir-v1`](../suites/fleurs-fa-ir-v1/suite.json), derived from the
+Persian `fa_ir` configuration of `google/fleurs` at revision
+`70bb2e84b976b7e960aa89f1c648e09c59f894dd` under CC BY 4.0.
 
-| Property | Value |
-|---|---|
-| Repository | `google/fleurs` |
-| Revision | `70bb2e84b976b7e960aa89f1c648e09c59f894dd` |
-| License | CC BY 4.0 |
-| Evaluation split | `test` |
-| Manifest | [`manifest.jsonl`](../suites/fleurs-fa-ir-v1/manifest.jsonl) |
-| Manifest SHA-256 | `76e87e96769cd63ce5d5abbc7827563644e55c3ba3fdc4041f4359a67435c061` |
-
-| Split | Rows | Benchmark use |
+| Split | Rows | Use |
 |---|---:|---|
-| train | 3,101 | Materialized and verified, not scored |
-| validation | 369 | Materialized and verified, not scored |
-| test | 871 | Official ranking |
+| train | 3,101 | Materialized and verified |
+| validation | 369 | Materialized and verified |
+| test | 871 | Official evaluation |
 
-The manifest records the upstream ID and row index, exact transcript, duration, canonical audio
-hash and path, source revision, and license. Dataset preparation decodes every recording once into
-16-kHz mono PCM-16 WAV and verifies the materialized data against the committed manifest.
+The schema-2 manifest has SHA-256
+`031a6871898bfb6b994164da49739ca6d50b79af91c7af59e6883ae820520488`. Its only change from the
+historical manifest is the `schema_version` field; audio references, hashes, transcripts, source
+identity, durations, and splits are unchanged.
 
-The upstream `transcription` field is the scoring reference. Empty normalized references are not
-valid suite data. Empty model predictions are valid outputs and are scored as errors.
+Audio is canonical 16-kHz mono PCM-16 WAV. Preparation verifies every materialized recording
+against the immutable manifest. The `fa-v1` normalizer remains unchanged: NFKC, Arabic/Persian
+letter folding, tatweel and diacritic removal, digit-glyph folding, ZWNJ/punctuation/symbol
+replacement with spaces, then whitespace collapse. Empty normalized references are invalid; empty
+predictions are scored.
 
-Published manifests are immutable. A source revision, transcript, audio, split, or normalization
-change requires a new suite ID and independent leaderboard.
+CER removes normalized whitespace before character edits. WER retains word boundaries. The known
+digit-versus-spoken-number and Persian spacing sensitivities remain part of `fa-v1`.
 
-## Text normalization
+## Model and batching contract
 
-The `fa-v1` normalizer is applied identically to references and predictions. It performs:
+Each model JSON pins repository revision, adapter, native dtype, language, generation policy,
+runtime image, and `speed_profile`. A speed profile contains:
 
-1. Unicode NFKC normalization;
-2. Arabic/Persian letter-variant unification;
-3. tatweel and diacritic removal;
-4. Persian and Arabic-Indic digit conversion to ASCII;
-5. replacement of ZWNJ, non-breaking spaces, punctuation, and symbols with spaces; and
-6. whitespace collapse and trimming.
+- `hardware_profile_id = rtx-6000-ada-v1`;
+- one positive, calibrated `batch_size`.
 
-Normalization intentionally removes punctuation from the accuracy measurement. Punctuation
-quality is not a separate metric in the current suite. Replacing ZWNJ with a space also makes WER
-sensitive to Persian word-segmentation conventions: a model that emits joined compounds can
-receive word substitutions and deletions even when its letters match the reference.
+The suffix in `rtx-6000-ada-v1` is the revision of the hardware profile, independent of the PESTE
+major version. Both speed fields contribute to the model digest. Official runs use the committed
+batch size exactly and never retune, reduce it after OOM, or substitute singleton loops.
 
-### Number-format sensitivity
+Every adapter accepts multiple canonical audio paths and returns exactly one transcription per
+input in the same order. Whisper and CTC use padded processor batches, Qwen uses its native batched
+transcription request, and NeMo calls `model.transcribe(paths, batch_size=n)`. Output cardinality
+violations are hard failures.
 
-`fa-v1` canonicalizes digit glyphs but does not equate digits with spoken Persian number words.
-The `fleurs-fa-ir-v1` test split has digit glyphs in 153 of 871 references. Consequently, a model
-that emits `۱۹۶۷` matches a reference containing `۱۹۶۷` after glyph folding, while a model that
-emits the semantically equivalent `هزار و نهصد و شصت و هفت` does not. In the corresponding
-FLEURS reference sentence, that representation difference alone produces one substitution and six
-insertions under WER. Published v1 scores retain this known formatting bias because their suite and
-normalization contracts are immutable.
+Checkpoint-native precision, language, decoder, token handling, and generation limits remain
+fixed. Quantization, offload, compilation, external language models, and fallback behavior are
+prohibited.
 
-## Model contract
+## Hardware profile
 
-Every checkpoint has an immutable JSON specification under [`models/`](../models) containing its
-Hugging Face repository and revision, adapter, native dtype, declared license, language policy,
-generation policy, and runtime image.
+The authoritative profile is
+[`hardware/rtx-6000-ada-v1.json`](../hardware/rtx-6000-ada-v1.json):
 
-The model digest is stored in every run request and result bundle. A result whose model digest no
-longer matches the corresponding specification is excluded from generated rankings.
+- exactly one full physical `NVIDIA RTX 6000 Ada Generation` with 48 GB VRAM;
+- x86-64 host, at least 8 vCPUs and 64 GiB RAM;
+- at least 100 GiB free local storage;
+- driver `580.142`;
+- ECC exactly `Disabled`;
+- power limit and board maximum both exactly 300 W;
+- no active clock-throttle reason;
+- no competing GPU process or GPU-enabled container; and
+- exactly one matching GPU visible inside an NVIDIA-enabled container.
 
-Supported model proposals must follow an existing adapter contract. See
-[Adding a model](adding-a-model.md). New inference interfaces require maintainer-owned adapter and
-runtime work; see the [maintainer guide](maintainer-guide.md).
+CPU model and GPU UUID are recorded but not pinned. VM OS is recorded but not comparison-critical;
+timed execution occurs in the x86-64 NGC PyTorch image pinned by digest. The Vast VM image is
+`docker.io/vastai/kvm:ubuntu_terminal`.
 
-## Execution contract
+`peste doctor` is authoritative. Marketplace filters only preselect plausible hosts. Vast.ai is
+the reference acquisition path, but any machine passing the same doctor is acceptable.
 
-Official runs use:
+## Determinism and isolation
 
-- one CUDA device and batch size 1;
-- checkpoint-native benchmark precision;
-- canonical manifest order;
-- fixed Python, NumPy, PyTorch, and CUDA seeds;
-- strict PyTorch deterministic algorithms;
-- a fixed CUDA BLAS workspace configuration;
-- disabled TF32 and cuDNN autotuning;
-- inference/evaluation mode; and
-- no fallback decoder, precision, quantization, offload, or compilation.
+Official inference uses one CUDA device, fixed Python/NumPy/PyTorch/CUDA seeds, deterministic
+PyTorch algorithms, `CUBLAS_WORKSPACE_CONFIG=:4096:8`, TF32 disabled, cuDNN autotuning disabled,
+and model evaluation/inference mode. Dataset and model caches are mounted read-only. Network access
+is disabled after preparation and prefetch.
 
-Dataset and checkpoint acquisition run in network-enabled preparation containers. Official
-inference containers have networking disabled and mount dataset/model caches read-only.
+Framework families remain isolated in digest-pinned images:
 
-Framework families run in separate images with frozen dependencies:
-
-| Runtime | Use |
+| Runtime | Adapters |
 |---|---|
-| `modern` | Transformers 5.14.1 Whisper, Qwen, and standard greedy CTC adapters |
-| `nemo` | NeMo ASR and the default RNNT adapter |
+| `modern` | Transformers Whisper, Qwen, and greedy CTC |
+| `nemo` | NeMo default RNNT |
 
-Runtime Dockerfiles and lockfiles under [`runtimes/`](../runtimes) are authoritative.
+## Batch calibration
 
-The `modern` runtime's `transformers-ctc` path uses the standard `AutoProcessor` and
-`AutoModelForCTC` interfaces with fixed batch-size-one greedy decoding. It groups repeated CTC
-tokens, preserves special tokens including `<unk>`, and does not use beam search or an external
-language model. The reference specification is
-[`wav2vec2-large-xlsr-53-persian.json`](../models/wav2vec2-large-xlsr-53-persian.json).
+`peste model profile-speed` selects 128 deterministic duration quantiles, including shortest and
+longest evaluation recordings. It evaluates candidates `1, 2, 4, 8, 16, 32, 64, 128` with two
+warmups and three measured passes each.
 
-## Hardware contract
+A candidate is rejected when it OOMs, exceeds 85% of total VRAM on the longest-duration stress
+batch, violates output cardinality/order, or differs from singleton normalized output on a fixed
+16-recording conformance set. Among safe candidates, the smallest reaching at least 95% of the
+best safe throughput is selected. Memory telemetry exists only during calibration and is not a
+published benchmark metric.
 
-The official profile is:
+## Official timing protocol
 
-- Jetson AGX Orin 32GB;
-- Ubuntu 22.04;
-- JetPack 6.2 / L4T R36.4.7;
-- host CUDA 12.6;
-- NVIDIA container runtime;
-- MAXN power mode;
-- at least 60 GiB free cache storage; and
-- no competing NVIDIA containers or detected host GPU processes.
+1. Validate every evaluation audio path and read the audio into the OS cache.
+2. Load the model outside the timed region.
+3. Sort evaluation work by `(duration_seconds, original_sequence)`.
+4. Run two excluded warmup batches at representative median duration.
+5. Make one complete measured pass over all 871 test recordings.
+6. Call `torch.cuda.synchronize()` immediately before starting and immediately after returning
+   from every timed adapter call.
+7. Restore original manifest order in `predictions.jsonl`.
 
-`peste doctor` enforces this profile before smoke tests and full runs. The captured profile, runtime
-image digest, Python/PyTorch/CUDA versions, installed dependencies, seed, and source revision are
-stored in the result bundle.
-
-Jetson CUDA memory is unified system/GPU memory. Peak CUDA values therefore should not be compared
-directly with process VRAM measurements from discrete GPUs.
-
-## Metrics
-
-WER and CER are corpus-level Levenshtein error rates:
+Timed work includes audio loading, preprocessing, transfers, inference/generation, decoding, and
+postprocessing. Model load, audio priming, warmup, scoring, journal writes, logging, and
+orchestration are excluded.
 
 ```text
-WER = total word substitutions + deletions + insertions
-      -------------------------------------------------
-                   total reference words
-
-CER = total character substitutions + deletions + insertions
-      ------------------------------------------------------
-                 total reference characters
+audio_throughput_x = total_audio_seconds / processing_seconds
+RTF                = processing_seconds / total_audio_seconds
 ```
 
-CER removes normalized whitespace before counting characters. Word accuracy and memory efficiency
-are derived values:
+Both values and their source times are stored with a reciprocity invariant. The speed board sorts
+throughput descending, then CER, WER, and model ID. The accuracy board sorts CER, WER, and model
+ID. No composite score is defined.
 
-```text
-word_accuracy_pct = 100 × max(0, 1 − WER)
-memory_efficiency = word_accuracy_pct / peak_cuda_reserved_gib
-```
+## Resume and artifacts
 
-The accuracy board sorts by CER ascending, WER ascending, then stable model ID. CER is primary
-because it ignores normalized whitespace and is therefore robust to Persian ZWNJ/word-segmentation
-variation. WER remains a complementary measure of word-level transcription and orthographic
-segmentation. The memory board sorts by memory efficiency descending, WER ascending, then model ID;
-because memory efficiency derives from word accuracy, that secondary board remains
-segmentation-sensitive.
+Each completed measured batch is appended atomically to `timing.jsonl`, including original
+sequences, sample IDs, audio duration, processing duration, and prediction records. Recovery
+requires a contiguous prefix matching the deterministic batch plan. `predictions.jsonl` is
+materialized from the journal in original manifest order.
 
-### Resource measurement
+A resumed successful run retains predictions and accuracy, but `speed.valid` is false with an
+explicit reason. It is excluded only from the speed board. Canonical speed publication requires a
+fresh uninterrupted run.
 
-Peak CUDA reserved and allocated memory are reset before checkpoint loading and measured through
-the complete run. Peak process RSS is also retained. Resumed runs carry forward the highest
-measurements from earlier segments.
-
-### Statistical uncertainty
-
-Published CER and WER include deterministic 95% percentile-bootstrap intervals. Each replicate
-resamples the 871 test utterances with replacement and recomputes the corpus error rate from the
-resampled edit-count and reference-unit totals. The generator uses 10,000 replicates and seed
-`20250731`.
-
-The numeric leaderboard order is based on point estimates; it is not a claim that every adjacent
-model differs significantly. To evaluate those gaps, the generator also publishes paired
-utterance-bootstrap intervals for the CER difference between each adjacent pair in point-estimate
-order. A difference is marked resolved at 95% only when its interval excludes zero. These are
-unadjusted pointwise intervals, not simultaneous family-wise guarantees. They quantify sampling
-uncertainty over this test set and do not capture model-training variation, speaker clustering,
-training-data overlap, dataset bias, or deployment-domain shift.
-
-### ZWNJ-policy sensitivity
-
-In the current test manifest, 622 of 871 references (71.4%) contain ZWNJ. As a sensitivity check,
-removing ZWNJ instead of converting it to a space changes corpus WER materially and changes the
-model order. For example, `whisper-large-v3` changes from 0.1980 to 0.2882 WER, while
-`whisper-large-persian-steja` changes from 0.2648 to 0.1917 and moves from fourth to first under
-that alternative. These alternative values are diagnostic only; official `fleurs-fa-ir-v1`
-scores retain the immutable `fa-v1` policy.
-
-## Result bundles
-
-An official result directory contains:
+An official directory contains:
 
 | Artifact | Purpose |
 |---|---|
-| `request.json` | Immutable run request and digests |
-| `run.json` | Status, aggregates, environment, memory, and artifact references |
-| `predictions.jsonl` | Append-only per-sample references, predictions, normalized text, and edit counts |
+| `request.json` | Immutable schema-2 request and spec digests |
+| `run.json` | Status, environment, `speed`, `model_facts`, aggregates, references |
+| `timing.jsonl` | Append-only measured-batch journal and timing artifact |
+| `predictions.jsonl` | Manifest-ordered text and edit counts |
 | `runner.jsonl` | Structured runner log |
-| `container.jsonl` | Captured container output |
-| `diagnostics.json` | External failure diagnostics when a container cannot produce a bundle |
+| `container.jsonl` | Captured container log |
+| `diagnostics.json` | External failure details, when needed |
 
-Resume validates the original request, append-only prediction count, and sample sequence. It is
-available only for failed or killed runs, not OOM runs.
+`model_facts` contains native dtype, parameter count, and checkpoint bytes. Environment data
+records the GPU product, driver, ECC, power limit, CPU model, GPU UUID, dependency/runtime
+versions, source revision, and optional cloud instance/host provenance.
+
+## Accuracy uncertainty
+
+CER and WER retain deterministic 95% utterance-level percentile-bootstrap intervals with 10,000
+replicates and seed `20250731`. Adjacent accuracy rows retain paired CER-difference intervals.
+These intervals measure test-set sampling uncertainty only; they do not cover training variation,
+speaker clustering, data overlap, domain shift, or multiplicity.
 
 ## Ranking eligibility
 
-A result enters a generated leaderboard only when:
+Accuracy ranking requires a tracked, successful, complete schema-2 bundle with matching suite and
+model digests and a committed source revision. Speed ranking additionally requires `speed.valid =
+true`. Multiple successful official bundles for one model ID are rejected. Stale, incomplete,
+failed, killed, and OOM bundles remain auditable but unranked.
 
-- `run.json` is tracked as an intended official result;
-- the suite ID and digest match the current suite specification;
-- the model digest matches the current model specification;
-- status is `success` and aggregate metrics are present;
-- the prediction count equals the complete evaluation split; and
-- the recorded source revision is not `uncommitted`.
-
-The generator rejects multiple successful official runs for the same model ID. Failed, killed,
-incomplete, stale, and OOM bundles remain available for audit but are not ranked.
-
-Maintainers regenerate Markdown, SVG, JSON, CSV, and the README leaderboard block from eligible
-bundles. Generated artifacts are never the source of benchmark metrics.
+Markdown, SVG, JSON, CSV, and the README marker block are deterministic derived artifacts. They
+are never authoritative metric sources.

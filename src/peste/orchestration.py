@@ -1,9 +1,9 @@
-"""Docker-over-SSH orchestration for the official Jetson host."""
+"""Docker-over-SSH orchestration for doctor-approved discrete-GPU hosts."""
 
 import json
 import logging
+import math
 import os
-import re
 import subprocess
 import tarfile
 import tempfile
@@ -20,19 +20,21 @@ from peste.digests import canonical_json
 from peste.schemas import (
     EnvironmentFingerprint,
     LogReferences,
-    MemoryStatistics,
+    ModelFacts,
     ModelSpec,
     ResumeState,
     RunBundle,
     RunRequest,
     RunStatus,
+    SpeedStatistics,
     SuiteSpec,
 )
 from peste.specs import spec_digest
 
 LOGGER = logging.getLogger(__name__)
+HARDWARE_PROFILE_PATH = PROJECT_ROOT / "hardware" / "rtx-6000-ada-v1.json"
 BASE_IMAGE = (
-    "nvcr.io/nvidia/pytorch@sha256:90f3c17838fde28d5c7ae2d5bfbc8a4c587d3797767ea96cdd48fe82e3613f3b"
+    "nvcr.io/nvidia/pytorch@sha256:3cb18e2c438db8af2d3a659ca27fac5da328640261c38c48a34edcd223c38af9"
 )
 HF_VOLUME = "peste-huggingface-cache-v1"
 OFFLINE_ENVIRONMENT = {
@@ -42,6 +44,15 @@ OFFLINE_ENVIRONMENT = {
     "HF_HUB_OFFLINE": "1",
     "TRANSFORMERS_OFFLINE": "1",
 }
+GPU_DEVICE_REQUESTS = [docker.types.DeviceRequest(count=-1, capabilities=[["gpu"]])]
+
+
+def load_hardware_profile(path: Path = HARDWARE_PROFILE_PATH) -> dict[str, Any]:
+    with path.open(encoding="utf-8") as profile_file:
+        profile = cast(dict[str, Any], json.load(profile_file))
+    if profile.get("profile_id") != "rtx-6000-ada-v1":
+        raise ValueError(f"Unsupported hardware profile in {path}")
+    return profile
 
 
 def _dataset_volume(suite: SuiteSpec) -> str:
@@ -52,105 +63,168 @@ def _result_volume(suite: SuiteSpec) -> str:
     return f"peste-{suite.suite_id}-results"
 
 
-class JetsonOrchestrator:
+def _marker(output: str, name: str) -> str:
+    prefix = f"__{name}__="
+    for line in output.splitlines():
+        if line.startswith(prefix):
+            return line.removeprefix(prefix).strip()
+    raise ValueError(f"Host diagnostics omitted {prefix}")
+
+
+def _optional_marker(output: str, name: str) -> str | None:
+    try:
+        value = _marker(output, name)
+    except ValueError:
+        return None
+    return value or None
+
+
+def _gpu_container_names(containers: list[Any]) -> list[str]:
+    names: list[str] = []
+    for container in containers:
+        host_config = container.attrs.get("HostConfig", {})
+        if host_config.get("Runtime") == "nvidia" or host_config.get("DeviceRequests"):
+            names.append(str(container.name))
+    return names
+
+
+class GpuOrchestrator:
     def __init__(self, host: str, root: Path = PROJECT_ROOT) -> None:
         if not host.startswith("ssh://"):
-            raise ValueError("Jetson host must use an ssh:// Docker endpoint")
+            raise ValueError("GPU host must use an ssh:// Docker endpoint")
         self.host = host
         self.root = root
         self.client = docker.DockerClient(base_url=host, use_ssh_client=True)
 
     def doctor(self) -> dict[str, str | int | float | bool]:
+        contract = load_hardware_profile(self.root / "hardware" / "rtx-6000-ada-v1.json")
         info = self.client.info()
         host_diagnostics = self._host_diagnostics()
-        running_gpu_containers = [
-            container.name
-            for container in self.client.containers.list()
-            if container.attrs.get("HostConfig", {}).get("Runtime") == "nvidia"
-        ]
-        command = [
-            "bash",
-            "-lc",
-            "set -euo pipefail; "
-            "printf '__L4T__='; tr '\\n' ' ' < /host/etc/nv_tegra_release; echo; "
-            "printf '__OS__='; "
-            'awk -F= \'/^(DISTRIB_ID|DISTRIB_RELEASE)=/{gsub(/"/,""); '
-            'printf "%s=%s ",$1,$2}\' /host/etc/lsb-release; echo; '
-            "printf '__MODEL__='; tr -d '\\000' < /host/sys/firmware/devicetree/base/model; echo; "
-            "printf '__MEM_KIB__='; awk '/MemTotal/{print $2}' /host/proc/meminfo; "
-            "printf '__STORAGE_KIB__='; df -Pk /cache | awk 'END{print $4}'; "
-            "printf '__IMAGE_TORCH_CUDA__='; "
-            "python -c 'import sys,torch; "
-            "sys.stdout.write(str(torch.version.cuda))'",
-        ]
-        output = self.client.containers.run(
+        running_gpu_containers = _gpu_container_names(self.client.containers.list())
+        visible_gpu_output = self.client.containers.run(
             BASE_IMAGE,
-            command,
+            [
+                "bash",
+                "-lc",
+                "nvidia-smi --query-gpu=name --format=csv,noheader,nounits",
+            ],
             remove=True,
-            runtime="nvidia",
+            device_requests=GPU_DEVICE_REQUESTS,
             network_disabled=True,
-            volumes={
-                "/etc": {"bind": "/host/etc", "mode": "ro"},
-                "/proc": {"bind": "/host/proc", "mode": "ro"},
-                "/sys": {"bind": "/host/sys", "mode": "ro"},
-                HF_VOLUME: {"bind": "/cache", "mode": "rw"},
-            },
         ).decode("utf-8", errors="replace")
-        report: dict[str, str | int | float | bool] = {
-            "docker_architecture": str(info.get("Architecture", "")),
-            "docker_os": str(info.get("OperatingSystem", "")),
-            "docker_memory_bytes": int(info.get("MemTotal", 0)),
-            "nvidia_runtime": "nvidia" in info.get("Runtimes", {}),
-            "competing_gpu_containers": ",".join(running_gpu_containers),
-            "raw_profile": output.strip(),
-            "raw_host_diagnostics": host_diagnostics.strip(),
-        }
+
+        gpu_rows = [row.strip() for row in _marker(host_diagnostics, "GPUS").split(";") if row]
+        gpu_fields = [field.strip() for field in gpu_rows[0].split(",")] if gpu_rows else []
         problems: list[str] = []
-        if report["docker_architecture"] not in {"aarch64", "arm64"}:
-            problems.append("Docker architecture is not ARM64")
-        if not report["nvidia_runtime"]:
-            problems.append("NVIDIA container runtime is unavailable")
-        if "R36 (release), REVISION: 4.7" not in output:
-            problems.append("L4T R36.4.7 was not detected")
-        if "DISTRIB_RELEASE=22.04" not in output:
-            problems.append("Ubuntu 22.04 was not detected")
-        if not re.search(r"__HOST_CUDA__=12\.6(?:\.|\b)", host_diagnostics):
-            problems.append("Host CUDA 12.6 was not detected")
-        if "Jetson AGX Orin" not in output:
-            problems.append("Jetson AGX Orin was not detected")
-        memory_gib = int(report["docker_memory_bytes"]) / 1024**3
-        if not 28 <= memory_gib <= 32:
-            problems.append(f"Expected AGX Orin 32GB memory profile, got {memory_gib:.1f} GiB")
-        if running_gpu_containers:
-            problems.append(f"Competing NVIDIA containers: {', '.join(running_gpu_containers)}")
-        maxn = bool(re.search(r"\bMAXN\b", host_diagnostics))
-        report["maxn"] = maxn
-        if not maxn:
-            problems.append("MAXN power mode was not detected")
-        gpu_process_match = re.search(r"__GPU_PIDS__=([^\n]*)", host_diagnostics)
-        gpu_processes = gpu_process_match.group(1).strip() if gpu_process_match else "unknown"
-        report["competing_gpu_processes"] = gpu_processes
-        if gpu_processes == "unknown":
-            problems.append("Could not verify competing host GPU processes")
-        elif gpu_processes:
-            problems.append(f"Competing host GPU processes: {gpu_processes}")
-        storage_match = re.search(r"__STORAGE_KIB__=(\d+)", output)
-        storage_available = int(storage_match.group(1)) * 1024 if storage_match else 0
-        report["storage_available_bytes"] = storage_available
-        minimum_storage = 60 * 1024**3
-        if storage_available < minimum_storage:
-            storage_gib = storage_available / 1024**3
+        if len(gpu_rows) != 1 or len(gpu_fields) != 8:
             problems.append(
-                f"At least 60 GiB free cache storage is required; found {storage_gib:.1f} GiB"
+                f"Expected exactly one full physical GPU; diagnostics reported {gpu_rows}"
             )
+            gpu_fields = ["unknown", "0", "unknown", "unknown", "0", "0", "unknown", "unknown"]
+        (
+            gpu_name,
+            memory_mib_raw,
+            driver_version,
+            ecc_state,
+            power_limit_raw,
+            power_max_raw,
+            gpu_uuid,
+            throttle_state,
+        ) = gpu_fields
+        try:
+            memory_mib = int(float(memory_mib_raw))
+            power_limit = float(power_limit_raw)
+            power_max = float(power_max_raw)
+        except ValueError:
+            memory_mib = 0
+            power_limit = 0.0
+            power_max = 0.0
+            problems.append("GPU numeric diagnostics could not be parsed")
+
+        architecture = str(info.get("Architecture", ""))
+        cpu_count = int(info.get("NCPU", _marker(host_diagnostics, "CPU_COUNT")))
+        memory_bytes = int(info.get("MemTotal", _marker(host_diagnostics, "MEM_BYTES")))
+        storage_bytes = int(_marker(host_diagnostics, "STORAGE_BYTES"))
+        cpu_model = _marker(host_diagnostics, "CPU_MODEL")
+        gpu_processes = _marker(host_diagnostics, "GPU_PROCESSES")
+        visible_names = [line.strip() for line in visible_gpu_output.splitlines() if line.strip()]
+
+        if architecture not in {"x86_64", "amd64"}:
+            problems.append(f"Docker architecture must be x86-64; got {architecture}")
+        if gpu_name != contract["gpu_product_name"]:
+            problems.append(f"GPU product must be {contract['gpu_product_name']}; got {gpu_name}")
+        if memory_mib != int(contract["gpu_memory_mib"]):
+            problems.append(
+                f"GPU memory must be {contract['gpu_memory_mib']} MiB; got {memory_mib} MiB"
+            )
+        if driver_version != contract["driver_version"]:
+            problems.append(f"Driver must be {contract['driver_version']}; got {driver_version}")
+        if ecc_state.casefold() != str(contract["ecc_state"]).casefold():
+            problems.append(f"ECC must be {contract['ecc_state']}; got {ecc_state}")
+        if not math.isclose(power_limit, float(contract["power_limit_watts"]), abs_tol=0.1):
+            problems.append(
+                f"Power limit must be {contract['power_limit_watts']} W; got {power_limit} W"
+            )
+        if not math.isclose(power_max, float(contract["power_max_limit_watts"]), abs_tol=0.1):
+            problems.append(
+                f"Board maximum must be {contract['power_max_limit_watts']} W; got {power_max} W"
+            )
+        if throttle_state.casefold() not in {
+            "0x0000000000000000",
+            "0x00000000",
+            "not active",
+            "none",
+        }:
+            problems.append(f"Active GPU throttling was detected: {throttle_state}")
+        if cpu_count < int(contract["minimum_cpu_count"]):
+            problems.append(f"At least {contract['minimum_cpu_count']} vCPUs are required")
+        if memory_bytes < int(contract["minimum_ram_bytes"]):
+            problems.append("At least 64 GiB host RAM is required")
+        if storage_bytes < int(contract["minimum_storage_bytes"]):
+            problems.append("At least 100 GiB free local storage is required")
+        if gpu_processes:
+            problems.append(f"Competing host GPU processes: {gpu_processes}")
+        if running_gpu_containers:
+            problems.append(f"Competing GPU containers: {', '.join(running_gpu_containers)}")
+        if visible_names != [str(contract["gpu_product_name"])]:
+            problems.append(f"Container GPU visibility mismatch: {visible_names}")
+
+        report: dict[str, str | int | float | bool] = {
+            "profile_id": str(contract["profile_id"]),
+            "profile": (
+                "NVIDIA RTX 6000 Ada Generation 48 GB / 300 W / "
+                f"driver {contract['driver_version']} / ECC {contract['ecc_state']}"
+            ),
+            "gpu_product_name": gpu_name,
+            "gpu_memory_mib": memory_mib,
+            "driver_version": driver_version,
+            "ecc_state": ecc_state,
+            "power_limit_watts": power_limit,
+            "power_max_limit_watts": power_max,
+            "throttle_state": throttle_state,
+            "gpu_uuid": gpu_uuid,
+            "cpu_count": cpu_count,
+            "cpu_model": cpu_model,
+            "memory_bytes": memory_bytes,
+            "storage_available_bytes": storage_bytes,
+            "docker_architecture": architecture,
+            "docker_os": str(info.get("OperatingSystem", "")),
+            "competing_gpu_processes": gpu_processes,
+            "competing_gpu_containers": ",".join(running_gpu_containers),
+            "vm_os": _marker(host_diagnostics, "OS"),
+        }
+        provenance = os.environ.get("PESTE_CLOUD_PROVENANCE") or _optional_marker(
+            host_diagnostics, "CLOUD_PROVENANCE"
+        )
+        if provenance:
+            report["cloud_provenance"] = provenance
         if problems:
             LOGGER.error(
-                "Jetson doctor failed",
+                "GPU doctor failed",
                 extra={"host": self.host, "problems": problems, "profile": report},
             )
-            raise RuntimeError("Jetson doctor failed: " + "; ".join(problems))
-        report["profile"] = "Jetson AGX Orin 32GB / JetPack 6.2 / R36.4.7 / CUDA 12.6"
-        LOGGER.info("Jetson doctor passed", extra={"host": self.host})
+            raise RuntimeError("GPU doctor failed: " + "; ".join(problems))
+        LOGGER.info("GPU doctor passed", extra={"host": self.host, "profile": report})
         return report
 
     def _host_diagnostics(self) -> str:
@@ -163,16 +237,27 @@ class JetsonOrchestrator:
         command = ["ssh", "-o", "BatchMode=yes"]
         if endpoint.port:
             command.extend(["-p", str(endpoint.port)])
-        command.extend(
-            [
-                target,
-                "set -eu; command -v nvpmodel >/dev/null; command -v fuser >/dev/null; "
-                "nvpmodel -q; printf '__GPU_PIDS__='; "
-                "fuser /dev/nvhost-gpu 2>/dev/null || true; echo; "
-                "printf '__HOST_CUDA__='; "
-                "awk -F'\"' '/\"version\"/{print $4; exit}' /usr/local/cuda/version.json",
-            ]
+        remote_command = (
+            "set -eu; "
+            "printf '__GPUS__='; "
+            "nvidia-smi --query-gpu=name,memory.total,driver_version,ecc.mode.current,"
+            "power.limit,power.max_limit,uuid,clocks_event_reasons.active "
+            "--format=csv,noheader,nounits | paste -sd ';' -; printf '\\n'; "
+            "printf '__GPU_PROCESSES__='; "
+            "nvidia-smi --query-compute-apps=pid,process_name --format=csv,noheader,nounits "
+            "2>/dev/null | paste -sd ';' - || true; printf '\\n'; "
+            "printf '__CPU_COUNT__='; getconf _NPROCESSORS_ONLN; "
+            "printf '__CPU_MODEL__='; awk -F: '/model name/{sub(/^ /,\"\",$2); print $2; exit}' "
+            "/proc/cpuinfo; "
+            "printf '__MEM_BYTES__='; awk '/MemTotal/{print $2 * 1024}' /proc/meminfo; "
+            "printf '__STORAGE_BYTES__='; df -PB1 / | awk 'END{print $4}'; "
+            "printf '__OS__='; . /etc/os-release; printf '%s %s\\n' \"$ID\" \"$VERSION_ID\"; "
+            "printf '__CLOUD_PROVENANCE__='; "
+            "awk -F= '/^(CONTAINER_ID|VAST_CONTAINERLABEL|VAST_INSTANCE_ID)=/"
+            '{printf "%s=%s ",$1,$2}\' '
+            "/etc/environment 2>/dev/null || true; printf '\\n'"
         )
+        command.extend([target, remote_command])
         try:
             return subprocess.run(
                 command,
@@ -183,7 +268,7 @@ class JetsonOrchestrator:
             ).stdout
         except (subprocess.SubprocessError, FileNotFoundError) as error:
             raise RuntimeError(
-                f"Unable to collect non-interactive Jetson host diagnostics: {error}"
+                f"Unable to collect non-interactive host diagnostics: {error}"
             ) from error
 
     def _run_checked(
@@ -205,19 +290,41 @@ class JetsonOrchestrator:
                 image,
                 command,
                 remove=True,
-                runtime="nvidia",
+                device_requests=GPU_DEVICE_REQUESTS,
                 network_disabled=network_disabled,
                 volumes=volumes,
                 environment=environment,
             ),
         )
 
+    def build_images(self) -> None:
+        for runtime in ("modern", "nemo"):
+            tag = f"peste-{runtime}:2.0.0"
+            LOGGER.info("Building remote runtime image", extra={"host": self.host, "image": tag})
+            image, build_logs = self.client.images.build(
+                path=str(self.root),
+                dockerfile=f"runtimes/{runtime}/Dockerfile",
+                tag=tag,
+                rm=True,
+            )
+            for entry in build_logs:
+                message = entry.get("stream") or entry.get("error")
+                if message and message.strip():
+                    LOGGER.debug(
+                        "Remote image build output",
+                        extra={"image": tag, "output": message.strip()},
+                    )
+            LOGGER.info(
+                "Built remote runtime image",
+                extra={"host": self.host, "image": tag, "digest": image.id},
+            )
+
     def prepare_dataset(self, suite: SuiteSpec) -> None:
         environment = {}
         if token := os.environ.get("HF_TOKEN"):
             environment["HF_TOKEN"] = token
         self._run_checked(
-            "peste-modern:1.0.0",
+            "peste-modern:2.0.0",
             ["peste", "_dataset-container", "--suite", suite.suite_id],
             network_disabled=False,
             volumes={_dataset_volume(suite): {"bind": "/cache/dataset", "mode": "rw"}},
@@ -225,6 +332,7 @@ class JetsonOrchestrator:
         )
 
     def _prefetch(self, suite: SuiteSpec, model: ModelSpec) -> None:
+        del suite
         environment = {}
         if token := os.environ.get("HF_TOKEN"):
             environment["HF_TOKEN"] = token
@@ -264,6 +372,49 @@ class JetsonOrchestrator:
             extra={"host": self.host, "model": model.model_id, "container_log": output.decode()},
         )
 
+    def profile_speed(self, suite: SuiteSpec, model: ModelSpec) -> dict[str, Any]:
+        profile = self.doctor()
+        self._prefetch(suite, model)
+        artifact = f"profile-speed-{model.model_id}.json"
+        self._run_checked(
+            model.runtime.image,
+            [
+                "peste",
+                "_profile-speed-container",
+                "--suite",
+                suite.suite_id,
+                "--model",
+                model.model_id,
+                "--output",
+                f"/results/{artifact}",
+            ],
+            network_disabled=True,
+            volumes={
+                HF_VOLUME: {"bind": "/cache/hf", "mode": "ro"},
+                _dataset_volume(suite): {"bind": "/cache/dataset", "mode": "ro"},
+                _result_volume(suite): {"bind": "/results", "mode": "rw"},
+            },
+            environment={
+                **OFFLINE_ENVIRONMENT,
+                "PESTE_HARDWARE_PROFILE_JSON": json.dumps(profile, sort_keys=True),
+            },
+        )
+        helper: Container = self.client.containers.create(
+            BASE_IMAGE,
+            ["true"],
+            volumes={_result_volume(suite): {"bind": "/results", "mode": "ro"}},
+        )
+        try:
+            with tempfile.TemporaryDirectory() as temporary:
+                destination = Path(temporary)
+                self._copy_archive(helper, PurePosixPath("/results") / artifact, destination)
+                return cast(
+                    dict[str, Any],
+                    json.loads((destination / artifact).read_text(encoding="utf-8")),
+                )
+        finally:
+            helper.remove(force=True)
+
     def _latest_resume(self, suite: SuiteSpec, model: ModelSpec) -> tuple[str, ResumeState] | None:
         results = self.root / "results" / suite.suite_id
         candidates: list[tuple[float, Path, RunBundle]] = []
@@ -277,20 +428,17 @@ class JetsonOrchestrator:
         if not candidates:
             return None
         _, path, bundle = max(candidates, key=lambda item: item[0])
-        prediction_path = path.parent / bundle.predictions_path
-        completed = (
-            sum(1 for _ in prediction_path.open(encoding="utf-8"))
-            if prediction_path.exists()
-            else 0
-        )
-        return (
-            bundle.run_id,
-            ResumeState(
-                completed_samples=completed,
-                peak_cuda_reserved_bytes=bundle.memory.peak_cuda_reserved_bytes,
-                peak_cuda_allocated_bytes=bundle.memory.peak_cuda_allocated_bytes,
-                peak_process_rss_bytes=bundle.memory.peak_process_rss_bytes,
-            ),
+        timing_path = path.parent / bundle.speed.timing_artifact
+        completed_batches = 0
+        completed_samples = 0
+        if timing_path.exists():
+            with timing_path.open(encoding="utf-8") as timing:
+                for line in timing:
+                    completed_batches += 1
+                    completed_samples += len(json.loads(line)["records"])
+        return bundle.run_id, ResumeState(
+            completed_batches=completed_batches,
+            completed_samples=completed_samples,
         )
 
     def run(self, suite: SuiteSpec, model: ModelSpec, *, resume: bool = False) -> RunBundle:
@@ -301,9 +449,8 @@ class JetsonOrchestrator:
             raise ValueError(f"No resumable failed run exists for {model.model_id}")
         timestamp = datetime.now(tz=UTC).strftime("%Y%m%dT%H%M%SZ")
         run_id = resumed[0] if resumed else f"{suite.suite_id}-{model.model_id}-{timestamp}"
-        resume_state = resumed[1] if resumed else None
         request = RunRequest(
-            schema_version=1,
+            schema_version=2,
             run_id=run_id,
             suite_id=suite.suite_id,
             suite_digest=spec_digest(suite),
@@ -313,7 +460,7 @@ class JetsonOrchestrator:
             dataset_cache=Path("/cache/dataset"),
             model_cache=Path("/cache/hf"),
             output_directory=Path("/results") / run_id,
-            resume=resume_state,
+            resume=resumed[1] if resumed else None,
         )
         image = self.client.images.get(model.runtime.image)
         image_digest = image.attrs.get("Id", "unknown")
@@ -330,7 +477,7 @@ class JetsonOrchestrator:
             ["peste", "_run-container"],
             detach=True,
             remove=False,
-            runtime="nvidia",
+            device_requests=GPU_DEVICE_REQUESTS,
             network_disabled=True,
             volumes={
                 HF_VOLUME: {"bind": "/cache/hf", "mode": "ro"},
@@ -352,6 +499,8 @@ class JetsonOrchestrator:
         bundle_path = destination / "run.json"
         if not bundle_path.exists():
             status = RunStatus.KILLED if wait_result.get("StatusCode") == 137 else RunStatus.FAILED
+            (destination / "timing.jsonl").touch(exist_ok=True)
+            (destination / "predictions.jsonl").touch(exist_ok=True)
             (destination / "diagnostics.json").write_bytes(
                 canonical_json({"container_wait": wait_result, "status": status.value})
             )
@@ -361,6 +510,29 @@ class JetsonOrchestrator:
 
     def _local_source_revision(self) -> str:
         try:
+            source_status = subprocess.run(
+                [
+                    "git",
+                    "status",
+                    "--porcelain",
+                    "--untracked-files=normal",
+                    "--",
+                    "src",
+                    "models",
+                    "suites",
+                    "runtimes",
+                    "hardware",
+                    "pyproject.toml",
+                ],
+                cwd=self.root,
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if source_status.stdout.strip():
+                LOGGER.warning("Benchmark source is uncommitted", extra={"root": str(self.root)})
+                return "uncommitted"
             return subprocess.run(
                 ["git", "rev-parse", "HEAD"],
                 cwd=self.root,
@@ -392,7 +564,7 @@ class JetsonOrchestrator:
         wait_result: dict[str, Any],
     ) -> RunBundle:
         return RunBundle(
-            schema_version=1,
+            schema_version=2,
             run_id=request.run_id,
             suite_id=suite.suite_id,
             suite_digest=request.suite_digest,
@@ -408,12 +580,30 @@ class JetsonOrchestrator:
                 pytorch_version="unknown",
                 cuda_version="unknown",
                 hardware_profile=profile,
+                gpu_product_name=str(profile.get("gpu_product_name", "unknown")),
+                driver_version=str(profile.get("driver_version", "unknown")),
+                ecc_state=str(profile.get("ecc_state", "unknown")),
+                power_limit_watts=float(profile.get("power_limit_watts", 0)),
+                cpu_model=str(profile.get("cpu_model", "unknown")),
+                gpu_uuid=str(profile.get("gpu_uuid", "unknown")),
+                cloud_provenance=(
+                    str(profile["cloud_provenance"]) if "cloud_provenance" in profile else None
+                ),
                 seed=request.seed,
             ),
-            memory=MemoryStatistics(
-                peak_cuda_reserved_bytes=0,
-                peak_cuda_allocated_bytes=0,
-                peak_process_rss_bytes=0,
+            speed=SpeedStatistics(
+                valid=False,
+                batch_size=model.speed_profile.batch_size,
+                warmup_batches=2,
+                measured_batches=0,
+                total_audio_seconds=0,
+                processing_seconds=0,
+                audio_throughput_x=0,
+                rtf=0,
+                timing_artifact="timing.jsonl",
+                invalidity_reason="Container exited before producing a result bundle",
+            ),
+            model_facts=ModelFacts(
                 checkpoint_bytes=0,
                 parameter_count=0,
                 native_dtype=model.native_dtype,
