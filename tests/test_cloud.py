@@ -3,6 +3,7 @@
 import json
 import logging
 import subprocess
+from contextlib import nullcontext
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -68,6 +69,15 @@ def test_create_uses_pinned_vm_image_direct_ssh_and_disk(tmp_path: Path) -> None
             },
             "ssh://root@5.6.7.8:2200",
         ),
+        (
+            {
+                "ssh_host": "ssh5.vast.ai",
+                "ssh_port": 29558,
+                "public_ipaddr": "112.69.3.12",
+                "ports": {"22/tcp": [{"HostIp": "0.0.0.0", "HostPort": "43522"}]},
+            },
+            "ssh://root@112.69.3.12:43522",
+        ),
     ],
 )
 def test_ssh_url_parses_direct_mappings(
@@ -80,6 +90,25 @@ def test_missing_api_key_has_actionable_error(monkeypatch: Any, tmp_path: Path) 
     monkeypatch.delenv("VAST_API_KEY", raising=False)
     with pytest.raises(RuntimeError, match="uv run vastai set api-key"):
         VastClient(config_path=tmp_path / "missing")
+
+
+def test_wait_accepts_created_running_vm_when_direct_ssh_is_reachable(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    client = _configured_client(tmp_path, RecordedRun([]))
+    instance = {
+        "id": 123,
+        "actual_status": "created",
+        "intended_status": "running",
+        "public_ipaddr": "112.69.3.12",
+        "ports": {"22/tcp": [{"HostIp": "0.0.0.0", "HostPort": "43522"}]},
+    }
+    monkeypatch.setattr(client, "show_instances", lambda: [instance])
+    monkeypatch.setattr(
+        "peste.cloud.socket.create_connection", lambda *args, **kwargs: nullcontext()
+    )
+
+    assert client.wait_until_running(123, clock=lambda: 0) == instance
 
 
 def test_api_key_is_redacted_from_failure_and_logs(
@@ -130,6 +159,9 @@ class LifecycleClient:
 
     def search_offers(self, *, max_dph: float | None = None) -> list[dict[str, Any]]:
         return self.offers
+
+    def show_instances(self) -> list[dict[str, Any]]:
+        return []
 
     def create_instance(self, offer_id: int) -> int:
         self.created.append(offer_id)

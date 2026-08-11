@@ -360,15 +360,11 @@ def cloud_down() -> None:
 
 @cloud_app.command("build", help="Build both v2 runtime images through the VM Docker daemon.")
 def cloud_build() -> None:
-    from peste.cloud import VastClient, labeled_instances
+    from peste.cloud import VastClient, instance_is_running, labeled_instances
     from peste.orchestration import GpuOrchestrator
 
     client = VastClient()
-    running = [
-        instance
-        for instance in labeled_instances(client)
-        if instance.get("actual_status", instance.get("status")) == "running"
-    ]
+    running = [instance for instance in labeled_instances(client) if instance_is_running(instance)]
     if len(running) != 1:
         raise RuntimeError(f"Expected one running peste-official instance; found {len(running)}")
     host = client.ssh_url(running[0])

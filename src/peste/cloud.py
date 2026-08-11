@@ -31,6 +31,13 @@ def _instance_id(value: Mapping[str, Any]) -> int:
     return int(raw_id)
 
 
+def instance_is_running(instance: Mapping[str, Any]) -> bool:
+    """Treat Vast's VM-specific `created` state as ready-intended, pending SSH reachability."""
+    actual = str(instance.get("actual_status", instance.get("status", "unknown")))
+    intended = str(instance.get("intended_status", "unknown"))
+    return actual == "running" or (actual == "created" and intended == "running")
+
+
 class VastClient:
     """Invoke the installed Vast.ai CLI and parse only its raw JSON output."""
 
@@ -151,7 +158,7 @@ class VastClient:
                 "Waiting for Vast.ai VM",
                 extra={"instance_id": instance_id, "state": last_state},
             )
-            if last_state == "running":
+            if instance_is_running(instance):
                 try:
                     host, port = self._ssh_address(instance)
                     with socket.create_connection((host, port), timeout=5):
@@ -165,15 +172,15 @@ class VastClient:
 
     @staticmethod
     def _ssh_address(instance: Mapping[str, Any]) -> tuple[str, int]:
-        host = (
-            instance.get("ssh_host") or instance.get("public_ipaddr") or instance.get("public_ip")
-        )
+        direct_host = instance.get("public_ipaddr") or instance.get("public_ip")
+        mappings = instance.get("ports", {}).get("22/tcp", [])
+        if direct_host and mappings and mappings[0].get("HostPort"):
+            return str(direct_host), int(mappings[0]["HostPort"])
+        host = instance.get("ssh_host") or direct_host
         port = instance.get("ssh_port")
-        if port is None:
-            mappings = instance.get("ports", {}).get("22/tcp", [])
-            if mappings:
-                port = mappings[0].get("HostPort")
-                host = host or mappings[0].get("HostIp")
+        if not host and mappings:
+            host = mappings[0].get("HostIp")
+            port = port or mappings[0].get("HostPort")
         if not host or not port:
             raise ValueError("Vast.ai instance has no direct SSH address")
         return str(host), int(port)
@@ -259,6 +266,29 @@ def provision_official_vm(
     bootstrap: Callable[[str], None] = bootstrap_vm,
 ) -> ProvisionedInstance:
     """Provision a doctor-approved VM, destroying every rejected attempt."""
+    existing = labeled_instances(client)
+    if len(existing) > 1:
+        raise RuntimeError(f"Expected at most one {VAST_LABEL} instance; found {len(existing)}")
+    if existing:
+        existing_id = _instance_id(existing[0])
+        LOGGER.info("Adopting existing labeled Vast.ai VM", extra={"instance_id": existing_id})
+        try:
+            instance = client.wait_until_running(existing_id)
+            host = client.ssh_url(instance)
+            bootstrap(host)
+            doctor_factory(host).doctor()
+            return ProvisionedInstance(
+                instance_id=existing_id,
+                offer_id=int(instance.get("ask_contract_id", existing_id)),
+                dph_total=float(instance.get("dph_total", instance.get("dph_base", 0))),
+                host=host,
+            )
+        except Exception:
+            LOGGER.exception(
+                "Rejected existing labeled Vast.ai VM", extra={"instance_id": existing_id}
+            )
+            client.destroy_instance(existing_id)
+
     offers = client.search_offers(max_dph=max_dph)
     if not offers:
         raise RuntimeError("No Vast.ai offers satisfy the RTX 6000 Ada preselection policy")
