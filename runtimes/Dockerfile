@@ -23,7 +23,7 @@ RUN uv venv --python /usr/bin/python3 --system-site-packages /opt/venvs/modern \
       --requirement /tmp/modern-requirements.txt \
     && uv venv --python /usr/bin/python3 --system-site-packages /opt/venvs/nemo \
     && uv export --directory /opt/runtime/nemo --quiet --frozen --no-dev --no-emit-project \
-      --prune torch --prune torchvision --prune torchcodec \
+      --prune torch --prune torchaudio --prune torchvision --prune torchcodec \
       --output-file /tmp/nemo-requirements.txt \
     && uv pip install --python /opt/venvs/nemo/bin/python --no-deps \
       --requirement /tmp/nemo-requirements.txt
