@@ -3,7 +3,6 @@
 import json
 import logging
 import subprocess
-from contextlib import nullcontext
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -104,11 +103,29 @@ def test_wait_accepts_created_running_vm_when_direct_ssh_is_reachable(
         "ports": {"22/tcp": [{"HostIp": "0.0.0.0", "HostPort": "43522"}]},
     }
     monkeypatch.setattr(client, "show_instances", lambda: [instance])
-    monkeypatch.setattr(
-        "peste.cloud.socket.create_connection", lambda *args, **kwargs: nullcontext()
-    )
+
+    class SshSocket:
+        def __enter__(self) -> "SshSocket":
+            return self
+
+        def __exit__(self, *args: Any) -> None:
+            pass
+
+        def settimeout(self, timeout: float) -> None:
+            pass
+
+        def recv(self, size: int) -> bytes:
+            return b"SSH-"
+
+    monkeypatch.setattr("peste.cloud.socket.create_connection", lambda *args, **kwargs: SshSocket())
 
     assert client.wait_until_running(123, clock=lambda: 0) == instance
+
+
+def test_destroy_is_noninteractive(tmp_path: Path) -> None:
+    run = RecordedRun([{"success": True}])
+    _configured_client(tmp_path, run).destroy_instance(123)
+    assert "--yes" in run.commands[0]
 
 
 def test_api_key_is_redacted_from_failure_and_logs(

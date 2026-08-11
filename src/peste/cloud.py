@@ -161,8 +161,10 @@ class VastClient:
             if instance_is_running(instance):
                 try:
                     host, port = self._ssh_address(instance)
-                    with socket.create_connection((host, port), timeout=5):
-                        return instance
+                    with socket.create_connection((host, port), timeout=5) as connection:
+                        connection.settimeout(5)
+                        if connection.recv(4) == b"SSH-":
+                            return instance
                 except (KeyError, ValueError, OSError):
                     pass
             sleep(poll_interval_seconds)
@@ -190,7 +192,7 @@ class VastClient:
         return f"ssh://root@{host}:{port}"
 
     def destroy_instance(self, instance_id: int) -> None:
-        payload = self._invoke(["destroy", "instance", str(instance_id)])
+        payload = self._invoke(["destroy", "instance", str(instance_id), "--yes"])
         if isinstance(payload, dict) and payload.get("success") is False:
             raise RuntimeError(f"Vast.ai rejected instance destruction: {payload}")
         LOGGER.info("Destroyed Vast.ai instance", extra={"instance_id": instance_id})
