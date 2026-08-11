@@ -4,6 +4,7 @@ import os
 import socket
 import stat
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -65,6 +66,55 @@ def test_remote_action_rejects_unapproved_environment_before_execution(
             "modern",
             '{"environment":{"VAST_API_KEY":"must-not-cross-boundary"}}',
         )
+
+
+def test_offline_action_drops_privileges_from_benchmark_users_home(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    benchmark_home = tmp_path / "peste"
+    benchmark_home.mkdir()
+    executable = tmp_path / "peste"
+    executable.touch()
+    offline_guard = tmp_path / "libpeste_offline.so"
+    offline_guard.touch()
+    cache_roots = (tmp_path / "dataset", tmp_path / "hf")
+    for root in cache_roots:
+        root.mkdir()
+    account = SimpleNamespace(
+        pw_uid=10001,
+        pw_gid=10001,
+        pw_name="peste",
+        pw_dir=str(benchmark_home),
+    )
+    recorded: dict[str, Any] = {}
+
+    def run(command: list[str], **options: Any) -> SimpleNamespace:
+        recorded["command"] = command
+        recorded.update(options)
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(remote.os, "geteuid", lambda: 0)
+    monkeypatch.setattr(remote.pwd, "getpwnam", lambda name: account)
+    monkeypatch.setattr(remote, "OFFLINE_GUARD", offline_guard)
+    monkeypatch.setattr(remote, "CACHE_ROOTS", cache_roots)
+    monkeypatch.setattr(remote, "_assert_cache_is_read_only", lambda root: None)
+    monkeypatch.setattr(remote, "_runtime_executable", lambda runtime: executable)
+    monkeypatch.setattr(remote.subprocess, "run", run)
+
+    result = remote.execute_action(
+        "smoke",
+        "nemo",
+        '{"model":"nvidia-fastconformer-fa","hardware_profile_json":"{}"}',
+    )
+
+    assert result == 0
+    assert recorded["cwd"] == str(benchmark_home)
+    assert recorded["user"] == account.pw_uid
+    assert recorded["group"] == account.pw_gid
+    assert recorded["extra_groups"] == ()
+    assert recorded["env"]["HOME"] == str(benchmark_home)
+    assert recorded["env"]["USER"] == "peste"
+    assert recorded["env"]["LOGNAME"] == "peste"
 
 
 def test_image_metadata_selects_only_non_secret_provenance(monkeypatch: Any) -> None:

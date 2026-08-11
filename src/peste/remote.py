@@ -214,6 +214,7 @@ def execute_action(action: ActionName, runtime: RuntimeName, payload_text: str) 
                 "group": account.pw_gid,
                 "extra_groups": (),
                 "umask": 0o022,
+                "cwd": account.pw_dir,
             }
         )
     completed = subprocess.run(command, **run_options)

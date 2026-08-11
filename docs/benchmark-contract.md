@@ -62,7 +62,8 @@ The authoritative profile is
 - NVIDIA driver major 580 or newer;
 - ECC exactly `Disabled`;
 - power limit and board maximum both exactly 300 W;
-- no active clock-throttle reason;
+- no active performance-limiting clock event (NVML's `0x1` GPU-idle bit is expected and allowed
+  while the doctor is probing an otherwise idle device);
 - no competing process on the assigned GPU; and
 - exactly one matching numbered NVIDIA GPU device visible in the carrier container.
 

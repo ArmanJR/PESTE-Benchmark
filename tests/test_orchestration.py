@@ -85,6 +85,11 @@ def test_doctor_accepts_exact_rtx_profile_and_digest_pinned_container() -> None:
     assert report["image_reference"] == IMAGE
 
 
+def test_doctor_accepts_benign_gpu_idle_clock_event() -> None:
+    report = _orchestrator(_diagnostics(throttle="0x0000000000000001")).doctor()
+    assert report["throttle_state"] == "0x0000000000000001"
+
+
 @pytest.mark.parametrize(
     ("diagnostics", "message"),
     [
@@ -95,7 +100,9 @@ def test_doctor_accepts_exact_rtx_profile_and_digest_pinned_container() -> None:
         (_diagnostics(ecc="Enabled"), "ECC"),
         (_diagnostics(power=250), "Power limit"),
         (_diagnostics(power_max=320), "Board maximum"),
-        (_diagnostics(throttle="0x0000000000000004"), "throttling"),
+        (_diagnostics(throttle="0x0000000000000004"), "clock event"),
+        (_diagnostics(throttle="0x0000000000000005"), "clock event"),
+        (_diagnostics(throttle="unparseable"), "clock event"),
         (_diagnostics(processes="1234, training"), "Competing GPU processes"),
         (_diagnostics(storage_bytes=99 * 1024**3), "100 GiB"),
         (_diagnostics(device_count=2), "exactly one numbered"),

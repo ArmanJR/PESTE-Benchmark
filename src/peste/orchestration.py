@@ -33,6 +33,19 @@ from peste.specs import spec_digest
 LOGGER = logging.getLogger(__name__)
 HARDWARE_PROFILE_PATH = PROJECT_ROOT / "hardware" / "rtx-6000-ada-v1.json"
 REMOTE_CONTROLLER = "/opt/venvs/modern/bin/peste"
+GPU_IDLE_CLOCK_EVENT_MASK = 0x1
+
+
+def has_performance_clock_event(throttle_state: str) -> bool:
+    """Return whether NVML reports any clock event beyond the benign idle state."""
+    normalized = throttle_state.strip().casefold()
+    if normalized in {"not active", "none"}:
+        return False
+    try:
+        active_mask = int(normalized, 0)
+    except ValueError:
+        return True
+    return active_mask & ~GPU_IDLE_CLOCK_EVENT_MASK != 0
 
 
 def load_hardware_profile(path: Path = HARDWARE_PROFILE_PATH) -> dict[str, Any]:
@@ -246,13 +259,10 @@ class GpuOrchestrator:
             problems.append(
                 f"Board maximum must be {contract['power_max_limit_watts']} W; got {power_max} W"
             )
-        if throttle_state.casefold() not in {
-            "0x0000000000000000",
-            "0x00000000",
-            "not active",
-            "none",
-        }:
-            problems.append(f"Active GPU throttling was detected: {throttle_state}")
+        if has_performance_clock_event(throttle_state):
+            problems.append(
+                f"A performance-limiting GPU clock event was detected: {throttle_state}"
+            )
         if int(diagnostics.get("gpu_device_count", 0)) != 1:
             problems.append("Container must expose exactly one numbered NVIDIA GPU device")
         if cpu_count < int(contract["minimum_cpu_count"]):
