@@ -18,7 +18,7 @@ uv sync --frozen --all-groups
 | [`hardware/`](../hardware) | Immutable doctor-enforced hardware profiles |
 | [`models/`](../models) | Checkpoint and deterministic batch specifications |
 | [`suites/`](../suites) | Dataset contracts and manifests |
-| [`runtimes/`](../runtimes) | Digest-pinned framework images and frozen dependencies |
+| [`runtimes/`](../runtimes) | Digest-pinned carrier image, offline guard, and frozen environments |
 | [`results/`](../results) | Official schema-2 run bundles |
 | [`generated/`](../generated) | Deterministic accuracy/speed artifacts |
 
@@ -51,6 +51,7 @@ That command owns `generated/leaderboard.md`, `generated/leaderboard-accuracy.sv
 `generated/leaderboard-speed.svg`, `generated/leaderboard.json`, `generated/leaderboard.csv`, and
 the README marker block.
 
-Framework/interface changes also require a real multi-item smoke and speed calibration on the
-doctor-approved RTX profile. State the changed contract, affected runtime, validation performed,
-and operational follow-up in the pull request. Do not include unofficial scores.
+Framework/interface changes also require the manual GHCR carrier workflow, a real multi-item smoke,
+and speed calibration on the doctor-approved RTX profile. State the changed contract, affected
+runtime, image digest, validation performed, and operational follow-up in the pull request. Do not
+include unofficial scores.

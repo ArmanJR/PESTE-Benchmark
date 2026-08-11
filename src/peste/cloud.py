@@ -1,8 +1,9 @@
-"""Thin, redacting Vast.ai CLI integration for reference VM acquisition."""
+"""Thin, redacting Vast.ai CLI integration for ordinary container acquisition."""
 
 import json
 import logging
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -11,17 +12,36 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
 
 LOGGER = logging.getLogger(__name__)
 VAST_LABEL = "peste-official"
-VAST_VM_IMAGE = "docker.io/vastai/kvm:ubuntu_terminal"
 VAST_GPU_ENUM = "RTX_6000Ada"
+VAST_DISK_GB = 200
+VAST_IMAGE_REPOSITORY = "ghcr.io/armanjr/peste-benchmark"
+IMAGE_REFERENCE_PATTERN = re.compile(rf"^{re.escape(VAST_IMAGE_REPOSITORY)}@sha256:[0-9a-f]{{64}}$")
 OFFER_QUERY = (
-    f"gpu_name={VAST_GPU_ENUM} num_gpus=1 vms_enabled=true verified=true "
-    "cpu_cores>=8 cpu_ram>=64 disk_space>=100 reliability>0.98 "
-    "gpu_max_power>=300"
+    f"gpu_name={VAST_GPU_ENUM} num_gpus=1 verified=true "
+    "cpu_cores>=8 cpu_ram>=64 disk_space>=200 reliability>0.98 "
+    "gpu_max_power>=300 driver_version>=580.0.0"
 )
+CONTAINER_ONSTART = (
+    "set -eu; install -d -m 0755 /cache/dataset /cache/hf /results; "
+    "touch /etc/environment; "
+    "for name in PESTE_IMAGE_REFERENCE PESTE_IMAGE_DIGEST PESTE_SOURCE_REVISION CONTAINER_ID "
+    'VAST_CONTAINERLABEL; do value=$(printenv "$name" 2>/dev/null || true); '
+    'if [ -n "$value" ]; then sed -i "/^${name}=/d" /etc/environment; '
+    'printf \'%s=%s\\n\' "$name" "$value" >> /etc/environment; fi; done'
+)
+
+
+def validate_image_reference(image_reference: str) -> str:
+    """Require the public PESTE GHCR image to be selected by immutable digest."""
+    if IMAGE_REFERENCE_PATTERN.fullmatch(image_reference) is None:
+        raise ValueError(
+            "Vast container image must be an immutable PESTE GHCR reference: "
+            f"{VAST_IMAGE_REPOSITORY}@sha256:<64 lowercase hex characters>"
+        )
+    return image_reference
 
 
 def _instance_id(value: Mapping[str, Any]) -> int:
@@ -32,10 +52,16 @@ def _instance_id(value: Mapping[str, Any]) -> int:
 
 
 def instance_is_running(instance: Mapping[str, Any]) -> bool:
-    """Treat Vast's VM-specific `created` state as ready-intended, pending SSH reachability."""
-    actual = str(instance.get("actual_status", instance.get("status", "unknown")))
-    intended = str(instance.get("intended_status", "unknown"))
-    return actual == "running" or (actual == "created" and intended == "running")
+    """Return whether an ordinary Vast container has reached its running state."""
+    return str(instance.get("actual_status", instance.get("status", "unknown"))) == "running"
+
+
+def _require_instance_image(instance: Mapping[str, Any], image_reference: str) -> None:
+    actual = str(instance.get("image_uuid", ""))
+    if actual != image_reference:
+        raise RuntimeError(
+            f"Vast.ai instance image {actual or 'missing'} differs from {image_reference}"
+        )
 
 
 class VastClient:
@@ -98,7 +124,15 @@ class VastClient:
 
     def search_offers(self, *, max_dph: float | None = None) -> list[dict[str, Any]]:
         payload = self._invoke(
-            ["search", "offers", OFFER_QUERY, "--order", "dph_total", "--storage", "100"]
+            [
+                "search",
+                "offers",
+                OFFER_QUERY,
+                "--order",
+                "dph_total",
+                "--storage",
+                str(VAST_DISK_GB),
+            ]
         )
         if not isinstance(payload, list):
             raise RuntimeError("Vast.ai offer search did not return a JSON list")
@@ -107,20 +141,26 @@ class VastClient:
             offers = [offer for offer in offers if float(offer["dph_total"]) <= max_dph]
         return sorted(offers, key=lambda offer: (float(offer["dph_total"]), int(offer["id"])))
 
-    def create_instance(self, offer_id: int) -> int:
+    def create_instance(self, offer_id: int, image_reference: str) -> int:
+        image_reference = validate_image_reference(image_reference)
+        digest = image_reference.rsplit("@", maxsplit=1)[1]
         payload = self._invoke(
             [
                 "create",
                 "instance",
                 str(offer_id),
                 "--image",
-                VAST_VM_IMAGE,
+                image_reference,
                 "--ssh",
                 "--direct",
                 "--disk",
-                "100",
+                str(VAST_DISK_GB),
                 "--label",
                 VAST_LABEL,
+                "--env",
+                (f"-e PESTE_IMAGE_REFERENCE={image_reference} -e PESTE_IMAGE_DIGEST={digest}"),
+                "--onstart-cmd",
+                CONTAINER_ONSTART,
                 "--cancel-unavail",
             ]
         )
@@ -148,6 +188,7 @@ class VastClient:
     ) -> dict[str, Any]:
         deadline = clock() + timeout_seconds
         last_state = "unknown"
+        terminal_states = {"exited", "offline", "unknown"}
         while clock() < deadline:
             instance = next(
                 (item for item in self.show_instances() if _instance_id(item) == instance_id),
@@ -157,9 +198,14 @@ class VastClient:
                 raise RuntimeError(f"Vast.ai instance {instance_id} disappeared while provisioning")
             last_state = str(instance.get("actual_status", instance.get("status", "unknown")))
             LOGGER.info(
-                "Waiting for Vast.ai VM",
+                "Waiting for Vast.ai container",
                 extra={"instance_id": instance_id, "state": last_state},
             )
+            if last_state in terminal_states:
+                status_message = str(instance.get("status_msg", ""))
+                raise RuntimeError(
+                    f"Vast.ai instance {instance_id} entered {last_state}: {status_message}"
+                )
             if instance_is_running(instance):
                 try:
                     host, port = self._ssh_address(instance)
@@ -186,7 +232,7 @@ class VastClient:
             host = mappings[0].get("HostIp")
             port = port or mappings[0].get("HostPort")
         if not host or not port:
-            raise ValueError("Vast.ai instance has no direct SSH address")
+            raise ValueError("Vast.ai instance has no SSH address")
         return str(host), int(port)
 
     def ssh_url(self, instance: Mapping[str, Any]) -> str:
@@ -200,97 +246,55 @@ class VastClient:
         LOGGER.info("Destroyed Vast.ai instance", extra={"instance_id": instance_id})
 
 
-def bootstrap_vm(host: str) -> None:
-    """Ensure systemd Docker and NVIDIA Container Toolkit work in the rented VM."""
-    endpoint = urlparse(host)
-    if endpoint.hostname is None:
-        raise ValueError(f"Invalid SSH URL: {host}")
-    target = f"{endpoint.username or 'root'}@{endpoint.hostname}"
-    command = [
-        "ssh",
-        "-o",
-        "BatchMode=yes",
-        "-o",
-        "StrictHostKeyChecking=accept-new",
-        "-o",
-        "ConnectTimeout=10",
-    ]
-    if endpoint.port:
-        command.extend(["-p", str(endpoint.port)])
-    bootstrap = (
-        "set -euo pipefail; export DEBIAN_FRONTEND=noninteractive; "
-        "if ! command -v docker >/dev/null; then apt-get update; apt-get install -y docker.io; fi; "
-        "if ! command -v nvidia-ctk >/dev/null; then "
-        "apt-get update; apt-get install -y --no-install-recommends ca-certificates curl gnupg2; "
-        "curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey "
-        "| gpg --dearmor --yes -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg; "
-        "curl -fsSL "
-        "https://nvidia.github.io/libnvidia-container/stable/deb/"
-        "nvidia-container-toolkit.list "
-        "| sed 's#deb https://#deb "
-        "[signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' "
-        "> /etc/apt/sources.list.d/nvidia-container-toolkit.list; "
-        "apt-get update; apt-get install -y nvidia-container-toolkit; fi; "
-        "nvidia-ctk runtime configure --runtime=docker; "
-        "systemctl enable --now docker; systemctl restart docker; "
-        "docker info >/dev/null; "
-        "docker run --rm --gpus all "
-        "nvcr.io/nvidia/pytorch@sha256:"
-        "3cb18e2c438db8af2d3a659ca27fac5da328640261c38c48a34edcd223c38af9 "
-        "nvidia-smi --query-gpu=name --format=csv,noheader,nounits"
-    )
-    command.extend([target, bootstrap])
-    LOGGER.info("Bootstrapping Vast.ai VM", extra={"host": host})
-    try:
-        subprocess.run(command, check=True, capture_output=True, text=True, timeout=600)
-    except subprocess.CalledProcessError as error:
-        LOGGER.error(
-            "Vast.ai VM bootstrap failed",
-            extra={"host": host, "returncode": error.returncode, "stderr": error.stderr},
-        )
-        raise RuntimeError(f"Vast.ai VM bootstrap failed: {error.stderr.strip()}") from error
-    except (subprocess.SubprocessError, FileNotFoundError) as error:
-        raise RuntimeError(f"Unable to bootstrap Vast.ai VM: {error}") from error
-
-
 @dataclass(frozen=True, slots=True)
 class ProvisionedInstance:
     instance_id: int
     offer_id: int
     dph_total: float
     host: str
+    image_reference: str
 
 
-def provision_official_vm(
+def provision_official_container(
     client: VastClient,
     doctor_factory: Callable[[str], Any],
+    image_reference: str,
     *,
     max_dph: float | None = None,
     maximum_attempts: int = 3,
     excluded_offer_ids: frozenset[int] | None = None,
-    bootstrap: Callable[[str], None] = bootstrap_vm,
 ) -> ProvisionedInstance:
-    """Provision a doctor-approved VM, destroying every rejected attempt."""
+    """Provision a doctor-approved container, destroying every rejected attempt."""
+    image_reference = validate_image_reference(image_reference)
     existing = labeled_instances(client)
     if len(existing) > 1:
         raise RuntimeError(f"Expected at most one {VAST_LABEL} instance; found {len(existing)}")
     if existing:
         existing_id = _instance_id(existing[0])
-        LOGGER.info("Adopting existing labeled Vast.ai VM", extra={"instance_id": existing_id})
+        existing_image = str(existing[0].get("image_uuid", ""))
+        LOGGER.info(
+            "Inspecting existing labeled Vast.ai container",
+            extra={"instance_id": existing_id, "image": existing_image},
+        )
         try:
+            if existing_image and existing_image != image_reference:
+                raise RuntimeError(
+                    f"Existing instance image {existing_image} differs from {image_reference}"
+                )
             instance = client.wait_until_running(existing_id)
+            _require_instance_image(instance, image_reference)
             host = client.ssh_url(instance)
-            bootstrap(host)
             doctor_factory(host).doctor()
             return ProvisionedInstance(
                 instance_id=existing_id,
                 offer_id=int(instance.get("ask_contract_id", existing_id)),
                 dph_total=float(instance.get("dph_total", instance.get("dph_base", 0))),
                 host=host,
+                image_reference=image_reference,
             )
         except Exception:
             LOGGER.exception(
-                "Rejected existing labeled Vast.ai VM", extra={"instance_id": existing_id}
+                "Rejected existing labeled Vast.ai container", extra={"instance_id": existing_id}
             )
             client.destroy_instance(existing_id)
 
@@ -300,29 +304,25 @@ def provision_official_vm(
     ]
     if not offers:
         raise RuntimeError(
-            "No non-excluded Vast.ai offers satisfy the RTX 6000 Ada preselection policy"
+            "No non-excluded Vast.ai offers satisfy the RTX 6000 Ada container preselection policy"
         )
     failures: list[str] = []
     for offer in offers[:maximum_attempts]:
         offer_id = int(offer["id"])
         dph_total = float(offer["dph_total"])
         instance_id: int | None = None
-        LOGGER.info(
-            "Trying Vast.ai offer",
-            extra={"offer_id": offer_id, "dph_total": dph_total},
-        )
+        LOGGER.info("Trying Vast.ai offer", extra={"offer_id": offer_id, "dph_total": dph_total})
         try:
-            instance_id = client.create_instance(offer_id)
+            instance_id = client.create_instance(offer_id, image_reference)
             instance = client.wait_until_running(instance_id)
+            _require_instance_image(instance, image_reference)
             host = client.ssh_url(instance)
-            bootstrap(host)
             doctor_factory(host).doctor()
-            return ProvisionedInstance(instance_id, offer_id, dph_total, host)
+            return ProvisionedInstance(instance_id, offer_id, dph_total, host, image_reference)
         except Exception as error:
             failures.append(f"offer {offer_id}: {type(error).__name__}: {error}")
             LOGGER.exception(
-                "Rejected Vast.ai offer",
-                extra={"offer_id": offer_id, "instance_id": instance_id},
+                "Rejected Vast.ai offer", extra={"offer_id": offer_id, "instance_id": instance_id}
             )
             if instance_id is not None:
                 try:
@@ -335,7 +335,9 @@ def provision_official_vm(
                     raise RuntimeError(
                         f"Failed to destroy rejected Vast.ai instance {instance_id}"
                     ) from destroy_error
-    raise RuntimeError("No doctor-approved Vast.ai VM was provisioned: " + "; ".join(failures))
+    raise RuntimeError(
+        "No doctor-approved Vast.ai container was provisioned: " + "; ".join(failures)
+    )
 
 
 def labeled_instances(client: VastClient) -> list[dict[str, Any]]:

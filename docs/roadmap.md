@@ -12,7 +12,7 @@
 - [x] Replace singleton adapter calls with deterministic per-model native batching.
 - [x] Replace resource ranking with steady-state throughput and RTF.
 - [x] Add batch calibration, timing journals, and resumed-speed invalidation.
-- [x] Add the Vast.ai VM reference acquisition/build lifecycle.
+- [x] Add the ordinary Vast.ai container and digest-pinned GHCR reference lifecycle.
 - [x] Move persisted specifications, manifests, requests, predictions, bundles, and generated JSON
   to schema 2.
 - [x] Preserve `fleurs-fa-ir-v1`, `fa-v1`, checkpoint revisions, accuracy metrics, uncertainty, and

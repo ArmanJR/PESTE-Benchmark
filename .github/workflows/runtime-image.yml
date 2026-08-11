@@ -1,0 +1,76 @@
+name: Runtime image
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: ghcr.io/armanjr/peste-benchmark
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reclaim runner disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc
+          docker system prune --all --force
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish carrier image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: runtimes/Dockerfile
+          platforms: linux/amd64
+          push: true
+          build-args: PESTE_SOURCE_REVISION=${{ github.sha }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:2.0.0
+            ${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+
+      - name: Verify both runtime environments and offline guard
+        env:
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          image_ref="${IMAGE_NAME}@${IMAGE_DIGEST}"
+          docker run --rm --entrypoint /opt/venvs/modern/bin/peste "$image_ref" --version
+          docker run --rm --entrypoint /opt/venvs/nemo/bin/peste "$image_ref" --version
+          probe=$(docker run --rm --user peste \
+            -e LD_PRELOAD=/opt/peste/lib/libpeste_offline.so \
+            --entrypoint /opt/venvs/modern/bin/peste "$image_ref" _offline-probe)
+          test "$probe" = '{"cache_writes_denied": true, "network_denied": true}'
+
+      - name: Publish immutable reference artifact
+        env:
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          jq -n \
+            --arg image_reference "${IMAGE_NAME}@${IMAGE_DIGEST}" \
+            --arg source_revision "${GITHUB_SHA}" \
+            '{image_reference: $image_reference, source_revision: $source_revision}' \
+            > runtime-image.json
+          {
+            echo '### PESTE runtime image'
+            echo
+            echo "\`${IMAGE_NAME}@${IMAGE_DIGEST}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: runtime-image-${{ github.sha }}
+          path: runtime-image.json
+          if-no-files-found: error

@@ -9,7 +9,15 @@ from typing import Any
 
 import pytest
 
-from peste.cloud import VastClient, bootstrap_vm, provision_official_vm
+from peste.cloud import (
+    CONTAINER_ONSTART,
+    VAST_IMAGE_REPOSITORY,
+    VastClient,
+    provision_official_container,
+    validate_image_reference,
+)
+
+IMAGE = f"{VAST_IMAGE_REPOSITORY}@sha256:{'a' * 64}"
 
 
 class RecordedRun:
@@ -40,21 +48,41 @@ def test_offer_query_filters_price_and_sorts_recorded_raw_json(tmp_path: Path) -
     command = run.commands[0]
     assert command[:3] == ["vastai", "search", "offers"]
     assert "gpu_name=RTX_6000Ada" in command[3]
-    assert "vms_enabled=true" in command[3]
+    assert "vms_enabled" not in command[3]
     assert "cpu_ram>=64" in command[3]
-    assert "driver_version" not in command[3]
-    assert command[command.index("--storage") + 1] == "100"
+    assert "disk_space>=200" in command[3]
+    assert "driver_version>=580.0.0" in command[3]
+    assert command[command.index("--storage") + 1] == "200"
     assert "--raw" in command
 
 
-def test_create_uses_pinned_vm_image_direct_ssh_and_disk(tmp_path: Path) -> None:
+def test_create_uses_digest_pinned_image_direct_ssh_and_container_policy(tmp_path: Path) -> None:
     run = RecordedRun([{"success": True, "new_contract": 123}])
-    assert _configured_client(tmp_path, run).create_instance(55) == 123
+    assert _configured_client(tmp_path, run).create_instance(55, IMAGE) == 123
     command = run.commands[0]
-    assert "docker.io/vastai/kvm:ubuntu_terminal" in command
+    assert command[command.index("--image") + 1] == IMAGE
     assert "--ssh" in command and "--direct" in command
-    assert command[command.index("--disk") + 1] == "100"
+    assert command[command.index("--disk") + 1] == "200"
     assert command[command.index("--label") + 1] == "peste-official"
+    assert command[command.index("--onstart-cmd") + 1] == CONTAINER_ONSTART
+    assert "PESTE_SOURCE_REVISION" in CONTAINER_ONSTART
+    environment = command[command.index("--env") + 1]
+    assert f"PESTE_IMAGE_REFERENCE={IMAGE}" in environment
+    assert f"PESTE_IMAGE_DIGEST=sha256:{'a' * 64}" in environment
+
+
+@pytest.mark.parametrize(
+    "reference",
+    [
+        "ghcr.io/armanjr/peste-benchmark:2.0.0",
+        f"docker.io/example/image@sha256:{'a' * 64}",
+        f"{VAST_IMAGE_REPOSITORY}@sha256:{'A' * 64}",
+        f"{VAST_IMAGE_REPOSITORY}@sha256:short",
+    ],
+)
+def test_image_reference_must_be_public_project_image_by_digest(reference: str) -> None:
+    with pytest.raises(ValueError, match="immutable PESTE GHCR"):
+        validate_image_reference(reference)
 
 
 @pytest.mark.parametrize(
@@ -68,18 +96,9 @@ def test_create_uses_pinned_vm_image_direct_ssh_and_disk(tmp_path: Path) -> None
             },
             "ssh://root@5.6.7.8:2200",
         ),
-        (
-            {
-                "ssh_host": "ssh5.vast.ai",
-                "ssh_port": 29558,
-                "public_ipaddr": "112.69.3.12",
-                "ports": {"22/tcp": [{"HostIp": "0.0.0.0", "HostPort": "43522"}]},
-            },
-            "ssh://root@112.69.3.12:43522",
-        ),
     ],
 )
-def test_ssh_url_parses_direct_mappings(
+def test_ssh_url_prefers_direct_mappings(
     tmp_path: Path, instance: dict[str, Any], expected: str
 ) -> None:
     assert _configured_client(tmp_path, RecordedRun([])).ssh_url(instance) == expected
@@ -91,14 +110,13 @@ def test_missing_api_key_has_actionable_error(monkeypatch: Any, tmp_path: Path) 
         VastClient(config_path=tmp_path / "missing")
 
 
-def test_wait_accepts_created_running_vm_when_direct_ssh_is_reachable(
+def test_wait_accepts_running_container_when_direct_ssh_is_reachable(
     monkeypatch: Any, tmp_path: Path
 ) -> None:
     client = _configured_client(tmp_path, RecordedRun([]))
     instance = {
         "id": 123,
-        "actual_status": "created",
-        "intended_status": "running",
+        "actual_status": "running",
         "public_ipaddr": "112.69.3.12",
         "ports": {"22/tcp": [{"HostIp": "0.0.0.0", "HostPort": "43522"}]},
     }
@@ -118,8 +136,20 @@ def test_wait_accepts_created_running_vm_when_direct_ssh_is_reachable(
             return b"SSH-"
 
     monkeypatch.setattr("peste.cloud.socket.create_connection", lambda *args, **kwargs: SshSocket())
-
     assert client.wait_until_running(123, clock=lambda: 0) == instance
+
+
+def test_wait_fails_immediately_for_terminal_container_state(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    client = _configured_client(tmp_path, RecordedRun([]))
+    monkeypatch.setattr(
+        client,
+        "show_instances",
+        lambda: [{"id": 123, "actual_status": "exited", "status_msg": "image failed"}],
+    )
+    with pytest.raises(RuntimeError, match="image failed"):
+        client.wait_until_running(123, clock=lambda: 0)
 
 
 def test_destroy_is_noninteractive(tmp_path: Path) -> None:
@@ -139,39 +169,12 @@ def test_api_key_is_redacted_from_failure_and_logs(
     caplog: pytest.LogCaptureFixture, tmp_path: Path
 ) -> None:
     secret = "secret-api-key"
-    error = subprocess.CalledProcessError(
-        1,
-        ["vastai"],
-        stderr=f"request rejected for {secret}",
-    )
+    error = subprocess.CalledProcessError(1, ["vastai"], stderr=f"rejected {secret}")
     client = _configured_client(tmp_path, RecordedRun([error]), key=secret)
     caplog.set_level(logging.DEBUG)
     with pytest.raises(RuntimeError, match="<redacted>"):
         client.show_instances()
     assert secret not in caplog.text
-
-
-def test_bootstrap_is_noninteractive_and_configures_official_nvidia_repository(
-    monkeypatch: Any,
-) -> None:
-    commands: list[list[str]] = []
-
-    def run(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
-        commands.append(command)
-        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
-
-    monkeypatch.setattr("peste.cloud.subprocess.run", run)
-    bootstrap_vm("ssh://root@example.test:2222")
-
-    assert len(commands) == 1
-    command = commands[0]
-    assert "StrictHostKeyChecking=accept-new" in command
-    assert command[command.index("-p") + 1] == "2222"
-    remote_command = command[-1]
-    assert "DEBIAN_FRONTEND=noninteractive" in remote_command
-    assert "nvidia.github.io/libnvidia-container/stable/deb" in remote_command
-    assert "nvidia-ctk runtime configure --runtime=docker" in remote_command
-    assert "docker run --rm --gpus all" in remote_command
 
 
 class LifecycleClient:
@@ -187,14 +190,20 @@ class LifecycleClient:
     def show_instances(self) -> list[dict[str, Any]]:
         return []
 
-    def create_instance(self, offer_id: int) -> int:
+    def create_instance(self, offer_id: int, image_reference: str) -> int:
+        assert image_reference == IMAGE
         self.created.append(offer_id)
         return offer_id + 100
 
     def wait_until_running(self, instance_id: int) -> dict[str, Any]:
         if self.wait_failure:
             raise TimeoutError("not reachable")
-        return {"id": instance_id, "ssh_host": "host", "ssh_port": 22}
+        return {
+            "id": instance_id,
+            "ssh_host": "host",
+            "ssh_port": 22,
+            "image_uuid": IMAGE,
+        }
 
     def ssh_url(self, instance: dict[str, Any]) -> str:
         return "ssh://root@host:22"
@@ -214,12 +223,13 @@ def test_doctor_rejection_destroys_instance_then_tries_next_offer() -> None:
             if calls == 1:
                 raise RuntimeError("wrong ECC")
 
-    result = provision_official_vm(
+    result = provision_official_container(
         client,  # type: ignore[arg-type]
         lambda host: Doctor(),
-        bootstrap=lambda host: None,
+        IMAGE,
     )
     assert result.offer_id == 2
+    assert result.image_reference == IMAGE
     assert client.created == [1, 2]
     assert client.destroyed == [101]
 
@@ -227,22 +237,22 @@ def test_doctor_rejection_destroys_instance_then_tries_next_offer() -> None:
 def test_provisioning_failure_destroys_created_instance() -> None:
     client = LifecycleClient(wait_failure=True)
     with pytest.raises(RuntimeError, match="No doctor-approved"):
-        provision_official_vm(
+        provision_official_container(
             client,  # type: ignore[arg-type]
             lambda host: SimpleNamespace(doctor=lambda: None),
+            IMAGE,
             maximum_attempts=1,
-            bootstrap=lambda host: None,
         )
     assert client.destroyed == [101]
 
 
 def test_provisioning_skips_explicitly_excluded_offer() -> None:
     client = LifecycleClient()
-    result = provision_official_vm(
+    result = provision_official_container(
         client,  # type: ignore[arg-type]
         lambda host: SimpleNamespace(doctor=lambda: None),
+        IMAGE,
         excluded_offer_ids=frozenset({1}),
-        bootstrap=lambda host: None,
     )
     assert result.offer_id == 2
     assert client.created == [2]

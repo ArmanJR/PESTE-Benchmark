@@ -4,11 +4,18 @@ from pathlib import Path
 
 from peste.schemas import ModelSpec
 
+EXPECTED_RUNTIME_IMAGE = "ghcr.io/armanjr/peste-benchmark:2.0.0"
+EXPECTED_RUNTIME_DOCKERFILE = "runtimes/Dockerfile"
+
 
 def validate_model_policy(model: ModelSpec, root: Path) -> None:
     dockerfile = root / model.runtime.dockerfile
     if not dockerfile.is_file():
         raise ValueError(f"Runtime Dockerfile does not exist: {dockerfile}")
+    if model.runtime.image != EXPECTED_RUNTIME_IMAGE:
+        raise ValueError(f"Runtime image mismatch for {model.model_id}")
+    if model.runtime.dockerfile != EXPECTED_RUNTIME_DOCKERFILE:
+        raise ValueError(f"Runtime Dockerfile policy mismatch for {model.model_id}")
     if model.adapter == "transformers-whisper":
         expected = {"task": "transcribe", "max_new_tokens": 444, "return_timestamps": False}
         if model.language != "fa" or model.generation != expected:

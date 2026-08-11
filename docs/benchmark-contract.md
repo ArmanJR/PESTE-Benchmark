@@ -59,30 +59,34 @@ The authoritative profile is
 - exactly one full physical `NVIDIA RTX 6000 Ada Generation` with 48 GB VRAM;
 - x86-64 host, at least 8 vCPUs and 64 GiB RAM;
 - at least 100 GiB free local storage;
-- driver `580.142`;
+- NVIDIA driver major 580 or newer;
 - ECC exactly `Disabled`;
 - power limit and board maximum both exactly 300 W;
 - no active clock-throttle reason;
-- no competing GPU process or GPU-enabled container; and
-- exactly one matching GPU visible inside an NVIDIA-enabled container.
+- no competing process on the assigned GPU; and
+- exactly one matching numbered NVIDIA GPU device visible in the carrier container.
 
-CPU model and GPU UUID are recorded but not pinned. VM OS is recorded but not comparison-critical;
-timed execution occurs in the x86-64 NGC PyTorch image pinned by digest. The Vast VM image is
-`docker.io/vastai/kvm:ubuntu_terminal`.
+CPU model and GPU UUID are recorded but not pinned. The exact driver, container OS, host kernel,
+image digest, and source revision are recorded. Timed execution occurs in the public PESTE carrier
+image selected by immutable GHCR digest and built from the pinned x86-64 NGC PyTorch base.
 
 `peste doctor` is authoritative. Marketplace filters only preselect plausible hosts. Vast.ai is
-the reference acquisition path, but any machine passing the same doctor is acceptable. The Vast
-CLI query parser only accepts three-component driver versions, so the two-component pinned driver
-`580.142` is enforced by the doctor rather than by offer search.
+the reference acquisition path, but any compatible SSH-accessible carrier container passing the
+same doctor is acceptable. The reference search requires one ordinary container GPU, verified
+hosting, high reliability, driver `>=580.0.0`, sufficient CPU/RAM/disk, and 300 W capability. It
+requests 200 GB so the doctor can still require 100 GiB free after the carrier image is present.
 
 ## Determinism and isolation
 
 Official inference uses one CUDA device, fixed Python/NumPy/PyTorch/CUDA seeds, deterministic
 PyTorch algorithms, `CUBLAS_WORKSPACE_CONFIG=:4096:8`, TF32 disabled, cuDNN autotuning disabled,
-and model evaluation/inference mode. Dataset and model caches are mounted read-only. Network access
-is disabled after preparation and prefetch.
+and model evaluation/inference mode. Preparation and prefetch run as root; their cache trees are
+then root-owned and timed work runs as an unprivileged user that cannot modify them. Network access
+is denied for smoke, calibration, and inference by the digest-pinned native socket guard, in
+addition to the framework offline variables. The doctor proves both controls before acceptance.
 
-Framework families remain isolated in digest-pinned images:
+Framework families remain isolated in separate virtual environments within the same digest-pinned
+carrier image so all models can run on one accepted host:
 
 | Runtime | Adapters |
 |---|---|

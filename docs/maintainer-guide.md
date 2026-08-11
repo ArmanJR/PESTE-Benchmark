@@ -14,37 +14,40 @@ An `ASRAdapter` implementation must:
 - report parameter count; and
 - release resources without hiding failures.
 
-Coordinate schema/registry, adapter, semantic policy, prefetch, runtime Dockerfile/lock, contract
+Coordinate schema/registry, adapter, semantic policy, prefetch, carrier Dockerfile/runtime locks, contract
 tests, and documentation. Use another runtime when dependency stacks conflict. Never add silent
 precision, decoder, batch, or dependency fallback.
 
 Qualification requires mocked multi-item contracts, real offline smoke runs, singleton
-equivalence, output-order/cardinality checks, and an x86-64 runtime build using the pinned NGC
-digest. Runtime image builds assert distributed support and the expected PyTorch build, so no
-host-specific compatibility shim is allowed.
+equivalence, output-order/cardinality checks, and an x86-64 carrier build using the pinned NGC
+digest. The public carrier image holds separate modern and NeMo virtual environments, asserts
+distributed support and the expected PyTorch build in both, and includes no host-specific shim.
 
 ## Reference Vast.ai session
 
-Configure the key once, then provision a VM:
+Configure the key once. Trigger the manual `Runtime image` GitHub Actions workflow for the exact
+commit to test, download its `runtime-image.json` artifact, and make the GHCR package public on its
+first publication. Then provision an ordinary container by immutable digest:
 
 ```bash
 uv sync --frozen --all-groups
 uv run vastai set api-key <key>
-uv run peste cloud up --max-dph <cap>
-uv run peste cloud build
+gh workflow run runtime-image.yml --ref <40-character-commit>
+# Wait for the run and download its runtime-image-<commit> artifact.
+image_ref=$(jq -r .image_reference runtime-image.json)
+uv run peste cloud up --image "$image_ref" --max-dph <cap>
 ```
 
-The search policy preselects verified, reliable `RTX_6000Ada` offers with one GPU, VM support,
-direct networking, sufficient CPU/RAM/disk, and 300 W capability. Vast's query parser requires
-three-component driver versions and cannot represent the pinned `580.142` value, so driver
-equality remains a doctor-only check. `cloud up` tries a bounded number of offers. Every rejected
-or failed instance is destroyed before the next offer; only the doctor defines acceptance.
+The search policy preselects verified, reliable `RTX_6000Ada` offers with one GPU, driver
+`>=580.0.0`, direct networking, sufficient CPU/RAM/disk, and 300 W capability. Provisioning
+allocates 200 GB. `cloud up` tries a bounded number of offers; every rejected or failed instance is
+destroyed before the next offer, and only the doctor defines acceptance.
 
 If Vast reports a host-side provisioning failure before SSH or doctor execution, record its offer
 ID and exclude it from the next attempt rather than paying to reproduce the same failure:
 
 ```bash
-uv run peste cloud up --exclude-offer <offer-id>
+uv run peste cloud up --image "$image_ref" --exclude-offer <offer-id>
 ```
 
 Use the printed direct SSH URL:
@@ -57,13 +60,18 @@ uv run peste model profile-speed --model <model-id> --host <ssh-url>
 
 Commit the calibrated `speed_profile.batch_size` only after reviewing all candidates, the 85%
 headroom stress result, singleton conformance, and the 95% knee decision. Because it changes the
-model digest, perform calibration for every model before full runs. Rebuild both runtime images
-after committing the profiles: the images contain the model JSON files, and a stale image will not
-match the updated request digest.
+model digest, perform calibration for every model before full runs. Destroy the calibration
+instance, build the commit containing all reviewed profiles, and provision a fresh container from
+that workflow's immutable digest: the carrier image contains the model JSON files, and a stale
+image will not match the updated request digest.
 
 ```bash
 uv run peste validate-specs
-uv run peste cloud build
+uv run peste cloud down
+# Trigger and download the final Runtime image workflow artifact.
+image_ref=$(jq -r .image_reference runtime-image.json)
+uv run peste cloud up --image "$image_ref" --max-dph <cap>
+uv run peste dataset prepare --suite fleurs-fa-ir-v1 --host <ssh-url>
 ```
 
 Run exactly one fresh evaluation per model:
@@ -77,8 +85,8 @@ Resume exists for prediction recovery and accuracy only. A resumed bundle must s
 
 Review status, spec/source/image digests, exact doctor facts, cloud provenance when available,
 prediction order/count, journal batch plan, two warmups, timing reciprocity, model facts, WER/CER
-aggregates, uncertainty, and structured logs. Confirm networking was disabled and caches read-only
-during inference.
+aggregates, uncertainty, and structured logs. Confirm the doctor recorded the native socket guard
+and unprivileged cache-write probe as enforced.
 
 Finish every session with:
 
@@ -86,7 +94,7 @@ Finish every session with:
 uv run peste cloud down
 ```
 
-Destroying the VM erases remote state. Result copy-back must be complete first. Stopping is not a
+Destroying the container erases remote state. Result copy-back must be complete first. Stopping is not a
 substitute because disk remains billable.
 
 ## Publishing

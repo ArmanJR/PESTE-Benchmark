@@ -223,8 +223,8 @@ def test_markdown_links_models_and_presents_speed_board(
                 },
                 "runtime": {
                     "name": "modern",
-                    "image": "peste-modern:2.0.0",
-                    "dockerfile": "runtimes/modern/Dockerfile",
+                    "image": "ghcr.io/armanjr/peste-benchmark:2.0.0",
+                    "dockerfile": "runtimes/Dockerfile",
                 },
                 "speed_profile": {
                     "hardware_profile_id": "rtx-6000-ada-v1",

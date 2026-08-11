@@ -6,9 +6,10 @@ import json
 import logging
 import os
 import shutil
+import sys
 import tempfile
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, cast
 
 import typer
 
@@ -31,14 +32,16 @@ app = typer.Typer(
     pretty_exceptions_enable=False,
     help="PESTE v2 schema-2 Persian ASR accuracy and batched-speed benchmark.",
 )
-dataset_app = typer.Typer(no_args_is_help=True, help="Prepare immutable suite audio on a GPU VM.")
+dataset_app = typer.Typer(
+    no_args_is_help=True, help="Prepare immutable suite audio on a remote GPU container."
+)
 model_app = typer.Typer(
     no_args_is_help=True,
     help="Validate adapters and calibrate deterministic RTX speed-profile batch sizes.",
 )
 cloud_app = typer.Typer(
     no_args_is_help=True,
-    help="Provision, inspect, build on, and destroy doctor-gated Vast.ai VM instances.",
+    help="Provision, inspect, and destroy doctor-gated Vast.ai container instances.",
 )
 app.add_typer(dataset_app, name="dataset")
 app.add_typer(model_app, name="model")
@@ -63,9 +66,9 @@ def main(
     configure_logging(log_level)
 
 
-@app.command(help="Enforce the rtx-6000-ada-v1 hardware contract over Docker SSH.")
+@app.command(help="Enforce the rtx-6000-ada-v1 hardware contract over direct SSH.")
 def doctor(
-    host: str = typer.Option(..., help="Docker endpoint, for example ssh://root@host:22"),
+    host: str = typer.Option(..., help="SSH endpoint, for example ssh://root@host:22"),
 ) -> None:
     from peste.orchestration import GpuOrchestrator
 
@@ -76,7 +79,7 @@ def doctor(
 @dataset_app.command("prepare")
 def dataset_prepare(
     suite: str = typer.Option(DEFAULT_SUITE_ID),
-    host: str = typer.Option(..., help="Doctor-approved Docker-over-SSH endpoint"),
+    host: str = typer.Option(..., help="Doctor-approved direct SSH endpoint"),
 ) -> None:
     from peste.orchestration import GpuOrchestrator
 
@@ -106,7 +109,7 @@ def model_validate(
 def model_profile_speed(
     model: str = typer.Option(...),
     suite: str = typer.Option(DEFAULT_SUITE_ID),
-    host: str = typer.Option(..., help="Doctor-approved Docker-over-SSH endpoint"),
+    host: str = typer.Option(..., help="Doctor-approved direct SSH endpoint"),
 ) -> None:
     from peste.orchestration import GpuOrchestrator
 
@@ -286,8 +289,44 @@ def profile_speed_container(
         adapter.close()
 
 
-@cloud_app.command("up", help="Rent and bootstrap a bounded, doctor-approved Vast.ai VM.")
+@app.command("_remote-action", hidden=True)
+def remote_action(
+    action: str = typer.Option(...),
+    runtime: str = typer.Option(...),
+) -> None:
+    from peste.remote import ActionName, RuntimeName, execute_action
+
+    if action not in {"dataset", "prefetch", "smoke", "profile-speed", "run"}:
+        raise ValueError(f"Unsupported remote action: {action}")
+    if runtime not in {"modern", "nemo"}:
+        raise ValueError(f"Unsupported remote runtime: {runtime}")
+    returncode = execute_action(
+        cast(ActionName, action), cast(RuntimeName, runtime), sys.stdin.read()
+    )
+    if returncode:
+        raise typer.Exit(code=returncode)
+
+
+@app.command("_doctor-probe", hidden=True)
+def doctor_probe() -> None:
+    from peste.remote import collect_diagnostics
+
+    typer.echo(json.dumps(collect_diagnostics(), ensure_ascii=False, sort_keys=True))
+
+
+@app.command("_offline-probe", hidden=True)
+def offline_probe_command() -> None:
+    from peste.remote import offline_probe
+
+    typer.echo(json.dumps(offline_probe(), ensure_ascii=False, sort_keys=True))
+
+
+@cloud_app.command("up", help="Rent a bounded, digest-pinned, doctor-approved Vast.ai container.")
 def cloud_up(
+    image: str = typer.Option(
+        ...,
+        help="Public PESTE GHCR reference pinned with @sha256:<digest>",
+    ),
     max_dph: float | None = typer.Option(None, min=0),
     maximum_attempts: int = typer.Option(3, min=1, max=10, hidden=True),
     exclude_offer: Annotated[
@@ -295,30 +334,34 @@ def cloud_up(
         typer.Option("--exclude-offer", min=1, help="Skip a known-broken offer ID; repeatable"),
     ] = None,
 ) -> None:
-    from peste.cloud import VastClient, provision_official_vm
+    from peste.cloud import VastClient, provision_official_container
     from peste.orchestration import GpuOrchestrator
 
-    provisioned = provision_official_vm(
+    provisioned = provision_official_container(
         VastClient(),
         GpuOrchestrator,
+        image,
         max_dph=max_dph,
         maximum_attempts=maximum_attempts,
         excluded_offer_ids=frozenset(exclude_offer or []),
     )
     LOGGER.info(
-        "Provisioned doctor-approved Vast.ai VM",
+        "Provisioned doctor-approved Vast.ai container",
         extra={
             "instance_id": provisioned.instance_id,
             "offer_id": provisioned.offer_id,
             "dph_total": provisioned.dph_total,
             "host": provisioned.host,
+            "image": provisioned.image_reference,
         },
     )
+    typer.echo(f"instance={provisioned.instance_id}")
     typer.echo(f"${provisioned.dph_total:.4f}/hr")
+    typer.echo(provisioned.image_reference)
     typer.echo(provisioned.host)
 
 
-@cloud_app.command("status", help="List peste-official instances, state, and hourly price.")
+@cloud_app.command("status", help="List labeled instances with state, hourly price, and image.")
 def cloud_status() -> None:
     from peste.cloud import VastClient, labeled_instances
 
@@ -330,7 +373,8 @@ def cloud_status() -> None:
         instance_id = instance.get("id", instance.get("instance_id"))
         state = instance.get("actual_status", instance.get("status", "unknown"))
         price = float(instance.get("dph_total", instance.get("dph_base", 0)))
-        typer.echo(f"{instance_id}\t{state}\t${price:.4f}/hr")
+        image = instance.get("image_uuid", "unknown")
+        typer.echo(f"{instance_id}\t{state}\t${price:.4f}/hr\t{image}")
 
 
 @cloud_app.command("down", help="Destroy every labeled instance so storage billing also ends.")
@@ -361,21 +405,6 @@ def cloud_down() -> None:
         raise RuntimeError(
             "Some labeled Vast.ai instances were not destroyed: " + "; ".join(failures)
         )
-
-
-@cloud_app.command("build", help="Build both v2 runtime images through the VM Docker daemon.")
-def cloud_build() -> None:
-    from peste.cloud import VastClient, instance_is_running, labeled_instances
-    from peste.orchestration import GpuOrchestrator
-
-    client = VastClient()
-    running = [instance for instance in labeled_instances(client) if instance_is_running(instance)]
-    if len(running) != 1:
-        raise RuntimeError(f"Expected one running peste-official instance; found {len(running)}")
-    host = client.ssh_url(running[0])
-    orchestrator = GpuOrchestrator(host)
-    orchestrator.doctor()
-    orchestrator.build_images()
 
 
 if __name__ == "__main__":

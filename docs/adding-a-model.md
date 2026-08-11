@@ -40,8 +40,8 @@ example is:
   },
   "runtime": {
     "name": "modern",
-    "image": "peste-modern:2.0.0",
-    "dockerfile": "runtimes/modern/Dockerfile"
+    "image": "ghcr.io/armanjr/peste-benchmark:2.0.0",
+    "dockerfile": "runtimes/Dockerfile"
   },
   "speed_profile": {
     "hardware_profile_id": "rtx-6000-ada-v1",
@@ -80,11 +80,12 @@ in the proposal.
 
 ## Maintainer qualification
 
-Maintainers build the runtime on a doctor-approved host, prefetch the checkpoint, run the real
-offline smoke test twice, and exercise multi-item padding, masks, dtype/device movement, ordered
-decoding, cardinality, and singleton equivalence. They then run `peste model profile-speed` and
-commit the selected batch size. The runtime image must be rebuilt after that commit because it
-contains the model specification; only then may one fresh uninterrupted full evaluation run.
+Maintainers publish the carrier image for the candidate commit, provision a doctor-approved
+container, prefetch the checkpoint, run the real offline smoke test twice, and exercise multi-item
+padding, masks, dtype/device movement, ordered decoding, cardinality, and singleton equivalence.
+They then run `peste model profile-speed` and commit the selected batch size. The carrier image
+must be rebuilt after that commit because it contains the model specification; only then may one
+fresh uninterrupted full evaluation run.
 
 A model remains unranked if it OOMs, diverges, violates adapter cardinality/order, or cannot finish
 under the fixed contract. Policy is never changed after observing a failure merely to obtain a

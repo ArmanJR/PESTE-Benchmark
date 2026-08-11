@@ -57,8 +57,8 @@ def make_model(
             "generation": generations[adapter],
             "runtime": RuntimeSpec(
                 name=runtime_name,
-                image=f"peste-{runtime_name}:test",
-                dockerfile=f"runtimes/{runtime_name}/Dockerfile",
+                image="ghcr.io/armanjr/peste-benchmark:2.0.0",
+                dockerfile="runtimes/Dockerfile",
             ),
             "speed_profile": SpeedProfile(
                 hardware_profile_id="rtx-6000-ada-v1",

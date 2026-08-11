@@ -15,11 +15,12 @@ Persian automatic speech recognition.
 - **Accuracy:** corpus CER (primary), WER, deterministic bootstrap uncertainty, and paired CER
   comparisons
 - **Speed:** steady-state end-to-end audio throughput and real-time factor (RTF)
-- **Official profile:** one NVIDIA RTX 6000 Ada Generation 48 GB GPU, driver `580.142`, 300 W,
+- **Official profile:** one NVIDIA RTX 6000 Ada Generation 48 GB GPU, driver major 580 or newer, 300 W,
   ECC disabled, at least 8 vCPUs, 64 GiB RAM, and 100 GiB free local storage
 - **Inference:** deterministic per-model batching, checkpoint-native precision, offline execution,
   and read-only dataset/checkpoint caches
-- **Runtime base:** x86-64 NGC PyTorch 25.06,
+- **Carrier image:** a digest-pinned public GHCR image with isolated modern and NeMo environments,
+  built from x86-64 NGC PyTorch 25.06,
   `nvcr.io/nvidia/pytorch@sha256:3cb18e2c438db8af2d3a659ca27fac5da328640261c38c48a34edcd223c38af9`
 
 The hardware-profile identifier is `rtx-6000-ada-v1`. Its `-v1` suffix versions the hardware
@@ -90,9 +91,9 @@ runs never retune or silently fall back.
 
 ## Reproduce on Vast.ai
 
-Vast.ai VM instances are the reference acquisition path, not part of the comparison contract. Any
-host accepted by `peste doctor` is eligible. VM instances are required because the orchestrator
-builds and runs nested benchmark containers through a remote Docker daemon.
+Ordinary Vast.ai container instances are the reference acquisition path, not part of the
+comparison contract. Any SSH-accessible carrier container accepted by `peste doctor` is eligible.
+Timed execution occurs directly inside the digest-pinned PESTE carrier image.
 
 Install the locked environment and configure the Vast.ai API key once outside the repository:
 
@@ -104,16 +105,28 @@ uv run vastai set api-key <key>
 `VAST_API_KEY` can override the stored key. Keys are redacted from subprocess logging and must not
 be committed.
 
-Provision, validate, and build both runtime images:
+Build the selected commit with the manually triggered `Runtime image` GitHub Actions workflow.
+The workflow publishes `ghcr.io/armanjr/peste-benchmark`, verifies both isolated runtime
+environments and the native offline guard, and uploads `runtime-image.json` containing the
+immutable image reference. The GHCR package must be public so Vast can pull it without receiving a
+registry credential.
 
 ```bash
-uv run peste cloud up --max-dph <maximum-hourly-price>
-uv run peste cloud status
-uv run peste cloud build
+gh workflow run runtime-image.yml --ref <40-character-commit>
+# Wait for the run, then download its runtime-image-<commit> artifact.
 ```
 
-`cloud up` prints the accepted hourly price and a direct `ssh://root@<ip>:<port>` Docker host URL.
-Use that URL unchanged with the existing commands:
+Provision and validate an ordinary container using that exact digest:
+
+```bash
+image_ref=$(jq -r .image_reference runtime-image.json)
+uv run peste cloud up --image "$image_ref" --max-dph <maximum-hourly-price>
+uv run peste cloud status
+```
+
+`cloud up` preselects one verified RTX 6000 Ada offer with driver 580 or newer, allocates 200 GB,
+destroys every rejected attempt, and prints the instance ID, accepted price, image digest, and a
+direct `ssh://root@<ip>:<port>` URL. Use that URL unchanged with the existing commands:
 
 ```bash
 uv run peste doctor --host <ssh-url>
@@ -124,22 +137,28 @@ uv run peste model profile-speed --model <model-id> --host <ssh-url>
 
 Repeat validation and profiling for every model, write each reported
 `selected_batch_size` into its model JSON, review the candidate evidence, and commit all eight
-profiles together. Because model specifications are copied into the runtime images and contribute
-to request digests, rebuild both images after that commit and before any full run:
+profiles together. Because model specifications are copied into the carrier image and contribute
+to request digests, destroy the calibration instance, build the updated commit, and provision a
+fresh container from the new workflow digest before any full run:
 
 ```bash
 uv run peste validate-specs
-uv run peste cloud build
+uv run peste cloud down
+# Trigger the Runtime image workflow for the commit containing calibrated profiles.
+image_ref=$(jq -r .image_reference runtime-image.json)
+uv run peste cloud up --image "$image_ref" --max-dph <maximum-hourly-price>
+uv run peste dataset prepare --suite fleurs-fa-ir-v1 --host <ssh-url>
 uv run peste run-all --suite fleurs-fa-ir-v1 --host <ssh-url>
 uv run peste leaderboard --suite fleurs-fa-ir-v1
 uv run peste check-generated
 uv run peste cloud down
 ```
 
-`cloud build` streams the local checkout as Docker build context over SSH, so no registry is
-needed. Fresh VM storage is ephemeral: images, audio, and checkpoints are recreated for every
-session. Result bundles are copied back to this checkout before the remote container is removed.
-`cloud down` destroys labeled instances because stopped instances continue billing storage.
+The two Python dependency stacks remain isolated in `/opt/venvs/modern` and `/opt/venvs/nemo`
+inside one image, so every model can use the same physical host. Fresh container storage is
+ephemeral: audio and checkpoints are recreated for every session. Result bundles are copied back
+to this checkout after each run. `cloud down` destroys labeled instances because stopped instances
+continue billing storage.
 
 If an instance dies during a run, resume can recover predictions and accuracy, but the speed result
 is invalid. Repeat that model from a fresh run on a new doctor-approved host for publication.

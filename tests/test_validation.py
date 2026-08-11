@@ -16,14 +16,14 @@ def _ctc_model(**updates: Any) -> ModelSpec:
     return ModelSpec.model_validate(payload)
 
 
-def _make_modern_runtime(tmp_path: Path) -> None:
-    dockerfile = tmp_path / "runtimes" / "modern" / "Dockerfile"
+def _make_runtime(tmp_path: Path) -> None:
+    dockerfile = tmp_path / "runtimes" / "Dockerfile"
     dockerfile.parent.mkdir(parents=True)
     dockerfile.touch()
 
 
 def test_transformers_ctc_policy_accepts_exact_configuration(tmp_path: Path) -> None:
-    _make_modern_runtime(tmp_path)
+    _make_runtime(tmp_path)
 
     validate_model_policy(_ctc_model(), tmp_path)
 
@@ -42,7 +42,7 @@ def test_transformers_ctc_policy_accepts_exact_configuration(tmp_path: Path) -> 
 def test_transformers_ctc_policy_rejects_wrong_decoding_configuration(
     tmp_path: Path, field: str, invalid_value: str | int | bool
 ) -> None:
-    _make_modern_runtime(tmp_path)
+    _make_runtime(tmp_path)
     model = _ctc_model()
     generation = dict(model.generation)
     generation[field] = invalid_value
@@ -52,14 +52,14 @@ def test_transformers_ctc_policy_rejects_wrong_decoding_configuration(
 
 
 def test_transformers_ctc_policy_rejects_wrong_language(tmp_path: Path) -> None:
-    _make_modern_runtime(tmp_path)
+    _make_runtime(tmp_path)
 
     with pytest.raises(ValueError, match="Transformers CTC policy mismatch"):
         validate_model_policy(_ctc_model(language="en"), tmp_path)
 
 
 def test_transformers_ctc_policy_rejects_wrong_runtime(tmp_path: Path) -> None:
-    _make_modern_runtime(tmp_path)
+    _make_runtime(tmp_path)
     runtime = make_model("transformers-ctc").runtime.model_copy(update={"name": "nemo"})
 
     with pytest.raises(ValueError, match="Transformers CTC policy mismatch"):

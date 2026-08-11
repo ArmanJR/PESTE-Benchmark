@@ -2,7 +2,7 @@
   "profile_id": "rtx-6000-ada-v1",
   "gpu_product_name": "NVIDIA RTX 6000 Ada Generation",
   "gpu_memory_mib": 49140,
-  "driver_version": "580.142",
+  "minimum_driver_major": 580,
   "ecc_state": "Disabled",
   "power_limit_watts": 300.0,
   "power_max_limit_watts": 300.0,
@@ -10,6 +10,6 @@
   "minimum_cpu_count": 8,
   "minimum_ram_bytes": 68719476736,
   "minimum_storage_bytes": 107374182400,
-  "vast_vm_image": "docker.io/vastai/kvm:ubuntu_terminal",
+  "carrier_image_repository": "ghcr.io/armanjr/peste-benchmark",
   "runtime_base_image": "nvcr.io/nvidia/pytorch@sha256:3cb18e2c438db8af2d3a659ca27fac5da328640261c38c48a34edcd223c38af9"
 }
