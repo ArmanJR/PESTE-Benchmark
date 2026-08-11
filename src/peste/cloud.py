@@ -64,7 +64,7 @@ class VastClient:
                 "or set VAST_API_KEY"
             )
 
-    def _invoke(self, arguments: Sequence[str]) -> Any:
+    def _invoke(self, arguments: Sequence[str], *, allow_empty: bool = False) -> Any:
         command = [self.executable, *arguments, "--raw"]
         if self.api_key is not None:
             command.extend(["--api-key", self.api_key])
@@ -89,6 +89,8 @@ class VastClient:
             ) from error
         except (subprocess.SubprocessError, FileNotFoundError) as error:
             raise RuntimeError(f"Unable to execute Vast.ai CLI: {error}") from error
+        if allow_empty and not completed.stdout.strip():
+            return None
         try:
             return json.loads(completed.stdout)
         except json.JSONDecodeError as error:
@@ -192,7 +194,7 @@ class VastClient:
         return f"ssh://root@{host}:{port}"
 
     def destroy_instance(self, instance_id: int) -> None:
-        payload = self._invoke(["destroy", "instance", str(instance_id), "--yes"])
+        payload = self._invoke(["destroy", "instance", str(instance_id), "--yes"], allow_empty=True)
         if isinstance(payload, dict) and payload.get("success") is False:
             raise RuntimeError(f"Vast.ai rejected instance destruction: {payload}")
         LOGGER.info("Destroyed Vast.ai instance", extra={"instance_id": instance_id})

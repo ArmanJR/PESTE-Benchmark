@@ -123,9 +123,16 @@ def test_wait_accepts_created_running_vm_when_direct_ssh_is_reachable(
 
 
 def test_destroy_is_noninteractive(tmp_path: Path) -> None:
-    run = RecordedRun([{"success": True}])
-    _configured_client(tmp_path, run).destroy_instance(123)
-    assert "--yes" in run.commands[0]
+    commands: list[list[str]] = []
+
+    def empty_success(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        commands.append(command)
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    config = tmp_path / "vast_api_key"
+    config.write_text("configured", encoding="utf-8")
+    VastClient(executable="vastai", config_path=config, run=empty_success).destroy_instance(123)
+    assert "--yes" in commands[0]
 
 
 def test_api_key_is_redacted_from_failure_and_logs(
