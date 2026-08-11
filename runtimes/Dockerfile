@@ -2,6 +2,7 @@ FROM ghcr.io/astral-sh/uv:0.8.14 AS uv
 FROM nvcr.io/nvidia/pytorch@sha256:3cb18e2c438db8af2d3a659ca27fac5da328640261c38c48a34edcd223c38af9
 
 ARG PESTE_SOURCE_REVISION=unknown
+ARG TORCHAUDIO_REVISION=6e1c7fe9ff6d82b8665d0a46d859d3357d2ebaaa
 LABEL org.opencontainers.image.source="https://github.com/ArmanJR/PESTE-Benchmark" \
       org.opencontainers.image.revision="$PESTE_SOURCE_REVISION" \
       org.opencontainers.image.version="2.0.0"
@@ -26,7 +27,10 @@ RUN uv venv --python /usr/bin/python3 --system-site-packages /opt/venvs/modern \
       --prune torch --prune torchaudio --prune torchvision --prune torchcodec \
       --output-file /tmp/nemo-requirements.txt \
     && uv pip install --python /opt/venvs/nemo/bin/python --no-deps \
-      --requirement /tmp/nemo-requirements.txt
+      --requirement /tmp/nemo-requirements.txt \
+    && USE_CUDA=1 uv pip install --python /opt/venvs/nemo/bin/python --no-deps \
+      --no-build-isolation \
+      "torchaudio @ git+https://github.com/pytorch/audio.git@$TORCHAUDIO_REVISION"
 
 WORKDIR /opt/peste
 COPY pyproject.toml README.md LICENSE NOTICE ./
