@@ -71,7 +71,9 @@ timed execution occurs in the x86-64 NGC PyTorch image pinned by digest. The Vas
 `docker.io/vastai/kvm:ubuntu_terminal`.
 
 `peste doctor` is authoritative. Marketplace filters only preselect plausible hosts. Vast.ai is
-the reference acquisition path, but any machine passing the same doctor is acceptable.
+the reference acquisition path, but any machine passing the same doctor is acceptable. The Vast
+CLI query parser only accepts three-component driver versions, so the two-component pinned driver
+`580.142` is enforced by the doctor rather than by offer search.
 
 ## Determinism and isolation
 

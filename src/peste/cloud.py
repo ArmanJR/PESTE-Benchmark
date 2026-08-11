@@ -17,11 +17,10 @@ LOGGER = logging.getLogger(__name__)
 VAST_LABEL = "peste-official"
 VAST_VM_IMAGE = "docker.io/vastai/kvm:ubuntu_terminal"
 VAST_GPU_ENUM = "RTX_6000Ada"
-PINNED_DRIVER = "580.142"
 OFFER_QUERY = (
     f"gpu_name={VAST_GPU_ENUM} num_gpus=1 vms_enabled=true verified=true "
-    "cpu_cores>=8 cpu_ram>=65536 disk_space>=100 reliability>0.98 "
-    f"gpu_max_power>=300 driver_version={PINNED_DRIVER}"
+    "cpu_cores>=8 cpu_ram>=64 disk_space>=100 reliability>0.98 "
+    "gpu_max_power>=300"
 )
 
 

@@ -35,9 +35,10 @@ uv run peste cloud build
 ```
 
 The search policy preselects verified, reliable `RTX_6000Ada` offers with one GPU, VM support,
-direct networking, sufficient CPU/RAM/disk, 300 W capability, and the pinned driver. `cloud up`
-tries a bounded number of offers. Every rejected or failed instance is destroyed before the next
-offer; only the doctor defines acceptance.
+direct networking, sufficient CPU/RAM/disk, and 300 W capability. Vast's query parser requires
+three-component driver versions and cannot represent the pinned `580.142` value, so driver
+equality remains a doctor-only check. `cloud up` tries a bounded number of offers. Every rejected
+or failed instance is destroyed before the next offer; only the doctor defines acceptance.
 
 Use the printed direct SSH URL:
 

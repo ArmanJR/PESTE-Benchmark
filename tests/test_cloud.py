@@ -41,7 +41,8 @@ def test_offer_query_filters_price_and_sorts_recorded_raw_json(tmp_path: Path) -
     assert command[:3] == ["vastai", "search", "offers"]
     assert "gpu_name=RTX_6000Ada" in command[3]
     assert "vms_enabled=true" in command[3]
-    assert "driver_version=580.142" in command[3]
+    assert "cpu_ram>=64" in command[3]
+    assert "driver_version" not in command[3]
     assert command[command.index("--storage") + 1] == "100"
     assert "--raw" in command
 
