@@ -16,10 +16,10 @@ def test_seal_cache_removes_benchmark_user_write_permissions(
     monkeypatch: Any, tmp_path: Path
 ) -> None:
     cache = tmp_path / "cache"
-    cache.mkdir(mode=0o777)
+    cache.mkdir(mode=0o700)
     artifact = cache / "artifact"
     artifact.write_text("data", encoding="utf-8")
-    artifact.chmod(0o666)
+    artifact.chmod(0o600)
     ownership: list[Path] = []
 
     def chown(path: Path, uid: int, gid: int, **kwargs: Any) -> None:
@@ -32,6 +32,8 @@ def test_seal_cache_removes_benchmark_user_write_permissions(
     assert ownership == [cache, artifact]
     assert stat.S_IMODE(cache.stat().st_mode) & 0o022 == 0
     assert stat.S_IMODE(artifact.stat().st_mode) & 0o022 == 0
+    assert stat.S_IMODE(cache.stat().st_mode) & 0o005 == 0o005
+    assert stat.S_IMODE(artifact.stat().st_mode) & 0o004 == 0o004
 
 
 def test_offline_probe_requires_network_and_cache_write_denial(

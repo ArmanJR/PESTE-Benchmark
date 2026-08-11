@@ -102,6 +102,9 @@ def _seal_cache(root: Path) -> None:
         if path.is_symlink():
             continue
         mode = stat.S_IMODE(path.stat().st_mode) & ~(stat.S_IWGRP | stat.S_IWOTH)
+        mode |= stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH
+        if path.is_dir():
+            mode |= stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
         path.chmod(mode)
     LOGGER.info("Sealed cache for unprivileged offline access", extra={"path": str(root)})
 
