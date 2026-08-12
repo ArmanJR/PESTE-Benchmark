@@ -1,0 +1,405 @@
+{
+  "schema_version": 2,
+  "campaign_id": "compatible-37-20260811",
+  "suite_id": "fleurs-fa-ir-v1",
+  "candidate_count": 37,
+  "calibration_environment": {
+    "profile_id": "rtx-6000-ada-v1",
+    "profile": "NVIDIA RTX 6000 Ada Generation 48 GB / 300 W / driver >= 580 / ECC Disabled",
+    "gpu_product_name": "NVIDIA RTX 6000 Ada Generation",
+    "gpu_memory_mib": 49140,
+    "driver_version": "595.84",
+    "ecc_state": "Disabled",
+    "power_limit_watts": 300.0,
+    "power_max_limit_watts": 300.0,
+    "throttle_state": "0x0000000000000001",
+    "gpu_uuid": "GPU-570ecbda-f055-7c87-2a9b-b0555c4805bc",
+    "cpu_count": 64,
+    "cpu_model": "AMD Ryzen Threadripper 3970X 32-Core Processor",
+    "memory_bytes": 183347707904,
+    "storage_available_bytes": 416132325376,
+    "container_architecture": "x86_64",
+    "container_os": "ubuntu 24.04",
+    "host_kernel": "5.15.0-186-generic",
+    "image_reference": "ghcr.io/armanjr/peste-benchmark@sha256:7a893008287c03d22aab598a02c899a98d96f8d86598955bf81a43467ed5cd7e",
+    "image_digest": "sha256:7a893008287c03d22aab598a02c899a98d96f8d86598955bf81a43467ed5cd7e",
+    "source_revision": "4557ca47879a481e0c277589f3bc017b8dc1fda2",
+    "offline_guard_enforced": true,
+    "caches_read_only": true,
+    "competing_gpu_processes": "",
+    "cloud_provenance": "CONTAINER_ID=47520175 VAST_CONTAINERLABEL=C.47520175"
+  },
+  "official_environment": null,
+  "models": [
+    {
+      "model_id": "whisper-small-persian-steja",
+      "repository": "steja/whisper-small-persian",
+      "revision": "8c600b6b69f552730abab77a6a46311d673ea584",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "58fa6379b5f81da1550a51b9953d2e070e14d32a2425ce98c0a0631fc2486007",
+      "final_model_digest": "d7ee4e6ac051bbc10d6fec92118c792e1a30151f257aa851fb95980863e22703"
+    },
+    {
+      "model_id": "neuraspeech-whisperbase-neurai",
+      "repository": "Neurai/NeuraSpeech_WhisperBase",
+      "revision": "d0f95e6dcbfffe41a17d9a5d276a4a92ac19faa6",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "9e09813edcc80e461931f239677189ed83fd0200ddf0b31500571542c47e694b",
+      "final_model_digest": "363ff679fb3a5519e5dcaf0ffe2a6c623658d6bddd5a4f1c7b7854b39519d3da"
+    },
+    {
+      "model_id": "whisper-tiny-fa-aictsharif",
+      "repository": "aictsharif/whisper-tiny-fa",
+      "revision": "5cabeea3f4de08c66bfd7f6fc5449ca6b47f5115",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "b0d0a8a0a35cdb58660cdb2cb0b82dd78598b4fb821c7b3ac682bd6a84861d91",
+      "final_model_digest": "523509a58006367344bac40b5a4d9a96d51d6c09a5dd8a9ad22bd45b08bd8510"
+    },
+    {
+      "model_id": "whisper-base-fa-aictsharif",
+      "repository": "aictsharif/whisper-base-fa",
+      "revision": "9d6937cf8feac93c893e158a8176a051ecb3cc2a",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "41bfca9d2b18b8db17e942fc00aeceb5aa59b92c97a1e18bde34d85f808e041e",
+      "final_model_digest": "b2a4d58e69e521d908b78b37e103c7bf718b5ebd84eb797a6961e2b43bd29e90"
+    },
+    {
+      "model_id": "whisper-small-fa-aictsharif",
+      "repository": "aictsharif/whisper-small-fa",
+      "revision": "21a6bdfb4955cc0dfd8d13cc8a3dff183b760631",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "ca76fecfeedf2b47ee3e99e63cab9af07d1cbd9d445425c8f7a163fa39c25a33",
+      "final_model_digest": "e4737a9af2abad565b6bdba55967784a63b56b01e3fb22bb9763e7d7fc604cfd"
+    },
+    {
+      "model_id": "whisper-medium-fa-aictsharif",
+      "repository": "aictsharif/whisper-medium-fa",
+      "revision": "d8deaeed83a869c78be19b6e5f44cd2a2472173d",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 2,
+      "profile_sha256": "e7ebbb364ba70992f825e238c31d7de6e318b96df0dc28a0a62e39e26dc0bc37",
+      "final_model_digest": "e920aafb3912f85035f75da47dafeaeceb74ee89d69060df914f583e93013d33"
+    },
+    {
+      "model_id": "whisper-large-v2-fa-aictsharif",
+      "repository": "aictsharif/whisper-large-v2-fa",
+      "revision": "ba330761086f7b5086c83d129f576c20d2426f49",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 2,
+      "profile_sha256": "fc74b2876a6b38e0ad821af78d9c45d4114c6fdfef684f3d969a72a2c037a600",
+      "final_model_digest": "814493be33e88573b72bf4c670ef25a841442a941c9a8e72e829872fd6e7dfd8"
+    },
+    {
+      "model_id": "whisper-fa-small-v1-seyedali",
+      "repository": "SeyedAli/whisper-fa-small-v1",
+      "revision": "06f1b8b524d488dc68bd89beee34861390eab732",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "8a350e416ee8ef29daa418844ed95860ffc224d82cc96d3c19b963f6500c110b",
+      "final_model_digest": "06138a9ea8c1ddbcff9384ce18a30afe44ebb198b93d1ecdf5d2a856234fe800"
+    },
+    {
+      "model_id": "persian-whisper-large-v3-10-percent-17-0-one-epoch-mohammadreza-halakoo",
+      "repository": "MohammadReza-Halakoo/persian-whisper-large-v3-10-percent-17-0-one-epoch",
+      "revision": "3b32d4db7767a534bc315967e16a5fd6dd9d9cbb",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "d7d0aeb3afe3e8b91cd1e6b2cd53425728def8b29609164a10c772ec895cb1e9",
+      "final_model_digest": "c655627bb02002a106866b64c09cd1272923a390a6102d2809d328b901790cb6"
+    },
+    {
+      "model_id": "whisper-large-fa-v1-vhdm",
+      "repository": "vhdm/whisper-large-fa-v1",
+      "revision": "95485391406953c01ffc06724af5a08cb517a325",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "986f338ed6215b58a35f7e743f061f71a5c49b1d97e391e180772c476f256964",
+      "final_model_digest": "d0be5ae3f75de85c23ba1c8daee84cface6bc82df552ea8e4cf6c55f0d4e3e21"
+    },
+    {
+      "model_id": "whisper-persian-v4-nezamisafa",
+      "repository": "nezamisafa/whisper-persian-v4",
+      "revision": "b84fc89f5d8c6a08acbd0930c74010f8bb555253",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "75a7e2a0909e837bce61ea794ba7b242d732fa8b18929be7b5232435321671d7",
+      "final_model_digest": "8e930eb7048796fdb30a71f7e63dd887d1054d585ee573d635840581c9dd2a05"
+    },
+    {
+      "model_id": "whisper-v3-turbo-persian-v1-0-nezamisafa",
+      "repository": "nezamisafa/whisper-v3-turbo-persian-v1.0",
+      "revision": "d9dfe321e0bcbd0bfe2ae1f5d72e1f8b580518cf",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "743093f696c3f81074e707447affc0dd736af22cbf976a3e3a7c4eb9f53de997",
+      "final_model_digest": "9f8e37932112b0ee810c48b7762a5e7fdf1d7514e78ce1e9e6b791b5f6ad5421"
+    },
+    {
+      "model_id": "whisper-small-persian-v1-aliyzd95",
+      "repository": "aliyzd95/whisper-small-persian-v1",
+      "revision": "6f667ff324f2a4918e7df54d52f638a1c8d8263c",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "be4d00f7a239920d945080c1c6510627bda0b4aaa2d83384818e53e14f62a1f6",
+      "final_model_digest": "27d5acd383d921b32f2769cb3fa1ccfd5a4bf566a1484885b11ae5e67c04d327"
+    },
+    {
+      "model_id": "whisper-small-fa-mohammadgholizadeh",
+      "repository": "MohammadGholizadeh/whisper-small-fa",
+      "revision": "d13d3798d2319e3fdfdf2f38f0eb3e7f18ace4f1",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "af471e66db5b9861c5bb7b5f3f39c7cd44d61ea2a724cba25003cb63ffb51446",
+      "final_model_digest": "ef40b7b528a056bcd97319a8a1569e905960faed82cb0bfd3c7eef860b926d9a"
+    },
+    {
+      "model_id": "whisper-fa-tinyyy-hackergeek98",
+      "repository": "hackergeek98/whisper-fa-tinyyy",
+      "revision": "e3eba5cdb1a64de5689ad231ee9aeff365b16094",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "4004f4b1ee47d0f7a14913bfae4df431ef9036f2e3359364e7574fdb56954ac4",
+      "final_model_digest": "efae93899acbbeadfe7443a46ae83dabc44f756d04e7b7824d8b5e111eb9f944"
+    },
+    {
+      "model_id": "whisper-small-fa-7-taesiri",
+      "repository": "taesiri/whisper-small-fa-7",
+      "revision": "e3f1fa1f55ce8e24bcecce1bccb5940077df92a6",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "0751cae0f317d0dc5e64553ea89eaadea780992e7240f53f70235394a87197f5",
+      "final_model_digest": "fb9f2ba9ab53d1ed68b3e6478da41d044ca0b97a4c2e726023e5334d555849f6"
+    },
+    {
+      "model_id": "whisper-small-persian-amirmohseni",
+      "repository": "AmirMohseni/whisper-small-persian",
+      "revision": "349c3edab4a19cc9c59147a69effb718fdc6cd38",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 2,
+      "profile_sha256": "4f2c6767f4bddc5fc88c439d8d0cf9edaed3a5a90781a1f2aed79445df2841d9",
+      "final_model_digest": "4fd7de8f1f2963309ab79ea4389d50c5e29493da6d81ac0ba772b4e637b18160"
+    },
+    {
+      "model_id": "whisper-small-ctejarat-makhataei",
+      "repository": "makhataei/Whisper-Small-Ctejarat",
+      "revision": "16332d3dbba6e0b5372c2ee42d0b9d4b1a20973e",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "c2f9fa2b28b8dee1a765130d34936a5c2c2bb067cc3a9e884403e21591e8204e",
+      "final_model_digest": "55d89e060bc74728b114e1a607e665b39d69d02a7ea88340c97cdc62e4ff396b"
+    },
+    {
+      "model_id": "whisper-small-persian-alism98",
+      "repository": "alism98/whisper-small-persian",
+      "revision": "4b7c6eb71d6495d16e9991fb95197d3611b972ff",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 4,
+      "profile_sha256": "c7a1ddd8a2d86a81be6ee7e9466b4ec53522822828696ac67a917dc88bbe9492",
+      "final_model_digest": "6b3079107a9ef520734d66ec187c226a08e16c722cfecdf48998a76c39736d90"
+    },
+    {
+      "model_id": "whisper-small-fa-mjavadf",
+      "repository": "mjavadf/whisper-small-fa",
+      "revision": "ff66e51dc5b4c7763d28803775efc4ab88546277",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "3df83e8b377516876f2a5fab765ccfa7b19353348809698c57b99d94d311087f",
+      "final_model_digest": "0230feef5491682106d73c60902983f761309f560b971b0bebcaf4324f2c0feb"
+    },
+    {
+      "model_id": "whisper-tiny",
+      "repository": "openai/whisper-tiny",
+      "revision": "169d4a4341b33bc18d8881c4b69c2e104e1cc0af",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "2744b57889d82f080b393d987b39ea37b51ecc93199bdfe797c9a92bec8226de",
+      "final_model_digest": "a2713e81d6938d2dfb148f42fa959ed12111e24408e065e5f608cc268976b8f4"
+    },
+    {
+      "model_id": "whisper-base",
+      "repository": "openai/whisper-base",
+      "revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "a20a71d9239be6552034a19f34630e0c34c13f3bd5d8176020320369144f8c78",
+      "final_model_digest": "b6e18531504e035877d99ed4e25b4bb31ffb530de97aa577e49c6202e003ba9a"
+    },
+    {
+      "model_id": "whisper-small",
+      "repository": "openai/whisper-small",
+      "revision": "973afd24965f72e36ca33b3055d56a652f456b4d",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 2,
+      "profile_sha256": "2fa660bf2d82c9acaf08ec284c9b39f6765cd2ad2539c7b4c3b15d2e70ea3805",
+      "final_model_digest": "391637aef724d37546988df68b2abfecf3f71f17f40a728ae9f2def6a40f4eb2"
+    },
+    {
+      "model_id": "whisper-medium",
+      "repository": "openai/whisper-medium",
+      "revision": "abdf7c39ab9d0397620ccaea8974cc764cd0953e",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "800a5aa68a724b8d7fcc5e846c9e6a2d24808c1be9fb25757de7d5174da2dbf6",
+      "final_model_digest": "28ac3029a78b9157f93134389e8c5f2e5719aeee56ecd6b1753db6e7e8466aef"
+    },
+    {
+      "model_id": "whisper-large-v2",
+      "repository": "openai/whisper-large-v2",
+      "revision": "ae4642769ce2ad8fc292556ccea8e901f1530655",
+      "adapter": "transformers-whisper",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "a4495ec76aee0daaf174d43e33f34795632cc7bbf02cd6fd79618cd16670c292",
+      "final_model_digest": "f0ed75979525131810e49f2eb7a3d58cb87975ad6e4a1e978e2d53b6c6f60322"
+    },
+    {
+      "model_id": "shenava-rizeh-v1-0",
+      "repository": "Reza2kn/Shenava-Rizeh-v1.0",
+      "revision": "74c96b7c23d8611dd4d0c775744f43bc4fb9c2ec",
+      "adapter": "nemo-rnnt",
+      "qualification_status": "qualified",
+      "selected_batch_size": 128,
+      "profile_sha256": "162d150e9abe5ce608d2964c479b478a4f255ad01f56c62d18bbcc54e5e7d80f",
+      "final_model_digest": "58f3193894a282ab7d55f86a7f72fe605100c93ae38cbad3509f6d0f79313c96"
+    },
+    {
+      "model_id": "visualears-fastconformer-fa-full-ab",
+      "repository": "Reza2kn/visualears-fastconformer-fa-full-ab",
+      "revision": "7f43a9d41d06328605257f0f28542c2f2332ed55",
+      "adapter": "nemo-rnnt",
+      "qualification_status": "qualified",
+      "selected_batch_size": 32,
+      "profile_sha256": "8127cc5add0da7d63925a1c32fdfb7b300b74009012e3fbc12b0cacfb10cc12f",
+      "final_model_digest": "98d2d843252252755f0af86ed243bfec68c20800b101b2890cd96cfdd42e1006"
+    },
+    {
+      "model_id": "wav2vec2-large-xlsr-persian-m3hrdadfi",
+      "repository": "m3hrdadfi/wav2vec2-large-xlsr-persian",
+      "revision": "a6fc7cdc898c6ec218e7f337a4835c3cd1ab8fab",
+      "adapter": "transformers-ctc",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "6388af40da5efa0fd10cc439425176fb482a31541ef7e4db6c1302491a551e0d",
+      "final_model_digest": "09081a84dede4957a8924ad0ea995c0ca56f8ef0a730915595bbc53f5f63de0b"
+    },
+    {
+      "model_id": "wav2vec2-large-xlsr-persian-v2-m3hrdadfi",
+      "repository": "m3hrdadfi/wav2vec2-large-xlsr-persian-v2",
+      "revision": "599d7361d87b6ea3ca5d64a993e8ad8c942c48eb",
+      "adapter": "transformers-ctc",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "0ccf86ae59cb08bf879030afc7b083e1f2e2eb2a46b7a5e5c06b8017993b9de8",
+      "final_model_digest": "b9a8c28a9be826220ef915a7d3ed00d8e24e7e073815f1f6c578cd297e15229e"
+    },
+    {
+      "model_id": "wav2vec2-large-xlsr-persian-shemo-m3hrdadfi",
+      "repository": "m3hrdadfi/wav2vec2-large-xlsr-persian-shemo",
+      "revision": "f9aa526bb0408f48543d0359dca089555adefc05",
+      "adapter": "transformers-ctc",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "287e5e9520d53cb7906337378811fdbe5535903a8964afd2aa93d88faa3d71fb",
+      "final_model_digest": "b68dc275d0b4020fad52e9e739c21c08b75ebecf385a93181a3ba350bf4f016e"
+    },
+    {
+      "model_id": "xls-r-1b-fa-cv8-ghofrani",
+      "repository": "ghofrani/xls-r-1b-fa-cv8",
+      "revision": "c38ce46e838cade8ecadc7ff5ad5fb58fd7cda95",
+      "adapter": "transformers-ctc",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "b63aa50277c72b9a45e4aa276929f54332d2e5b220a5172009a1cf16c2bed20c",
+      "final_model_digest": "e979715e8c440eaabef7420aa18505137b71de36564ace6317282e8a61530c1c"
+    },
+    {
+      "model_id": "wav2vec2-xls-r-300m-fa-alifarokh",
+      "repository": "alifarokh/wav2vec2-xls-r-300m-fa",
+      "revision": "79d44772d3bfc1f9000748c8478781662a5fbc64",
+      "adapter": "transformers-ctc",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "07852b238e54cb17d6e62b59cf4d9ee619387b710370d6fd65a2c78c706b03e4",
+      "final_model_digest": "e2d459f58ba02f85df2596a78435775b6c45ac17f1645238e04808c913f1dfde"
+    },
+    {
+      "model_id": "persian-speech-transcription-wav2vec2-v1-seyedali",
+      "repository": "SeyedAli/Persian-Speech-Transcription-Wav2Vec2-V1",
+      "revision": "21623b1ffbdcb4c79bf7bd74737ab30237db4b66",
+      "adapter": "transformers-ctc",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "fcd4ca5e8bebbd3ddb187178b9b4075040051300daf7533b6febe8e556d91139",
+      "final_model_digest": "977082796cdbc842f86400796b14f78e9027b52d97c164786e9dd82e69590b5c"
+    },
+    {
+      "model_id": "wav2vec2-base-common-voice-persian-colab-zoha",
+      "repository": "zoha/wav2vec2-base-common-voice-persian-colab",
+      "revision": "6267762ef6345f5e673123a26c873a4e340c08e2",
+      "adapter": "transformers-ctc",
+      "qualification_status": "failed",
+      "stage": "qualification",
+      "error_type": "RuntimeError",
+      "error_sha256": "993cf606c1ab52935f35e3cc053e2575a893fcbe444c3b4788453e57d17a5baf"
+    },
+    {
+      "model_id": "wav2vec2-base-common-voice-40p-persian-colab-zoha",
+      "repository": "zoha/wav2vec2-base-common-voice-40p-persian-colab",
+      "revision": "fca861e14529491fba97caa766e52394bd8616c4",
+      "adapter": "transformers-ctc",
+      "qualification_status": "failed",
+      "stage": "qualification",
+      "error_type": "RuntimeError",
+      "error_sha256": "46a7d7b3585d1fc6ff669c49b906686bda2fe6f2323a09b368e3e76a40f69df9"
+    },
+    {
+      "model_id": "wav2vec2-xlsr-persian-50p-zoha",
+      "repository": "zoha/wav2vec2-xlsr-persian-50p",
+      "revision": "e780f1e94a4b181fc88fef263281996c491cd60f",
+      "adapter": "transformers-ctc",
+      "qualification_status": "failed",
+      "stage": "qualification",
+      "error_type": "RuntimeError",
+      "error_sha256": "6fe90e654fd6a07ac5bb948dd2e2e792593c2df7e5fda6239959c2d11ba1e386"
+    },
+    {
+      "model_id": "wav2vec2-large-xlsr-persian-v3-masoumehb",
+      "repository": "masoumehb/wav2vec2-large-xlsr-persian-v3",
+      "revision": "918f655ca45ef4b729b496288139114a3fdf2b1a",
+      "adapter": "transformers-ctc",
+      "qualification_status": "qualified",
+      "selected_batch_size": 1,
+      "profile_sha256": "48f1fc5f35f459dfcd1dfa0e43d52cb10c9cb6486efaae6cafe13078d91f2981",
+      "final_model_digest": "bb63f841819fc657b0b4d952cca17cb559ee48f9d58fbe526820a88f278645cc"
+    }
+  ]
+}

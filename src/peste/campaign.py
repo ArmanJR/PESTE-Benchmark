@@ -231,7 +231,6 @@ def _qualification_summary(
             "profile_sha256",
             "stage",
             "error_type",
-            "error",
             "error_sha256",
         ):
             if field in outcome:

@@ -12,11 +12,16 @@ ungated, immutable, and licensed as recorded. Generic snapshot prefetch would re
 sessions therefore request 400 GB rather than the normal 200 GB allocation so the doctor can
 continue to enforce its 100 GiB free-space reserve.
 
-The batch size 1 values in the initial candidate specifications are provisional inputs for the
-calibration carrier only. A model becomes eligible for the final carrier after pinned prefetch,
-two-pass offline smoke, multi-item singleton equivalence, cardinality/order checks, 85% VRAM
-headroom, and deterministic 95%-knee selection. Calibration throughput is evidence, not an
-unofficial benchmark score, and is intentionally kept out of git.
+Qualification completed on 2026-08-12 from the digest-pinned calibration carrier. Thirty-four
+models passed pinned prefetch, real offline smoke, multi-item singleton equivalence,
+cardinality/order checks, 85% VRAM headroom, and deterministic 95%-knee selection. Their selected
+batches are 27 at batch 1, four at batch 2, one at batch 4, one at batch 32, and one at batch 128.
+The three Zoha checkpoints failed because their processors omitted the attention mask required for
+padding-safe CTC decoding; their provisional specifications were removed.
+
+The tracked `qualification-summary.json` preserves compact outcomes and evidence hashes. Verbose
+smoke, calibration, and failure logs remain under ignored `campaign-evidence/`. Calibration
+throughput is evidence, not an unofficial benchmark score.
 
 The two Shenava candidates remain eligible under the unchanged benchmark contract, but their
 published FLEURS training/model-selection overlap must remain disclosed when results are

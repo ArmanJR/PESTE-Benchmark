@@ -7,7 +7,17 @@
   "native_dtype": "float32",
   "license": "Apache-2.0",
   "language": "fa",
-  "generation": {"decoder": "rnnt", "external_language_model": false},
-  "runtime": {"name": "nemo", "image": "ghcr.io/armanjr/peste-benchmark:2.0.0", "dockerfile": "runtimes/Dockerfile"},
-  "speed_profile": {"hardware_profile_id": "rtx-6000-ada-v1", "batch_size": 1}
+  "generation": {
+    "decoder": "rnnt",
+    "external_language_model": false
+  },
+  "runtime": {
+    "name": "nemo",
+    "image": "ghcr.io/armanjr/peste-benchmark:2.0.0",
+    "dockerfile": "runtimes/Dockerfile"
+  },
+  "speed_profile": {
+    "hardware_profile_id": "rtx-6000-ada-v1",
+    "batch_size": 128
+  }
 }

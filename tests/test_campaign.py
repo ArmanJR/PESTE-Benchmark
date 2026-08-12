@@ -73,8 +73,16 @@ def test_compatible_campaign_contains_exact_new_adapter_split() -> None:
         "nvidia-fastconformer-fa",
     }
     assert not existing.intersection(candidate.model_id for candidate in campaign.candidates)
+    failed = {
+        "wav2vec2-base-common-voice-persian-colab-zoha",
+        "wav2vec2-base-common-voice-40p-persian-colab-zoha",
+        "wav2vec2-xlsr-persian-50p-zoha",
+    }
     for candidate in campaign.candidates:
         model_path = PROJECT_ROOT / "models" / f"{candidate.model_id}.json"
+        if candidate.model_id in failed:
+            assert not model_path.exists()
+            continue
         model = json.loads(model_path.read_text(encoding="utf-8"))
         assert (model["repository"], model["revision"], model["adapter"]) == (
             candidate.repository,
@@ -133,6 +141,11 @@ def test_qualification_records_failure_and_continues(
     assert state["qualification"][selected[1].model_id]["status"] == "qualified"
     error_path = tmp_path / state["qualification"][selected[0].model_id]["error_path"]
     assert "complete smoke failure" in error_path.read_text(encoding="utf-8")
+    summary = campaign_module._qualification_summary(campaign, state, PROJECT_ROOT)
+    failed = next(item for item in summary["models"] if item["model_id"] == selected[0].model_id)
+    assert failed["error_type"] == "RuntimeError"
+    assert failed["error_sha256"] == state["qualification"][selected[0].model_id]["error_sha256"]
+    assert "error" not in failed
 
 
 def test_campaign_rejects_duplicate_model_identity() -> None:

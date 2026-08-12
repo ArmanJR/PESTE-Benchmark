@@ -2,11 +2,11 @@
 
 Benchmark-state review: **2026-08-11**
 
-Campaign implementation update: **2026-08-12**. The 37 additional compatible candidates now
-have provisional schema-2 specifications and are fixed by the tracked
-`compatible-37-20260811` campaign manifest. Their batch-size-one profiles are calibration inputs,
-not qualification evidence or official profiles; the status counts below remain unchanged until
-real v2 qualification and evaluation complete.
+Campaign qualification update: **2026-08-12**. All 37 interface-compatible candidates were
+tested on a doctor-approved RTX 6000 Ada host from the immutable calibration image. Thirty-four
+passed real offline smoke, multi-item singleton equivalence, cardinality/order checks, VRAM
+limits, and deterministic batch calibration. Three Zoha checkpoints failed the attention-mask
+requirement for padding-safe CTC decoding and their provisional specifications were removed.
 
 Base inventory: [`asr-models-on-hf.md`](asr-models-on-hf.md) (**82 repositories**, Hub audit
 performed **2026-08-01**). Four subsequently requested independent ASR checkpoints are also
@@ -19,19 +19,18 @@ Of the 86 counted models:
 | Status | Models | Meaning |
 |---|---:|---|
 | Already evaluated successfully | 8 | A pinned schema-2 model specification and successful official v2 result bundle exist. |
-| Compatible candidate | 37 | The repository appears to fit a supported batched adapter; v2 qualification is still required. |
+| Qualified; official evaluation pending | 34 | Real v2 qualification passed and the reviewed RTX batch profile is committed, but no official result bundle exists yet. |
+| Compatible candidate not yet qualified | 0 | Every admitted candidate in the campaign has reached a qualification outcome. |
 | Conditional candidate | 9 | The inference interface fits, but access or a repository-declared license blocks admission. |
-| Compatible, but known not to complete v2 | 0 | No current model is in this state; the NVIDIA model's retired v1 OOM was superseded by a successful v2 run. |
+| Interface-compatible, but failed v2 qualification | 3 | The three Zoha processors did not emit the attention mask required for padding-safe batched CTC decoding. |
 | Not compatible with the current adapters/backend | 32 | A new adapter/runtime, different decoding policy, or repository repair is required. |
 | **Total** | **86** | The 82-model base inventory and four subsequent additions are each classified once below. |
 
-The direct answer is therefore **45 models that can use the adapters and backend already in this
-repository**: 8 proven by completed v2 runs and 37 additional interface-compatible candidates.
-The candidates are not claimed to satisfy the complete v2 contract. Each still needs a schema-2
-model specification, checkpoint prefetch, two real offline smoke runs, multi-item batching and
-singleton-equivalence checks, official RTX batch calibration, and a fresh uninterrupted full run.
-This is an interface and packaging classification, not a predicted score or a guarantee against
-runtime, batching, or OOM failures.
+The current evidence supports **42 models that use the existing adapters and satisfy the v2
+qualification contract**: 8 proven by completed v2 runs and 34 newly qualified models awaiting a
+fresh uninterrupted official run. The original interface/packaging audit found 37 additional
+candidates, but qualification correctly rejected three; interface compatibility alone is not a
+benchmark admission guarantee.
 
 PESTE 1.0.0 used schema 1, batch-size-one inference, and a Jetson AGX Orin. Those result bundles
 are retired and are not evidence of current evaluation status. The classifications below use the
@@ -59,13 +58,14 @@ uninterrupted speed measurements. The NVIDIA result supersedes its retired v1 CU
 the v2 adapter disables RNNT CUDA graphs for variable-length batched inference and the v2 run
 completed under the fixed current policy.
 
-## Additional compatible candidates (37)
+## Qualification campaign outcomes (37)
 
-These repositories match an existing adapter and declare a usable license. Each now has a
-provisional model specification for the calibration campaign, but none is qualified or eligible
-for an official run yet. Except where explicitly identified as a subsequent audit, “Observed
-revision” is the immutable Hub commit recorded on 2026-08-01; metadata and access were rechecked on
-2026-08-12 before creating the specifications.
+These repositories matched an existing adapter and declared a usable license. The campaign fixed
+their exact identities and tested all 37 without changing precision, decoding policy, or model
+artifacts. Thirty-four now have calibrated schema-2 specifications and are eligible for official
+evaluation; the three failed provisional specifications were removed. Except where explicitly
+identified as a subsequent audit, “Observed revision” is the immutable Hub commit recorded on
+2026-08-01; metadata and access were rechecked on 2026-08-12.
 
 ### Persian Whisper fine-tunes (20)
 
@@ -73,8 +73,8 @@ All 20 exposed a standard root-level Whisper checkpoint and processor. Under the
 pinned Transformers 5.14.1 stack, `AutoConfig` and `AutoProcessor` loaded without remote code, and
 their tokenizers contained `<|fa|>`, `<|transcribe|>`, and `<|notimestamps|>`. They fit the loading
 and decoding policy of `transformers-whisper`; checkpoints lacking modern generation metadata are
-covered by its legacy-generation shim. They still need the v2 multi-item padding, output-order,
-singleton-equivalence, and calibration checks.
+covered by its legacy-generation shim. All 20 passed real v2 qualification: 16 selected batch 1,
+three selected batch 2, and one selected batch 4.
 
 | Hugging Face model card | Observed revision | Declared license |
 |---|---|---|
@@ -87,7 +87,6 @@ singleton-equivalence, and calibration checks.
 | [`aictsharif/whisper-large-v2-fa`](https://huggingface.co/aictsharif/whisper-large-v2-fa) | `ba330761086f7b5086c83d129f576c20d2426f49` | Apache-2.0 |
 | [`SeyedAli/whisper-fa-small-v1`](https://huggingface.co/SeyedAli/whisper-fa-small-v1) | `06f1b8b524d488dc68bd89beee34861390eab732` | MIT |
 | [`MohammadReza-Halakoo/persian-whisper-large-v3-10-percent-17-0-one-epoch`](https://huggingface.co/MohammadReza-Halakoo/persian-whisper-large-v3-10-percent-17-0-one-epoch) | `3b32d4db7767a534bc315967e16a5fd6dd9d9cbb` | Apache-2.0 |
-| [`vhdm/whisper-large-fa-v1`](https://huggingface.co/vhdm/whisper-large-fa-v1) | `95485391406953c01ffc06724af5a08cb517a325` | MIT |
 | [`nezamisafa/whisper-persian-v4`](https://huggingface.co/nezamisafa/whisper-persian-v4) | `b84fc89f5d8c6a08acbd0930c74010f8bb555253` | Apache-2.0 |
 | [`nezamisafa/whisper-v3-turbo-persian-v1.0`](https://huggingface.co/nezamisafa/whisper-v3-turbo-persian-v1.0) | `d9dfe321e0bcbd0bfe2ae1f5d72e1f8b580518cf` | MIT |
 | [`aliyzd95/whisper-small-persian-v1`](https://huggingface.co/aliyzd95/whisper-small-persian-v1) | `6f667ff324f2a4918e7df54d52f638a1c8d8263c` | Apache-2.0 |
@@ -99,10 +98,11 @@ singleton-equivalence, and calibration checks.
 | [`alism98/whisper-small-persian`](https://huggingface.co/alism98/whisper-small-persian) | `4b7c6eb71d6495d16e9991fb95197d3611b972ff` | CreativeML Open RAIL-M |
 | [`mjavadf/whisper-small-fa`](https://huggingface.co/mjavadf/whisper-small-fa) | `ff66e51dc5b4c7763d28803775efc4ab88546277` | Apache-2.0 |
 
-### Multilingual Whisper baselines not yet specified (5)
+### Multilingual Whisper baselines (5)
 
 The cards use the same `AutoProcessor` plus `AutoModelForSpeechSeq2Seq` interface as the current
-adapter, and these are the multilingual checkpoints (not the English-only `.en` variants).
+adapter, and these are the multilingual checkpoints (not the English-only `.en` variants). All
+five passed v2 qualification; `whisper-small` selected batch 2 and the other four selected batch 1.
 
 | Hugging Face model card | Observed revision | Declared license |
 |---|---|---|
@@ -112,39 +112,38 @@ adapter, and these are the multilingual checkpoints (not the English-only `.en` 
 | [`openai/whisper-medium`](https://huggingface.co/openai/whisper-medium) | `abdf7c39ab9d0397620ccaea8974cc764cd0953e` | Apache-2.0 |
 | [`openai/whisper-large-v2`](https://huggingface.co/openai/whisper-large-v2) | `ae4642769ce2ad8fc292556ccea8e901f1530655` | Apache-2.0 |
 
-### NeMo RNNT candidates (2)
+### Qualified NeMo RNNT models (2)
 
 | Hugging Face model card | Observed revision | Declared license | Compatibility evidence |
 |---|---|---|---|
-| [`Reza2kn/Shenava-Rizeh-v1.0`](https://huggingface.co/Reza2kn/Shenava-Rizeh-v1.0) | `74c96b7c23d8611dd4d0c775744f43bc4fb9c2ec` | Apache-2.0 | The current revision has exactly one root `.nemo` file; its embedded config targets `EncDecHybridRNNTCTCBPEModel` and contains an RNNT decoder, so it fits `nemo-rnnt` in principle; native batched transcription and CUDA-graph control still require real v2 qualification |
-| [`Reza2kn/visualears-fastconformer-fa-full-ab`](https://huggingface.co/Reza2kn/visualears-fastconformer-fa-full-ab) | `7f43a9d41d06328605257f0f28542c2f2332ed55` | Apache-2.0 | Added in the 2026-08-11 supplementary audit; exactly one root `.nemo` file with an embedded `EncDecHybridRNNTCTCBPEModel` target and RNNT greedy-batch decoding; real v2 qualification is still required |
+| [`Reza2kn/Shenava-Rizeh-v1.0`](https://huggingface.co/Reza2kn/Shenava-Rizeh-v1.0) | `74c96b7c23d8611dd4d0c775744f43bc4fb9c2ec` | Apache-2.0 | Passed real v2 smoke and singleton-equivalence checks; calibrated batch 128 |
+| [`Reza2kn/visualears-fastconformer-fa-full-ab`](https://huggingface.co/Reza2kn/visualears-fastconformer-fa-full-ab) | `7f43a9d41d06328605257f0f28542c2f2332ed55` | Apache-2.0 | Passed real v2 smoke and singleton-equivalence checks; calibrated batch 32 |
 
 ### Transformers CTC candidates (10)
 
-The `transformers-ctc` adapter now supports standard root-level `AutoProcessor` plus
+The `transformers-ctc` adapter supports standard root-level `AutoProcessor` plus
 `AutoModelForCTC` checkpoints using deterministic padded batches and greedy decoding without an
-external language model. Three candidates completed historical two-pass singleton smoke tests on
-the v1 Jetson; that evidence establishes loadability only. The other seven have the same complete
-standard packaging and usable license but have not undergone real inference. All ten still need
-the current adapter's attention-mask-safe batched decoding, singleton-equivalence, and RTX
-calibration checks.
+external language model. Seven candidates passed real v2 smoke, attention-mask-safe decoding,
+singleton equivalence, and RTX calibration at batch 1. The three Zoha checkpoints loaded but
+failed smoke because their processors did not emit an attention mask; the adapter refuses to
+publish padding-unsafe batched output.
 
 | Hugging Face model card | Observed revision | Declared license | Compatibility evidence |
 |---|---|---|---|
-| [`m3hrdadfi/wav2vec2-large-xlsr-persian`](https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian) | `a6fc7cdc898c6ec218e7f337a4835c3cd1ab8fab` | Apache-2.0 | Complete standard `Wav2Vec2ForCTC` checkpoint and processor; real inference not yet tested |
-| [`m3hrdadfi/wav2vec2-large-xlsr-persian-v2`](https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian-v2) | `599d7361d87b6ea3ca5d64a993e8ad8c942c48eb` | Apache-2.0 | Historical v1 two-pass singleton smoke passed with 315,479,720 parameters; v2 batching not yet qualified |
-| [`m3hrdadfi/wav2vec2-large-xlsr-persian-shemo`](https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian-shemo) | `f9aa526bb0408f48543d0359dca089555adefc05` | Apache-2.0 | Complete standard `Wav2Vec2ForCTC` checkpoint and processor; real inference not yet tested |
-| [`ghofrani/xls-r-1b-fa-cv8`](https://huggingface.co/ghofrani/xls-r-1b-fa-cv8) | `c38ce46e838cade8ecadc7ff5ad5fb58fd7cda95` | Apache-2.0 | Historical v1 two-pass singleton smoke passed with 315,567,870 parameters; despite the repository name, the loaded checkpoint is approximately 315M parameters, not 1B; v2 batching not yet qualified |
-| [`alifarokh/wav2vec2-xls-r-300m-fa`](https://huggingface.co/alifarokh/wav2vec2-xls-r-300m-fa) | `79d44772d3bfc1f9000748c8478781662a5fbc64` | MIT | Complete standard `Wav2Vec2ForCTC` checkpoint and processor; real inference not yet tested |
-| [`SeyedAli/Persian-Speech-Transcription-Wav2Vec2-V1`](https://huggingface.co/SeyedAli/Persian-Speech-Transcription-Wav2Vec2-V1) | `21623b1ffbdcb4c79bf7bd74737ab30237db4b66` | MIT | Complete standard `Wav2Vec2ForCTC` checkpoint and processor; real inference not yet tested |
-| [`zoha/wav2vec2-base-common-voice-persian-colab`](https://huggingface.co/zoha/wav2vec2-base-common-voice-persian-colab) | `6267762ef6345f5e673123a26c873a4e340c08e2` | Apache-2.0 | Historical v1 two-pass singleton smoke passed with 94,404,010 parameters; v2 batching not yet qualified |
-| [`zoha/wav2vec2-base-common-voice-40p-persian-colab`](https://huggingface.co/zoha/wav2vec2-base-common-voice-40p-persian-colab) | `fca861e14529491fba97caa766e52394bd8616c4` | Apache-2.0 | Complete standard `Wav2Vec2ForCTC` checkpoint and processor; real inference not yet tested |
-| [`zoha/wav2vec2-xlsr-persian-50p`](https://huggingface.co/zoha/wav2vec2-xlsr-persian-50p) | `e780f1e94a4b181fc88fef263281996c491cd60f` | Apache-2.0 | Complete standard `Wav2Vec2ForCTC` checkpoint and processor; real inference not yet tested |
-| [`masoumehb/wav2vec2-large-xlsr-persian-v3`](https://huggingface.co/masoumehb/wav2vec2-large-xlsr-persian-v3) | `918f655ca45ef4b729b496288139114a3fdf2b1a` | Apache-2.0 | Complete standard `Wav2Vec2ForCTC` checkpoint and processor; real inference not yet tested |
+| [`m3hrdadfi/wav2vec2-large-xlsr-persian`](https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian) | `a6fc7cdc898c6ec218e7f337a4835c3cd1ab8fab` | Apache-2.0 | Qualified v2; batch 1 |
+| [`m3hrdadfi/wav2vec2-large-xlsr-persian-v2`](https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian-v2) | `599d7361d87b6ea3ca5d64a993e8ad8c942c48eb` | Apache-2.0 | Qualified v2 with 315,479,720 parameters; batch 1 |
+| [`m3hrdadfi/wav2vec2-large-xlsr-persian-shemo`](https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian-shemo) | `f9aa526bb0408f48543d0359dca089555adefc05` | Apache-2.0 | Qualified v2; batch 1 |
+| [`ghofrani/xls-r-1b-fa-cv8`](https://huggingface.co/ghofrani/xls-r-1b-fa-cv8) | `c38ce46e838cade8ecadc7ff5ad5fb58fd7cda95` | Apache-2.0 | Qualified v2 with 315,567,870 parameters despite the repository name; batch 1 |
+| [`alifarokh/wav2vec2-xls-r-300m-fa`](https://huggingface.co/alifarokh/wav2vec2-xls-r-300m-fa) | `79d44772d3bfc1f9000748c8478781662a5fbc64` | MIT | Qualified v2; batch 1 |
+| [`SeyedAli/Persian-Speech-Transcription-Wav2Vec2-V1`](https://huggingface.co/SeyedAli/Persian-Speech-Transcription-Wav2Vec2-V1) | `21623b1ffbdcb4c79bf7bd74737ab30237db4b66` | MIT | Qualified v2; batch 1 |
+| [`zoha/wav2vec2-base-common-voice-persian-colab`](https://huggingface.co/zoha/wav2vec2-base-common-voice-persian-colab) | `6267762ef6345f5e673123a26c873a4e340c08e2` | Apache-2.0 | Failed v2 smoke: processor omitted the required attention mask |
+| [`zoha/wav2vec2-base-common-voice-40p-persian-colab`](https://huggingface.co/zoha/wav2vec2-base-common-voice-40p-persian-colab) | `fca861e14529491fba97caa766e52394bd8616c4` | Apache-2.0 | Failed v2 smoke: processor omitted the required attention mask |
+| [`zoha/wav2vec2-xlsr-persian-50p`](https://huggingface.co/zoha/wav2vec2-xlsr-persian-50p) | `e780f1e94a4b181fc88fef263281996c491cd60f` | Apache-2.0 | Failed v2 smoke: processor omitted the required attention mask |
+| [`masoumehb/wav2vec2-large-xlsr-persian-v3`](https://huggingface.co/masoumehb/wav2vec2-large-xlsr-persian-v3) | `918f655ca45ef4b729b496288139114a3fdf2b1a` | Apache-2.0 | Qualified v2; batch 1 |
 
-The historical smoke tests establish loadability, deterministic single-sample inference,
-plausible parameter counts, and memory use. They are not v2 qualification runs, full evaluations,
-or benchmark scores.
+The tracked summary records compact qualification status, selected batches, and evidence hashes.
+Verbose smoke, calibration, and failure logs remain outside git. Qualification throughput is not
+a benchmark score; the 34 successful qualifiers still require fresh uninterrupted official runs.
 
 ## Conditional candidates (9)
 
@@ -255,8 +254,8 @@ Collection: [`Reza2kn/Shenava 1.0`](https://huggingface.co/collections/Reza2kn/s
 
 | Repository or group | Current status | PESTE v2 assessment |
 |---|---|---|
-| [`Reza2kn/Shenava-Rizeh-v1.0`](https://huggingface.co/Reza2kn/Shenava-Rizeh-v1.0) | **Compatible candidate** | Already counted above. Revision `74c96b7c23d8611dd4d0c775744f43bc4fb9c2ec` is Apache-2.0, has one root `.nemo`, and embeds `EncDecHybridRNNTCTCBPEModel` with an RNNT decoder. It still needs a schema-2 specification, real offline smoke tests, multi-item conformance, and RTX batch calibration. |
-| [`Reza2kn/visualears-fastconformer-fa-full-ab`](https://huggingface.co/Reza2kn/visualears-fastconformer-fa-full-ab) | **Compatible candidate** | Counted above as a subsequent addition. Revision `7f43a9d41d06328605257f0f28542c2f2332ed55` is Apache-2.0, has exactly one root `.nemo`, and embeds `EncDecHybridRNNTCTCBPEModel` with RNNT greedy-batch decoding. It fits `nemo-rnnt` in principle but has not passed v2 qualification. |
+| [`Reza2kn/Shenava-Rizeh-v1.0`](https://huggingface.co/Reza2kn/Shenava-Rizeh-v1.0) | **Qualified; official evaluation pending** | Already counted above. Revision `74c96b7c23d8611dd4d0c775744f43bc4fb9c2ec` passed real offline smoke, multi-item conformance, and RTX calibration at batch 128. |
+| [`Reza2kn/visualears-fastconformer-fa-full-ab`](https://huggingface.co/Reza2kn/visualears-fastconformer-fa-full-ab) | **Qualified; official evaluation pending** | Counted above as a subsequent addition. Revision `7f43a9d41d06328605257f0f28542c2f2332ed55` passed real offline smoke, multi-item conformance, and RTX calibration at batch 32. |
 | [`Reza2kn/Shenava-Koochik-v1.0`](https://huggingface.co/Reza2kn/Shenava-Koochik-v1.0) | **Not compatible with the current adapter** | Already counted above. Its current revision has two root `.nemo` files, while `nemo-rnnt` deliberately requires exactly one. Selecting one by filename would be a loader/policy change, not a model-only proposal. |
 | [`Reza2kn/Shenava-Rizeh-Pizeh-v1.0`](https://huggingface.co/Reza2kn/Shenava-Rizeh-Pizeh-v1.0) | **Not compatible with the current adapter** | Already counted above. Its sole archive embeds `EncDecCTCModelBPE`; the current NeMo adapter forces RNNT and PESTE has no NeMo-CTC adapter. |
 | [`Reza2kn/visualears-fastconformer-fa-69m-256x40-warmstart`](https://huggingface.co/Reza2kn/visualears-fastconformer-fa-69m-256x40-warmstart) | **Not compatible with the current adapter** | Counted above as a subsequent addition. Revision `9416a62bf215edcb85b6945332f462604e423e63` stores the final `.nemo` under `final/`, so the exact-one-root loader sees zero checkpoints. Supporting a selected nested artifact requires a loader contract change and subsequent decoder qualification. |
@@ -264,10 +263,9 @@ Collection: [`Reza2kn/Shenava 1.0`](https://huggingface.co/collections/Reza2kn/s
 | ONNX, CoreML, LiteRT, sherpa-onnx, and tract repositories | **Not compatible with current adapters** | PESTE has no adapter/runtime for these formats. Several exports are fixed-frame acoustic CTC cores that take precomputed features rather than complete raw-audio-to-text pipelines, so adding them would also require a new preprocessing and decoding policy. They are alternate deployments of parent models and should not be counted as independent checkpoints. |
 | [`Reza2kn/ShenavaSanj-v1.0`](https://huggingface.co/Reza2kn/ShenavaSanj-v1.0) | **Out of scope** | It is a token-classification word-importance scorer for Semantic WER, not an ASR model. |
 
-The actionable result is **two Shenava NeMo candidates** for the existing backend: Rizeh v1.0 and
-`visualears-fastconformer-fa-full-ab`. Only the latter is a new addition to the frozen inventory.
-Neither is already evaluated or proven compatible until it completes the v2 qualification and
-official-run lifecycle.
+The actionable result is **two qualified Shenava NeMo models** for the existing backend: Rizeh
+v1.0 and `visualears-fastconformer-fa-full-ab`. Only the latter is a new addition to the frozen
+inventory. Neither has an official PESTE result until it completes the fresh full-run lifecycle.
 
 Compatibility does not validate the collection's published scores. The cards report a different
 ITN/digit-normalization and attention-context convention, and the collection includes FLEURS-fa
