@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import math
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Collection, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 from xml.sax.saxutils import escape, quoteattr
@@ -32,6 +32,16 @@ class LeaderboardPlotRow(Protocol):
 
     @property
     def speed_valid(self) -> bool: ...
+
+
+class ParetoPlotRow(LeaderboardPlotRow, Protocol):
+    """Metrics and uncertainty required by the Pareto plot."""
+
+    @property
+    def cer_ci_lower(self) -> float: ...
+
+    @property
+    def cer_ci_upper(self) -> float: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -305,3 +315,253 @@ def render_speed_svg(
         accessible_description="Ranked by audio throughput; real-time factor is also shown.",
         repositories=repositories,
     )
+
+
+def _log_ticks(lower: float, upper: float) -> list[float]:
+    ticks: list[float] = []
+    minimum_exponent = math.floor(math.log10(lower))
+    maximum_exponent = math.ceil(math.log10(upper))
+    for exponent in range(minimum_exponent, maximum_exponent + 1):
+        magnitude = 10.0**exponent
+        for multiplier in (1.0, 2.0, 5.0):
+            candidate = multiplier * magnitude
+            if lower <= candidate <= upper:
+                ticks.append(candidate)
+    return ticks
+
+
+def _log_bounds(values: Sequence[float]) -> tuple[float, float]:
+    logarithms = [math.log10(value) for value in values]
+    lower = min(logarithms)
+    upper = max(logarithms)
+    span = upper - lower
+    if span == 0:
+        return lower - 0.5, upper + 0.5
+    padding = span * 0.08
+    return lower - padding, upper + padding
+
+
+def _pareto_tick(value: float, *, throughput: bool) -> str:
+    if throughput:
+        return f"{value:g}×"
+    if value >= 1:
+        return f"{value:g}"
+    return f"{value:.2g}"
+
+
+def render_pareto_svg(
+    suite_id: str,
+    rows: Sequence[ParetoPlotRow],
+    frontier_model_ids: Collection[str],
+    statistically_dominated_model_ids: Collection[str],
+    repositories: dict[str, str] | None = None,
+) -> str:
+    """Render the CER/throughput Pareto frontier with CER confidence intervals."""
+    ordered = sorted(
+        (row for row in rows if row.speed_valid),
+        key=lambda row: (-row.audio_throughput_x, row.cer, row.wer, row.model_id),
+    )
+    model_repositories = repositories or {}
+    frontier = set(frontier_model_ids)
+    statistically_dominated = set(statistically_dominated_model_ids)
+    width = 960
+    height = 560
+    plot_left = 78.0
+    plot_right = 720.0
+    plot_top = 88.0
+    plot_bottom = 482.0
+    plot_width = plot_right - plot_left
+    plot_height = plot_bottom - plot_top
+    lines = [
+        (
+            f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+            f'viewBox="0 0 {width} {height}" role="img" '
+            'aria-labelledby="pareto-plot-title pareto-plot-description">'
+        ),
+        '<title id="pareto-plot-title">PESTE accuracy-speed Pareto efficiency</title>',
+        (
+            '<desc id="pareto-plot-description">'
+            f"CER versus steady-state audio throughput for {len(ordered)} speed-valid models "
+            f"from {escape(suite_id)}. Lower CER and higher throughput are better."
+            "</desc>"
+        ),
+        "<style>",
+        "  :root { color-scheme: light dark; --plot-text: #111827; --plot-muted: #6b7280;",
+        "    --plot-grid: #d1d5db; --plot-frontier: #2563eb; --plot-dominated: #9ca3af;",
+        "    --plot-supported: #dc2626; --plot-error: #4b5563; --plot-surface: #ffffff; }",
+        "  @media (prefers-color-scheme: dark) { :root { --plot-text: #f3f4f6;",
+        "    --plot-muted: #9ca3af; --plot-grid: #374151; --plot-frontier: #60a5fa;",
+        "    --plot-dominated: #6b7280; --plot-supported: #f87171;",
+        "    --plot-error: #d1d5db; --plot-surface: #111827; } }",
+        (
+            "  text { fill: #111827; fill: var(--plot-text); font-family: ui-sans-serif, "
+            'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }'
+        ),
+        "  .subtitle, .tick, .legend { fill: #6b7280; fill: var(--plot-muted); }",
+        "  .subtitle { font-size: 12px; }",
+        "  .tick, .legend { font-size: 11px; }",
+        "  .axis-title { font-size: 13px; font-weight: 500; }",
+        "  .model-label { font-size: 11px; font-weight: 500; }",
+        "  .grid { stroke: #d1d5db; stroke: var(--plot-grid); stroke-width: 1; opacity: 0.55; }",
+        "  .axis { stroke: #6b7280; stroke: var(--plot-muted); stroke-width: 1.2; }",
+        "  .frontier-line { fill: none; stroke: #2563eb; stroke: var(--plot-frontier);",
+        "    stroke-width: 2.5; stroke-linejoin: round; opacity: 0.75; }",
+        "  .error-bar { stroke: #4b5563; stroke: var(--plot-error); stroke-width: 1.2; }",
+        "  .point { stroke: #ffffff; stroke: var(--plot-surface); stroke-width: 2; }",
+        "  .point.frontier { fill: #2563eb; fill: var(--plot-frontier); }",
+        "  .point.dominated { fill: #9ca3af; fill: var(--plot-dominated); }",
+        "  .point.supported-dominated { fill: #dc2626; fill: var(--plot-supported); }",
+        "  a:hover .model-label { text-decoration: underline; }",
+        "</style>",
+    ]
+    if not ordered:
+        lines.extend(
+            [
+                '<text class="subtitle" x="24" y="54">No complete speed-valid results yet</text>',
+                "</svg>",
+                "",
+            ]
+        )
+        return "\n".join(lines)
+    if any(row.audio_throughput_x <= 0 for row in ordered):
+        raise ValueError("Pareto throughput values must be positive for logarithmic plotting")
+    positive_cer_values = [
+        value
+        for row in ordered
+        for value in (row.cer, row.cer_ci_lower, row.cer_ci_upper)
+        if value > 0
+    ]
+    if not positive_cer_values:
+        positive_cer_values = [1e-6]
+    cer_floor = min(positive_cer_values) / 2
+    throughput_log_min, throughput_log_max = _log_bounds(
+        [row.audio_throughput_x for row in ordered]
+    )
+    cer_log_min, cer_log_max = _log_bounds([max(value, cer_floor) for value in positive_cer_values])
+
+    def x_position(value: float) -> float:
+        fraction = (math.log10(value) - throughput_log_min) / (
+            throughput_log_max - throughput_log_min
+        )
+        return plot_left + fraction * plot_width
+
+    def y_position(value: float) -> float:
+        fraction = (math.log10(max(value, cer_floor)) - cer_log_min) / (cer_log_max - cer_log_min)
+        return plot_top + fraction * plot_height
+
+    throughput_lower = 10**throughput_log_min
+    throughput_upper = 10**throughput_log_max
+    cer_lower = 10**cer_log_min
+    cer_upper = 10**cer_log_max
+    for tick in _log_ticks(throughput_lower, throughput_upper):
+        x = x_position(tick)
+        lines.extend(
+            [
+                f'<line class="grid" x1="{x:.1f}" y1="{plot_top:.1f}" '
+                f'x2="{x:.1f}" y2="{plot_bottom:.1f}" />',
+                f'<text class="tick" x="{x:.1f}" y="{plot_bottom + 18:.1f}" '
+                f'text-anchor="middle">{escape(_pareto_tick(tick, throughput=True))}</text>',
+            ]
+        )
+    for tick in _log_ticks(cer_lower, cer_upper):
+        y = y_position(tick)
+        lines.extend(
+            [
+                f'<line class="grid" x1="{plot_left:.1f}" y1="{y:.1f}" '
+                f'x2="{plot_right:.1f}" y2="{y:.1f}" />',
+                f'<text class="tick" x="{plot_left - 10:.1f}" y="{y + 4:.1f}" '
+                f'text-anchor="end">{escape(_pareto_tick(tick, throughput=False))}</text>',
+            ]
+        )
+    lines.extend(
+        [
+            f'<line class="axis" x1="{plot_left:.1f}" y1="{plot_bottom:.1f}" '
+            f'x2="{plot_right:.1f}" y2="{plot_bottom:.1f}" />',
+            f'<line class="axis" x1="{plot_left:.1f}" y1="{plot_top:.1f}" '
+            f'x2="{plot_left:.1f}" y2="{plot_bottom:.1f}" />',
+            f'<text class="axis-title" x="{(plot_left + plot_right) / 2:.1f}" y="534" '
+            'text-anchor="middle">Audio throughput (× real time, log scale) →</text>',
+            '<text class="axis-title" x="18" y="285" text-anchor="middle" '
+            'transform="rotate(-90 18 285)">Accuracy (CER ↓, inverted log scale)</text>',
+            '<text class="axis-title" x="18" y="78" text-anchor="middle">↑</text>',
+            '<text class="subtitle" x="512" y="70">Ideal direction: upper-right ↗</text>',
+            '<circle class="point frontier" cx="92" cy="28" r="6" />',
+            '<text class="legend" x="104" y="32">Pareto frontier</text>',
+            '<circle class="point dominated" cx="218" cy="28" r="6" />',
+            '<text class="legend" x="230" y="32">Point-dominated</text>',
+            '<circle class="point supported-dominated" cx="350" cy="28" r="6" />',
+            '<text class="legend" x="362" y="32">Supported dominance</text>',
+            '<line class="error-bar" x1="516" y1="21" x2="516" y2="35" />',
+            '<line class="error-bar" x1="512" y1="21" x2="520" y2="21" />',
+            '<line class="error-bar" x1="512" y1="35" x2="520" y2="35" />',
+            '<text class="legend" x="526" y="32">CER 95% CI</text>',
+        ]
+    )
+    frontier_points = sorted(
+        (row for row in ordered if row.model_id in frontier),
+        key=lambda row: row.audio_throughput_x,
+    )
+    if len(frontier_points) > 1:
+        points = " ".join(
+            f"{x_position(row.audio_throughput_x):.1f},{y_position(row.cer):.1f}"
+            for row in frontier_points
+        )
+        lines.append(f'<polyline class="frontier-line" points="{points}" />')
+    for index, row in enumerate(ordered):
+        x = x_position(row.audio_throughput_x)
+        y = y_position(row.cer)
+        lower_y = y_position(row.cer_ci_lower)
+        upper_y = y_position(row.cer_ci_upper)
+        lines.extend(
+            [
+                f'<line class="error-bar" x1="{x:.1f}" y1="{upper_y:.1f}" '
+                f'x2="{x:.1f}" y2="{lower_y:.1f}" />',
+                f'<line class="error-bar" x1="{x - 4:.1f}" y1="{upper_y:.1f}" '
+                f'x2="{x + 4:.1f}" y2="{upper_y:.1f}" />',
+                f'<line class="error-bar" x1="{x - 4:.1f}" y1="{lower_y:.1f}" '
+                f'x2="{x + 4:.1f}" y2="{lower_y:.1f}" />',
+            ]
+        )
+        if row.model_id in frontier:
+            point_class = "frontier"
+        elif row.model_id in statistically_dominated:
+            point_class = "supported-dominated"
+        else:
+            point_class = "dominated"
+        label_anchor = "end" if x > plot_right - 125 else "start"
+        label_x = x - 9 if label_anchor == "end" else x + 9
+        label_y = y - 9 if index % 2 == 0 else y + 17
+        label = _short_label(row.model_id, limit=32)
+        title = (
+            f"{row.model_id}: CER {row.cer:.4f} "
+            f"({row.cer_ci_lower:.4f}–{row.cer_ci_upper:.4f}), "
+            f"throughput {row.audio_throughput_x:.3f}×"
+        )
+        point = (
+            f'<circle class="point {point_class}" cx="{x:.1f}" cy="{y:.1f}" r="7">'
+            f"<title>{escape(title)}</title></circle>"
+        )
+        model_text = (
+            f'<text class="model-label" x="{label_x:.1f}" y="{label_y:.1f}" '
+            f'text-anchor="{label_anchor}"><title>{escape(row.model_id)}</title>'
+            f"{escape(label)}</text>"
+        )
+        repository = model_repositories.get(row.model_id)
+        if repository is None:
+            lines.extend([point, model_text])
+        else:
+            url = f"https://huggingface.co/{repository}"
+            lines.append(f"<a href={quoteattr(url)}>{point}{model_text}</a>")
+    lines.extend(["</svg>", ""])
+    LOGGER.debug(
+        "Rendered Pareto SVG",
+        extra={
+            "suite": suite_id,
+            "ranked_models": len(ordered),
+            "frontier_models": len(frontier),
+            "statistically_dominated_models": len(statistically_dominated),
+            "width": width,
+            "height": height,
+        },
+    )
+    return "\n".join(lines)

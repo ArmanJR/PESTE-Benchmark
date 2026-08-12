@@ -1,11 +1,17 @@
-"""Accuracy/speed ranking and deterministic generated-output tests."""
+"""Accuracy, speed, Pareto, and deterministic generated-output tests."""
 
 import json
 from pathlib import Path
 
 import pytest
 
-from peste.leaderboard import accuracy_order, collect_rows, generate_leaderboards, speed_order
+from peste.leaderboard import (
+    accuracy_order,
+    collect_rows,
+    generate_leaderboards,
+    pareto_dominators,
+    speed_order,
+)
 from peste.specs import load_model, spec_digest
 
 
@@ -154,6 +160,11 @@ def test_accuracy_and_speed_rank_orders_exclude_invalid_speed(
         "zeta",
     ]
     assert [row.model_id for row in speed_order(rows)] == ["beta", "zeta", "alpha"]
+    assert pareto_dominators(rows) == {
+        "beta": (),
+        "zeta": ("beta",),
+        "alpha": ("beta", "zeta"),
+    }
 
 
 def test_static_speed_outputs_are_deterministic_and_have_no_memory_fields(
@@ -162,10 +173,14 @@ def test_static_speed_outputs_are_deterministic_and_have_no_memory_fields(
     suite, _, _ = tiny_suite
     suite_digest = spec_digest(suite)  # type: ignore[arg-type]
     results = tmp_path / "results"
-    for model, throughput in (("model-a", 12.5), ("model-b", 10.0)):
+    for model, cer, throughput in (
+        ("model-a", 0.1, 12.5),
+        ("model-b", 0.1, 10.0),
+        ("model-c", 0.2, 5.0),
+    ):
         directory = results / model
         directory.mkdir(parents=True)
-        _write_bundle(directory, _bundle(model, "success", 0.2, 0.1, throughput, suite_digest))
+        _write_bundle(directory, _bundle(model, "success", 0.2, cer, throughput, suite_digest))
     (tmp_path / "README.md").write_text(
         "before\n<!-- LEADERBOARD:START -->\nstale\n<!-- LEADERBOARD:END -->\nafter\n",
         encoding="utf-8",
@@ -181,12 +196,28 @@ def test_static_speed_outputs_are_deterministic_and_have_no_memory_fields(
         "leaderboard.md",
         "leaderboard-accuracy.svg",
         "leaderboard-speed.svg",
+        "leaderboard-pareto.svg",
     ):
         assert (first / name).read_bytes() == (second / name).read_bytes()
     assert (tmp_path / "README.md").read_bytes() == first_readme
     payload = json.loads((first / "leaderboard.json").read_text())
     assert payload["schema_version"] == 2
     assert payload["speed"][0]["model_id"] == "model-a"
+    pareto = {entry["model_id"]: entry for entry in payload["pareto"]}
+    assert pareto["model-a"]["pareto_efficient"] is True
+    assert pareto["model-a"]["statistically_pareto_efficient"] is True
+    assert pareto["model-b"]["dominated_by"] == ["model-a"]
+    assert pareto["model-b"]["dominated_by_count"] == 1
+    assert pareto["model-b"]["statistically_dominated_by"] == []
+    assert pareto["model-b"]["statistically_pareto_efficient"] is True
+    assert pareto["model-c"]["statistically_dominated_by"] == ["model-a", "model-b"]
+    assert pareto["model-c"]["statistically_dominated_by_count"] == 2
+    assert pareto["model-c"]["statistically_pareto_efficient"] is False
+    assert all(
+        comparison["statistically_supported"]
+        for comparison in payload["pareto_dominance_comparisons"]
+        if comparison["dominated_model_id"] == "model-c"
+    )
     for path in first.iterdir():
         assert "memory_efficiency" not in path.read_text(encoding="utf-8")
         assert "peak_cuda" not in path.read_text(encoding="utf-8")
@@ -244,14 +275,19 @@ def test_markdown_links_models_and_presents_speed_board(
 
     generate_leaderboards(suite, results, output, require_tracked=False, root=tmp_path)  # type: ignore[arg-type]
 
-    expected_link = "[`model`](https://huggingface.co/organization/checkpoint)"
+    expected_link = "[model](https://huggingface.co/organization/checkpoint)"
     markdown = (output / "leaderboard.md").read_text()
     assert expected_link in markdown
     assert "## Steady-state speed" in markdown
     assert "| Rank | Model | Batch | Throughput | RTF | Processing s | Audio s |" in markdown
+    assert "## Accuracy-speed Pareto efficiency" in markdown
+    assert "| Order | Model | CER | Throughput | Point frontier | Supported frontier |" in markdown
     speed_svg = (output / "leaderboard-speed.svg").read_text()
     assert "PESTE steady-state speed leaderboard" in speed_svg
     assert "https://huggingface.co/organization/checkpoint" in speed_svg
+    pareto_svg = (output / "leaderboard-pareto.svg").read_text()
+    assert "PESTE accuracy-speed Pareto efficiency" in pareto_svg
+    assert "https://huggingface.co/organization/checkpoint" in pareto_svg
 
 
 def test_uncertainty_requires_prediction_counts_to_match_aggregates(

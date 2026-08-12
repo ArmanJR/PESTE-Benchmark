@@ -11,7 +11,7 @@ from pathlib import Path
 
 from peste.constants import DEFAULT_SEED, PROJECT_ROOT
 from peste.digests import canonical_json
-from peste.plotting import render_accuracy_svg, render_speed_svg
+from peste.plotting import render_accuracy_svg, render_pareto_svg, render_speed_svg
 from peste.schemas import PredictionRecord, RunBundle, RunStatus, SuiteSpec
 from peste.specs import discover_models, spec_digest
 from peste.uncertainty import (
@@ -63,6 +63,25 @@ class PairedComparison:
     ci_lower: float
     ci_upper: float
     resolved: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ParetoDominance:
+    dominant_model_id: str
+    dominated_model_id: str
+    cer_difference: float
+    ci_lower: float
+    ci_upper: float
+    statistically_supported: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ParetoEfficiency:
+    row: LeaderboardRow
+    pareto_efficient: bool
+    statistically_pareto_efficient: bool
+    dominated_by: tuple[str, ...]
+    statistically_dominated_by: tuple[str, ...]
 
 
 def _is_tracked(path: Path, root: Path) -> bool:
@@ -216,30 +235,67 @@ def speed_order(rows: list[LeaderboardRow]) -> list[LeaderboardRow]:
     )
 
 
-def paired_cer_comparisons(
+def _point_dominates(first: LeaderboardRow, second: LeaderboardRow) -> bool:
+    """Return whether first is no worse on both objectives and strictly better on one."""
+    no_less_accurate = first.cer <= second.cer
+    no_slower = first.audio_throughput_x >= second.audio_throughput_x
+    strictly_better = first.cer < second.cer or first.audio_throughput_x > second.audio_throughput_x
+    return no_less_accurate and no_slower and strictly_better
+
+
+def pareto_dominators(rows: list[LeaderboardRow]) -> dict[str, tuple[str, ...]]:
+    """Return deterministic point-estimate dominators for every speed-valid model."""
+    ordered = speed_order(rows)
+    return {
+        target.model_id: tuple(
+            candidate.model_id
+            for candidate in ordered
+            if candidate.model_id != target.model_id and _point_dominates(candidate, target)
+        )
+        for target in ordered
+    }
+
+
+def _prediction_counts_by_model(
     rows: list[LeaderboardRow], results_directory: Path, expected_samples: int
-) -> list[PairedComparison]:
-    comparisons: list[PairedComparison] = []
-    ordered = accuracy_order(rows)
-    counts_by_model: dict[str, PredictionCounts] = {}
+) -> dict[str, PredictionCounts]:
     run_paths: dict[str, tuple[Path, RunBundle]] = {}
     for run_path in results_directory.glob("*/run.json"):
         bundle = RunBundle.model_validate_json(run_path.read_text(encoding="utf-8"))
         run_paths[bundle.run_id] = (run_path, bundle)
-    for row in ordered:
+    counts_by_model: dict[str, PredictionCounts] = {}
+    for row in rows:
         try:
             run_path, bundle = run_paths[row.run_id]
         except KeyError as error:
             raise ValueError(f"Missing result bundle for run {row.run_id}") from error
         counts_by_model[row.model_id] = _load_prediction_counts(run_path, bundle, expected_samples)
+    return counts_by_model
+
+
+def _validate_paired_counts(
+    first_model_id: str,
+    second_model_id: str,
+    first_counts: PredictionCounts,
+    second_counts: PredictionCounts,
+) -> None:
+    if (
+        first_counts.sample_ids != second_counts.sample_ids
+        or first_counts.character_reference_units != second_counts.character_reference_units
+    ):
+        raise ValueError(f"Cannot pair predictions for {first_model_id} and {second_model_id}")
+
+
+def paired_cer_comparisons(
+    rows: list[LeaderboardRow], results_directory: Path, expected_samples: int
+) -> list[PairedComparison]:
+    comparisons: list[PairedComparison] = []
+    ordered = accuracy_order(rows)
+    counts_by_model = _prediction_counts_by_model(ordered, results_directory, expected_samples)
     for first, second in pairwise(ordered):
         first_counts = counts_by_model[first.model_id]
         second_counts = counts_by_model[second.model_id]
-        if (
-            first_counts.sample_ids != second_counts.sample_ids
-            or first_counts.character_reference_units != second_counts.character_reference_units
-        ):
-            raise ValueError(f"Cannot pair predictions for {first.model_id} and {second.model_id}")
+        _validate_paired_counts(first.model_id, second.model_id, first_counts, second_counts)
         estimate = bootstrap_paired_rate_difference(
             first_counts.character_errors,
             second_counts.character_errors,
@@ -259,11 +315,84 @@ def paired_cer_comparisons(
     return comparisons
 
 
+def pareto_efficiency(
+    rows: list[LeaderboardRow], results_directory: Path, expected_samples: int
+) -> tuple[list[ParetoEfficiency], list[ParetoDominance]]:
+    """Classify point-estimate efficiency and test each dominance edge with paired CER."""
+    ordered = speed_order(rows)
+    rows_by_model = {row.model_id: row for row in ordered}
+    dominators = pareto_dominators(ordered)
+    counts_by_model = _prediction_counts_by_model(ordered, results_directory, expected_samples)
+    comparisons: list[ParetoDominance] = []
+    supported_by_model: dict[str, list[str]] = {row.model_id: [] for row in ordered}
+    for dominated in ordered:
+        dominated_counts = counts_by_model[dominated.model_id]
+        for dominant_model_id in dominators[dominated.model_id]:
+            dominant = rows_by_model[dominant_model_id]
+            dominant_counts = counts_by_model[dominant_model_id]
+            _validate_paired_counts(
+                dominant.model_id,
+                dominated.model_id,
+                dominant_counts,
+                dominated_counts,
+            )
+            estimate = bootstrap_paired_rate_difference(
+                dominant_counts.character_errors,
+                dominated_counts.character_errors,
+                dominant_counts.character_reference_units,
+                seed=DEFAULT_SEED,
+            )
+            statistically_supported = estimate.upper < 0
+            comparisons.append(
+                ParetoDominance(
+                    dominant_model_id=dominant.model_id,
+                    dominated_model_id=dominated.model_id,
+                    cer_difference=estimate.point,
+                    ci_lower=estimate.lower,
+                    ci_upper=estimate.upper,
+                    statistically_supported=statistically_supported,
+                )
+            )
+            if statistically_supported:
+                supported_by_model[dominated.model_id].append(dominant.model_id)
+    entries = [
+        ParetoEfficiency(
+            row=row,
+            pareto_efficient=not dominators[row.model_id],
+            statistically_pareto_efficient=not supported_by_model[row.model_id],
+            dominated_by=dominators[row.model_id],
+            statistically_dominated_by=tuple(supported_by_model[row.model_id]),
+        )
+        for row in ordered
+    ]
+    entries.sort(
+        key=lambda entry: (
+            not entry.pareto_efficient,
+            -entry.row.audio_throughput_x,
+            entry.row.cer,
+            entry.row.wer,
+            entry.row.model_id,
+        )
+    )
+    LOGGER.info(
+        "Calculated accuracy-speed Pareto efficiency",
+        extra={
+            "eligible_models": len(entries),
+            "frontier_models": sum(entry.pareto_efficient for entry in entries),
+            "dominance_edges": len(comparisons),
+            "statistically_supported_edges": sum(
+                comparison.statistically_supported for comparison in comparisons
+            ),
+        },
+    )
+    return entries, comparisons
+
+
 def _model_cell(model_id: str, repositories: dict[str, str]) -> str:
     repository = repositories.get(model_id)
     if repository is None:
-        return f"`{model_id}`"
-    return f"[`{model_id}`](https://huggingface.co/{repository})"
+        return model_id
+    return f"[{model_id}](https://huggingface.co/{repository})"
 
 
 def _rate_with_interval(point: float, lower: float, upper: float) -> str:
@@ -319,17 +448,46 @@ def _comparison_table(comparisons: list[PairedComparison], repositories: dict[st
     return "\n".join([headings, separator, *values])
 
 
+def _model_list(model_ids: tuple[str, ...], repositories: dict[str, str]) -> str:
+    if not model_ids:
+        return "—"
+    return "<br>".join(_model_cell(model_id, repositories) for model_id in model_ids)
+
+
+def _pareto_table(entries: list[ParetoEfficiency], repositories: dict[str, str]) -> str:
+    headings = (
+        "| Order | Model | CER | Throughput | Point frontier | Supported frontier | "
+        "Point dominators | Supported dominators |"
+    )
+    separator = "|---:|---|---:|---:|---|---|---|---|"
+    values = [
+        f"| {order} | {_model_cell(entry.row.model_id, repositories)} | "
+        f"{_rate_with_interval(entry.row.cer, entry.row.cer_ci_lower, entry.row.cer_ci_upper)} | "
+        f"{entry.row.audio_throughput_x:.3f}× | "
+        f"{'Yes' if entry.pareto_efficient else 'No'} | "
+        f"{'Yes' if entry.statistically_pareto_efficient else 'No'} | "
+        f"{_model_list(entry.dominated_by, repositories)} | "
+        f"{_model_list(entry.statistically_dominated_by, repositories)} |"
+        for order, entry in enumerate(entries, start=1)
+    ]
+    if not values:
+        values = ["| — | No complete speed-valid results yet | — | — | — | — | — | — |"]
+    return "\n".join([headings, separator, *values])
+
+
 def render_markdown(
     suite: SuiteSpec,
     rows: list[LeaderboardRow],
     repositories: dict[str, str] | None = None,
     comparisons: list[PairedComparison] | None = None,
+    pareto_entries: list[ParetoEfficiency] | None = None,
     *,
     image_prefix: str = "",
     heading_level: int = 2,
 ) -> str:
     model_repositories = repositories or {}
     paired_comparisons = comparisons or []
+    efficiency_entries = pareto_entries or []
     heading = "#" * heading_level
     subheading = "#" * (heading_level + 1)
     comparison_section = ""
@@ -357,11 +515,35 @@ def render_markdown(
         + _table(speed_order(rows), speed=True, repositories=model_repositories)
         + "\n\nThroughput is total audio seconds divided by measured processing seconds; "
         "RTF is its reciprocal. Resumed runs retain accuracy but are excluded here.\n"
+        + f"\n{heading} Accuracy-speed Pareto efficiency\n\n"
+        f"![Accuracy-speed Pareto efficiency]({image_prefix}leaderboard-pareto.svg)\n\n"
+        + _pareto_table(efficiency_entries, model_repositories)
+        + "\n\nA speed-valid model is Pareto-efficient when no other model has both equal-or-lower "
+        "CER and equal-or-higher throughput, with at least one strict advantage. Point dominators "
+        "use the published estimates. Supported dominators additionally require the paired 95% "
+        "CER-difference interval to remain below zero. CER intervals measure test-set sampling "
+        "uncertainty; speed is a single deterministic run without a confidence interval. The plot "
+        "inverts its logarithmic CER axis so visually better directions are up and right while "
+        "tick labels remain raw CER. Pareto status is a trade-off classification, not a composite "
+        "score.\n"
     )
 
 
 def _as_dict(row: LeaderboardRow, rank: int) -> dict[str, str | int | float]:
     return {"rank": rank, **asdict(row)}
+
+
+def _pareto_as_dict(entry: ParetoEfficiency, order: int) -> dict[str, object]:
+    return {
+        "order": order,
+        **asdict(entry.row),
+        "pareto_efficient": entry.pareto_efficient,
+        "statistically_pareto_efficient": entry.statistically_pareto_efficient,
+        "dominated_by": list(entry.dominated_by),
+        "dominated_by_count": len(entry.dominated_by),
+        "statistically_dominated_by": list(entry.statistically_dominated_by),
+        "statistically_dominated_by_count": len(entry.statistically_dominated_by),
+    }
 
 
 def generate_leaderboards(
@@ -380,8 +562,13 @@ def generate_leaderboards(
         results_directory,
         suite.expected_split_counts[suite.evaluation_split],
     )
+    pareto_entries, pareto_comparisons = pareto_efficiency(
+        rows,
+        results_directory,
+        suite.expected_split_counts[suite.evaluation_split],
+    )
     repositories = {model.model_id: model.repository for model in discover_models(root)}
-    markdown = render_markdown(suite, rows, repositories, comparisons)
+    markdown = render_markdown(suite, rows, repositories, comparisons, pareto_entries)
     generated_directory.mkdir(parents=True, exist_ok=True)
     (generated_directory / "leaderboard.md").write_text(markdown, encoding="utf-8")
     (generated_directory / "leaderboard-accuracy.svg").write_text(
@@ -389,6 +576,20 @@ def generate_leaderboards(
     )
     (generated_directory / "leaderboard-speed.svg").write_text(
         render_speed_svg(suite.suite_id, rows, repositories), encoding="utf-8"
+    )
+    frontier_model_ids = {entry.row.model_id for entry in pareto_entries if entry.pareto_efficient}
+    statistically_dominated_model_ids = {
+        entry.row.model_id for entry in pareto_entries if entry.statistically_dominated_by
+    }
+    (generated_directory / "leaderboard-pareto.svg").write_text(
+        render_pareto_svg(
+            suite.suite_id,
+            rows,
+            frontier_model_ids,
+            statistically_dominated_model_ids,
+            repositories,
+        ),
+        encoding="utf-8",
     )
     payload = {
         "schema_version": 2,
@@ -402,15 +603,43 @@ def generate_leaderboards(
         "accuracy": [_as_dict(row, rank) for rank, row in enumerate(accuracy, start=1)],
         "adjacent_cer_comparisons": [asdict(comparison) for comparison in comparisons],
         "speed": [_as_dict(row, rank) for rank, row in enumerate(speed, start=1)],
+        "pareto": [
+            _pareto_as_dict(entry, order) for order, entry in enumerate(pareto_entries, start=1)
+        ],
+        "pareto_dominance_comparisons": [asdict(comparison) for comparison in pareto_comparisons],
     }
     (generated_directory / "leaderboard.json").write_bytes(canonical_json(payload))
-    columns = ["board", "rank", *LeaderboardRow.__dataclass_fields__]
+    pareto_columns = (
+        "pareto_order",
+        "pareto_efficient",
+        "statistically_pareto_efficient",
+        "dominated_by",
+        "dominated_by_count",
+        "statistically_dominated_by",
+        "statistically_dominated_by_count",
+    )
+    columns = ["board", "rank", *LeaderboardRow.__dataclass_fields__, *pareto_columns]
     buffer = io.StringIO(newline="")
     writer = csv.DictWriter(buffer, fieldnames=columns, lineterminator="\n")
     writer.writeheader()
     for board, ordered in (("accuracy", accuracy), ("speed", speed)):
         for rank, row in enumerate(ordered, start=1):
             writer.writerow({"board": board, **_as_dict(row, rank)})
+    for order, entry in enumerate(pareto_entries, start=1):
+        writer.writerow(
+            {
+                "board": "pareto",
+                "rank": "",
+                "pareto_order": order,
+                **asdict(entry.row),
+                "pareto_efficient": entry.pareto_efficient,
+                "statistically_pareto_efficient": entry.statistically_pareto_efficient,
+                "dominated_by": ";".join(entry.dominated_by),
+                "dominated_by_count": len(entry.dominated_by),
+                "statistically_dominated_by": ";".join(entry.statistically_dominated_by),
+                "statistically_dominated_by_count": len(entry.statistically_dominated_by),
+            }
+        )
     (generated_directory / "leaderboard.csv").write_text(buffer.getvalue(), encoding="utf-8")
     readme_path = root / "README.md"
     if readme_path.exists():
@@ -426,6 +655,7 @@ def generate_leaderboards(
             rows,
             repositories,
             comparisons,
+            pareto_entries,
             image_prefix="generated/",
             heading_level=3,
         ).removeprefix(f"# PESTE leaderboard — `{suite.suite_id}`\n\n")

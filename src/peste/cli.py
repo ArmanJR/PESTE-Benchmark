@@ -185,6 +185,7 @@ def check_generated() -> None:
         "leaderboard.csv",
         "leaderboard-accuracy.svg",
         "leaderboard-speed.svg",
+        "leaderboard-pareto.svg",
     )
     with tempfile.TemporaryDirectory() as temporary:
         temporary_root = Path(temporary)

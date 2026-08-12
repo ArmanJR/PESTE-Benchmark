@@ -128,7 +128,14 @@ RTF                = processing_seconds / total_audio_seconds
 
 Both values and their source times are stored with a reciprocity invariant. The speed board sorts
 throughput descending, then CER, WER, and model ID. The accuracy board sorts CER, WER, and model
-ID. No composite score is defined.
+ID. The derived Pareto board includes speed-valid models and minimizes CER while maximizing
+throughput. Model A point-dominates model B when A has equal-or-lower CER and equal-or-higher
+throughput, with at least one strict advantage. A dominance edge is statistically supported only
+when the paired 95% CER-difference interval for A minus B remains below zero. CER confidence bars
+measure test-set sampling uncertainty; the single-run speed coordinate has no confidence interval.
+Pareto efficiency is a classification, not a total ranking, and no composite score is defined.
+The Pareto SVG inverts the logarithmic CER axis so improving directions are visually up and right;
+its tick labels remain the untransformed CER values.
 
 ## Resume and artifacts
 
