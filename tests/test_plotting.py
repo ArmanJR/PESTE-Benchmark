@@ -92,3 +92,25 @@ def test_pareto_plot_renders_frontier_dominance_and_uncertainty() -> None:
         if (title := circle.find("svg:title", namespace)) is not None and title.text is not None
     }
     assert point_y["accurate-frontier"] < point_y["fast-frontier"]
+
+
+def test_large_leaderboards_keep_all_visible_model_names() -> None:
+    rows = [
+        PlotRow(
+            f"model-{index:02d}-with-a-complete-visible-name",
+            0.1 + index / 1000,
+            0.05 + index / 1000,
+            100.0 - index,
+            1 / (100.0 - index),
+        )
+        for index in range(45)
+    ]
+    accuracy = render_accuracy_svg("large-suite", rows)
+    pareto = render_pareto_svg("large-suite", rows, {rows[0].model_id}, set())
+
+    assert 'height="1704"' in accuracy
+    assert 'width="1440" height="959"' in pareto
+    assert "Numbered in speed order" in pareto
+    for row in rows:
+        assert f">{row.model_id}</text>" in accuracy
+        assert row.model_id in pareto

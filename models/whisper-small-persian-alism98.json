@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "model_id": "whisper-small-persian-alism98",
+  "repository": "alism98/whisper-small-persian",
+  "revision": "4b7c6eb71d6495d16e9991fb95197d3611b972ff",
+  "adapter": "transformers-whisper",
+  "native_dtype": "float16",
+  "license": "CreativeML Open RAIL-M",
+  "language": "fa",
+  "generation": {"task": "transcribe", "max_new_tokens": 444, "return_timestamps": false},
+  "runtime": {"name": "modern", "image": "ghcr.io/armanjr/peste-benchmark:2.0.0", "dockerfile": "runtimes/Dockerfile"},
+  "speed_profile": {"hardware_profile_id": "rtx-6000-ada-v1", "batch_size": 1}
+}

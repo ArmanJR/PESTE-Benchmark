@@ -1,14 +1,20 @@
 """Semantic validation beyond schema parsing."""
 
+import re
 from pathlib import Path
 
 from peste.schemas import ModelSpec
 
 EXPECTED_RUNTIME_IMAGE = "ghcr.io/armanjr/peste-benchmark:2.0.0"
 EXPECTED_RUNTIME_DOCKERFILE = "runtimes/Dockerfile"
+REPOSITORY_PATTERN = re.compile(r"^[^/\s]+/[^/\s]+$")
 
 
 def validate_model_policy(model: ModelSpec, root: Path) -> None:
+    if REPOSITORY_PATTERN.fullmatch(model.repository) is None:
+        raise ValueError(f"Invalid Hugging Face repository for {model.model_id}")
+    if not model.license.strip():
+        raise ValueError(f"Model license is empty for {model.model_id}")
     dockerfile = root / model.runtime.dockerfile
     if not dockerfile.is_file():
         raise ValueError(f"Runtime Dockerfile does not exist: {dockerfile}")
@@ -37,3 +43,9 @@ def validate_model_policy(model: ModelSpec, root: Path) -> None:
         expected = {"decoder": "rnnt", "external_language_model": False}
         if model.generation != expected:
             raise ValueError(f"NeMo policy mismatch for {model.model_id}")
+    expected_runtime = "nemo" if model.adapter == "nemo-rnnt" else "modern"
+    if model.runtime.name != expected_runtime:
+        raise ValueError(
+            f"Runtime {model.runtime.name} does not match adapter {model.adapter} "
+            f"for {model.model_id}"
+        )

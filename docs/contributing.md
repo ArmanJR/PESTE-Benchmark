@@ -17,6 +17,7 @@ uv sync --frozen --all-groups
 | [`tests/`](../tests) | Unit, batching, timing, doctor, cloud, profiler, adapter contracts |
 | [`hardware/`](../hardware) | Immutable doctor-enforced hardware profiles |
 | [`models/`](../models) | Checkpoint and deterministic batch specifications |
+| [`campaigns/`](../campaigns) | Exact multi-model campaign manifests and compact reviewed summaries |
 | [`suites/`](../suites) | Dataset contracts and manifests |
 | [`runtimes/`](../runtimes) | Digest-pinned carrier image, offline guard, and frozen environments |
 | [`results/`](../results) | Official schema-2 run bundles |
@@ -40,6 +41,10 @@ uv run pytest
 uv run peste validate-specs
 uv run peste check-generated
 ```
+
+Full campaign smoke, calibration, and failure logs belong under the ignored
+`campaign-evidence/` directory or in a workflow artifact. Commit only sanitized campaign
+summaries; calibration throughput is evidence for batch selection, not an unofficial score.
 
 If result inputs or rendering change, regenerate with:
 

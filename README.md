@@ -166,6 +166,10 @@ uv run peste cloud up --image "$image_ref" --max-dph <maximum-hourly-price>
 uv run peste cloud status
 ```
 
+The normal allocation is 200 GB. Multi-model campaigns must total the pinned Hub snapshots first
+and request sufficient storage with `cloud up --disk-gb <size>` while retaining the doctor's
+required 100 GiB free-space reserve.
+
 `cloud up` preselects one verified RTX 6000 Ada offer with driver 580 or newer, allocates 200 GB,
 allows up to one hour for the large carrier to become SSH-ready, destroys every rejected attempt,
 and prints the instance ID, accepted price, image digest, and a direct

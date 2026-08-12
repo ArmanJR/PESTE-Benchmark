@@ -65,6 +65,11 @@ example is:
 The `-v1` hardware-profile revision is independent of the PESTE release. Both speed-profile fields
 affect the model digest and force results to regenerate when changed.
 
+For a tracked multi-model campaign, batch size 1 may appear in the calibration-image commit as an
+explicitly provisional value because schema 2 requires a positive integer. It is not an official
+profile. `peste campaign run` refuses to run a candidate until reviewed calibration evidence has
+been applied and its selected batch size matches the campaign state.
+
 ## Contributor validation
 
 ```bash

@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "model_id": "persian-whisper-large-v3-10-percent-17-0-one-epoch-mohammadreza-halakoo",
+  "repository": "MohammadReza-Halakoo/persian-whisper-large-v3-10-percent-17-0-one-epoch",
+  "revision": "3b32d4db7767a534bc315967e16a5fd6dd9d9cbb",
+  "adapter": "transformers-whisper",
+  "native_dtype": "float16",
+  "license": "Apache-2.0",
+  "language": "fa",
+  "generation": {"task": "transcribe", "max_new_tokens": 444, "return_timestamps": false},
+  "runtime": {"name": "modern", "image": "ghcr.io/armanjr/peste-benchmark:2.0.0", "dockerfile": "runtimes/Dockerfile"},
+  "speed_profile": {"hardware_profile_id": "rtx-6000-ada-v1", "batch_size": 1}
+}

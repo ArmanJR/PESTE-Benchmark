@@ -23,7 +23,7 @@ from peste.prefetch import prefetch_model
 from peste.runner import run_benchmark
 from peste.schemas import RunRequest
 from peste.smoke import smoke_adapter
-from peste.specs import discover_models, load_model, load_suite
+from peste.specs import discover_models, load_campaign, load_model, load_suite
 from peste.validation import validate_model_policy
 
 LOGGER = logging.getLogger(__name__)
@@ -43,9 +43,14 @@ cloud_app = typer.Typer(
     no_args_is_help=True,
     help="Provision, inspect, and destroy doctor-gated Vast.ai container instances.",
 )
+campaign_app = typer.Typer(
+    no_args_is_help=True,
+    help="Qualify, calibrate, and run an exact tracked multi-model campaign.",
+)
 app.add_typer(dataset_app, name="dataset")
 app.add_typer(model_app, name="model")
 app.add_typer(cloud_app, name="cloud")
+app.add_typer(campaign_app, name="campaign")
 
 
 def _version_callback(value: bool) -> None:
@@ -158,12 +163,20 @@ def run_all(
 
 
 @app.command()
-def leaderboard(suite: str = typer.Option(DEFAULT_SUITE_ID)) -> None:
+def leaderboard(
+    suite: str = typer.Option(DEFAULT_SUITE_ID),
+    include_untracked: bool = typer.Option(
+        False,
+        "--include-untracked",
+        help="Include reviewed untracked bundles for pre-publication inspection.",
+    ),
+) -> None:
     suite_spec = load_suite(suite)
     generate_leaderboards(
         suite_spec,
         PROJECT_ROOT / "results" / suite,
         PROJECT_ROOT / "generated",
+        require_tracked=not include_untracked,
     )
 
 
@@ -171,9 +184,90 @@ def leaderboard(suite: str = typer.Option(DEFAULT_SUITE_ID)) -> None:
 def validate_specs() -> None:
     suite = load_suite(DEFAULT_SUITE_ID)
     validate_manifest(suite, PROJECT_ROOT / "suites" / suite.suite_id)
-    for model in discover_models():
+    models = discover_models()
+    for model in models:
+        expected_path = PROJECT_ROOT / "models" / f"{model.model_id}.json"
+        if not expected_path.is_file():
+            raise ValueError(f"Model filename does not match model_id: {model.model_id}")
         validate_model_policy(model, PROJECT_ROOT)
+    model_ids = [model.model_id for model in models]
+    if len(model_ids) != len(set(model_ids)):
+        raise ValueError("Model IDs must be unique")
+    for campaign_path in sorted((PROJECT_ROOT / "campaigns").glob("*/campaign.json")):
+        campaign = load_campaign(campaign_path.parent.name)
+        if campaign.campaign_id != campaign_path.parent.name:
+            raise ValueError(f"Campaign directory does not match campaign_id: {campaign_path}")
+        summary_path = campaign_path.parent / "qualification-summary.json"
+        failed_ids: set[str] = set()
+        if summary_path.exists():
+            summary = json.loads(summary_path.read_text(encoding="utf-8"))
+            failed_ids = {
+                str(entry["model_id"])
+                for entry in summary.get("models", [])
+                if entry.get("qualification_status") == "failed"
+            }
+        for candidate in campaign.candidates:
+            model_path = PROJECT_ROOT / "models" / f"{candidate.model_id}.json"
+            if not model_path.exists():
+                if candidate.model_id not in failed_ids:
+                    raise ValueError(
+                        f"Campaign candidate has no model specification: {candidate.model_id}"
+                    )
+                continue
+            model = load_model(candidate.model_id)
+            if (
+                model.repository,
+                model.revision,
+                model.adapter,
+            ) != (candidate.repository, candidate.revision, candidate.adapter):
+                raise ValueError(
+                    f"Campaign identity does not match model specification: {candidate.model_id}"
+                )
     LOGGER.info("All suite and model specifications are valid")
+
+
+@campaign_app.command("qualify")
+def campaign_qualify(
+    evidence_dir: Annotated[Path, typer.Option(help="Local untracked campaign evidence directory")],
+    campaign: str = typer.Option(...),
+    host: str = typer.Option(..., help="Doctor-approved direct SSH endpoint"),
+) -> None:
+    from peste.campaign import qualify_campaign
+
+    qualify_campaign(load_campaign(campaign), host, evidence_dir)
+
+
+@campaign_app.command("apply-profiles")
+def campaign_apply_profiles(
+    evidence_dir: Annotated[Path, typer.Option()],
+    campaign: str = typer.Option(...),
+    remove_failed: bool = typer.Option(False, "--remove-failed"),
+) -> None:
+    from peste.campaign import apply_campaign_profiles
+
+    apply_campaign_profiles(load_campaign(campaign), evidence_dir, remove_failed=remove_failed)
+
+
+@campaign_app.command("run")
+def campaign_run(
+    evidence_dir: Annotated[Path, typer.Option()],
+    campaign: str = typer.Option(...),
+    host: str = typer.Option(..., help="Doctor-approved direct SSH endpoint"),
+) -> None:
+    from peste.campaign import run_campaign
+
+    run_campaign(load_campaign(campaign), host, evidence_dir)
+
+
+@campaign_app.command("summarize")
+def campaign_summarize(
+    evidence_dir: Annotated[Path, typer.Option()],
+    output: Annotated[Path, typer.Option(help="Tracked compact campaign summary path")],
+    campaign: str = typer.Option(...),
+) -> None:
+    from peste.campaign import write_campaign_summary
+
+    write_campaign_summary(load_campaign(campaign), evidence_dir, output)
 
 
 @app.command("check-generated", hidden=True)
@@ -329,6 +423,11 @@ def cloud_up(
         help="Public PESTE GHCR reference pinned with @sha256:<digest>",
     ),
     max_dph: float | None = typer.Option(None, min=0),
+    disk_gb: int = typer.Option(
+        200,
+        min=200,
+        help="Container disk allocation in GB; large campaigns should size this explicitly.",
+    ),
     maximum_attempts: int = typer.Option(3, min=1, max=10, hidden=True),
     exclude_offer: Annotated[
         list[int] | None,
@@ -343,6 +442,7 @@ def cloud_up(
         GpuOrchestrator,
         image,
         max_dph=max_dph,
+        disk_gb=disk_gb,
         maximum_attempts=maximum_attempts,
         excluded_offer_ids=frozenset(exclude_offer or []),
     )

@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "model_id": "xls-r-1b-fa-cv8-ghofrani",
+  "repository": "ghofrani/xls-r-1b-fa-cv8",
+  "revision": "c38ce46e838cade8ecadc7ff5ad5fb58fd7cda95",
+  "adapter": "transformers-ctc",
+  "native_dtype": "float32",
+  "license": "Apache-2.0",
+  "language": "fa",
+  "generation": {"decoder": "greedy", "external_language_model": false, "group_tokens": true, "skip_special_tokens": false, "clean_up_tokenization_spaces": false},
+  "runtime": {"name": "modern", "image": "ghcr.io/armanjr/peste-benchmark:2.0.0", "dockerfile": "runtimes/Dockerfile"},
+  "speed_profile": {"hardware_profile_id": "rtx-6000-ada-v1", "batch_size": 1}
+}

@@ -111,9 +111,10 @@ def _render_leaderboard_svg(
     """Render one scalable leaderboard plot from already ranked rows."""
     ordered = list(rows)
     model_repositories = repositories or {}
-    width = 900
+    longest_label = max((len(row.model_id) for row in ordered), default=0)
+    label_width = max(235, min(680, 42 + longest_label * 7))
+    width = 900 + label_width - 235
     margin = 24
-    label_width = 235
     panel_gap = 24
     panel_width = (width - 2 * margin - label_width - panel_gap * (len(metrics) - 1)) / len(metrics)
     value_width = 58
@@ -219,7 +220,7 @@ def _render_leaderboard_svg(
             row_top = rows_top + (rank - 1) * row_height
             center_y = row_top + row_height / 2
             bar_y = center_y - 8
-            label = _short_label(row.model_id, limit=30)
+            label = row.model_id
             lines.append(
                 f'<line class="row-line" x1="{margin}" y1="{row_top}" '
                 f'x2="{width - margin}" y2="{row_top}" />'
@@ -364,12 +365,12 @@ def render_pareto_svg(
     model_repositories = repositories or {}
     frontier = set(frontier_model_ids)
     statistically_dominated = set(statistically_dominated_model_ids)
-    width = 960
-    height = 560
+    width = 1440
+    height = max(560, 104 + len(ordered) * 19)
     plot_left = 78.0
     plot_right = 720.0
     plot_top = 88.0
-    plot_bottom = 482.0
+    plot_bottom = float(height - 78)
     plot_width = plot_right - plot_left
     plot_height = plot_bottom - plot_top
     lines = [
@@ -479,10 +480,12 @@ def render_pareto_svg(
             f'x2="{plot_right:.1f}" y2="{plot_bottom:.1f}" />',
             f'<line class="axis" x1="{plot_left:.1f}" y1="{plot_top:.1f}" '
             f'x2="{plot_left:.1f}" y2="{plot_bottom:.1f}" />',
-            f'<text class="axis-title" x="{(plot_left + plot_right) / 2:.1f}" y="534" '
+            f'<text class="axis-title" x="{(plot_left + plot_right) / 2:.1f}" '
+            f'y="{height - 26}" '
             'text-anchor="middle">Audio throughput (× real time, log scale) →</text>',
-            '<text class="axis-title" x="18" y="285" text-anchor="middle" '
-            'transform="rotate(-90 18 285)">Accuracy (CER ↓, inverted log scale)</text>',
+            f'<text class="axis-title" x="18" y="{height / 2:.1f}" text-anchor="middle" '
+            f'transform="rotate(-90 18 {height / 2:.1f})">'
+            "Accuracy (CER ↓, inverted log scale)</text>",
             '<text class="axis-title" x="18" y="78" text-anchor="middle">↑</text>',
             '<text class="subtitle" x="512" y="70">Ideal direction: upper-right ↗</text>',
             '<circle class="point frontier" cx="92" cy="28" r="6" />',
@@ -507,6 +510,14 @@ def render_pareto_svg(
             for row in frontier_points
         )
         lines.append(f'<polyline class="frontier-line" points="{points}" />')
+    roster_x = 760.0
+    roster_top = 92.0
+    lines.extend(
+        [
+            f'<text class="axis-title" x="{roster_x:.1f}" y="70">All models</text>',
+            f'<text class="subtitle" x="{roster_x:.1f}" y="84">Numbered in speed order</text>',
+        ]
+    )
     for index, row in enumerate(ordered):
         x = x_position(row.audio_throughput_x)
         y = y_position(row.cer)
@@ -528,10 +539,6 @@ def render_pareto_svg(
             point_class = "supported-dominated"
         else:
             point_class = "dominated"
-        label_anchor = "end" if x > plot_right - 125 else "start"
-        label_x = x - 9 if label_anchor == "end" else x + 9
-        label_y = y - 9 if index % 2 == 0 else y + 17
-        label = _short_label(row.model_id, limit=32)
         title = (
             f"{row.model_id}: CER {row.cer:.4f} "
             f"({row.cer_ci_lower:.4f}–{row.cer_ci_upper:.4f}), "
@@ -541,17 +548,21 @@ def render_pareto_svg(
             f'<circle class="point {point_class}" cx="{x:.1f}" cy="{y:.1f}" r="7">'
             f"<title>{escape(title)}</title></circle>"
         )
+        point_number = (
+            f'<text class="legend" x="{x:.1f}" y="{y + 3.5:.1f}" '
+            f'text-anchor="middle">{index + 1}</text>'
+        )
+        roster_y = roster_top + index * 19
         model_text = (
-            f'<text class="model-label" x="{label_x:.1f}" y="{label_y:.1f}" '
-            f'text-anchor="{label_anchor}"><title>{escape(row.model_id)}</title>'
-            f"{escape(label)}</text>"
+            f'<text class="model-label" x="{roster_x:.1f}" y="{roster_y:.1f}">'
+            f"<title>{escape(title)}</title>{index + 1}. {escape(row.model_id)}</text>"
         )
         repository = model_repositories.get(row.model_id)
         if repository is None:
-            lines.extend([point, model_text])
+            lines.extend([point, point_number, model_text])
         else:
             url = f"https://huggingface.co/{repository}"
-            lines.append(f"<a href={quoteattr(url)}>{point}{model_text}</a>")
+            lines.append(f"<a href={quoteattr(url)}>{point}{point_number}{model_text}</a>")
     lines.extend(["</svg>", ""])
     LOGGER.debug(
         "Rendered Pareto SVG",

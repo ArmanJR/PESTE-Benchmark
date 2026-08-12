@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "model_id": "whisper-small-fa-aictsharif",
+  "repository": "aictsharif/whisper-small-fa",
+  "revision": "21a6bdfb4955cc0dfd8d13cc8a3dff183b760631",
+  "adapter": "transformers-whisper",
+  "native_dtype": "float16",
+  "license": "Apache-2.0",
+  "language": "fa",
+  "generation": {"task": "transcribe", "max_new_tokens": 444, "return_timestamps": false},
+  "runtime": {"name": "modern", "image": "ghcr.io/armanjr/peste-benchmark:2.0.0", "dockerfile": "runtimes/Dockerfile"},
+  "speed_profile": {"hardware_profile_id": "rtx-6000-ada-v1", "batch_size": 1}
+}

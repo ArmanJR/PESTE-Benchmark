@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "model_id": "whisper-fa-tinyyy-hackergeek98",
+  "repository": "hackergeek98/whisper-fa-tinyyy",
+  "revision": "e3eba5cdb1a64de5689ad231ee9aeff365b16094",
+  "adapter": "transformers-whisper",
+  "native_dtype": "float16",
+  "license": "MIT",
+  "language": "fa",
+  "generation": {"task": "transcribe", "max_new_tokens": 444, "return_timestamps": false},
+  "runtime": {"name": "modern", "image": "ghcr.io/armanjr/peste-benchmark:2.0.0", "dockerfile": "runtimes/Dockerfile"},
+  "speed_profile": {"hardware_profile_id": "rtx-6000-ada-v1", "batch_size": 1}
+}

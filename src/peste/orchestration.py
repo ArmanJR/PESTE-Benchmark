@@ -370,7 +370,7 @@ class GpuOrchestrator:
             timeout=None,
         )
 
-    def smoke(self, suite: SuiteSpec, model: ModelSpec) -> None:
+    def smoke(self, suite: SuiteSpec, model: ModelSpec, *, log_path: Path | None = None) -> None:
         profile = self.doctor()
         self._prefetch(model)
         completed = self._run_remote_action(
@@ -383,16 +383,21 @@ class GpuOrchestrator:
             },
             timeout=None,
         )
+        if log_path is not None:
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            log_path.write_text(completed.stderr, encoding="utf-8")
         LOGGER.info(
             "Remote real-adapter validation passed",
             extra={"host": self.host, "model": model.model_id, "remote_log": completed.stderr},
         )
 
-    def profile_speed(self, suite: SuiteSpec, model: ModelSpec) -> dict[str, Any]:
+    def profile_speed(
+        self, suite: SuiteSpec, model: ModelSpec, *, log_path: Path | None = None
+    ) -> dict[str, Any]:
         profile = self.doctor()
         self._prefetch(model)
         artifact = f"/results/profiles/profile-speed-{model.model_id}.json"
-        self._run_remote_action(
+        profile_process = self._run_remote_action(
             "profile-speed",
             model.runtime.name,
             {
@@ -403,6 +408,9 @@ class GpuOrchestrator:
             },
             timeout=None,
         )
+        if log_path is not None:
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            log_path.write_text(profile_process.stderr, encoding="utf-8")
         completed = self.transport.run(["cat", artifact], timeout=60)
         try:
             return cast(dict[str, Any], json.loads(completed.stdout))

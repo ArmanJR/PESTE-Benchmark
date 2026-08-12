@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "model_id": "wav2vec2-large-xlsr-persian-v2-m3hrdadfi",
+  "repository": "m3hrdadfi/wav2vec2-large-xlsr-persian-v2",
+  "revision": "599d7361d87b6ea3ca5d64a993e8ad8c942c48eb",
+  "adapter": "transformers-ctc",
+  "native_dtype": "float32",
+  "license": "Apache-2.0",
+  "language": "fa",
+  "generation": {"decoder": "greedy", "external_language_model": false, "group_tokens": true, "skip_special_tokens": false, "clean_up_tokenization_spaces": false},
+  "runtime": {"name": "modern", "image": "ghcr.io/armanjr/peste-benchmark:2.0.0", "dockerfile": "runtimes/Dockerfile"},
+  "speed_profile": {"hardware_profile_id": "rtx-6000-ada-v1", "batch_size": 1}
+}

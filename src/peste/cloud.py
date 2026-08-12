@@ -19,14 +19,9 @@ INSTANCE_STARTUP_TIMEOUT_SECONDS = 60 * 60
 SSH_AUTH_TIMEOUT_SECONDS = 5 * 60
 SSH_AUTH_POLL_SECONDS = 5
 VAST_GPU_ENUM = "RTX_6000Ada"
-VAST_DISK_GB = 200
+DEFAULT_VAST_DISK_GB = 200
 VAST_IMAGE_REPOSITORY = "ghcr.io/armanjr/peste-benchmark"
 IMAGE_REFERENCE_PATTERN = re.compile(rf"^{re.escape(VAST_IMAGE_REPOSITORY)}@sha256:[0-9a-f]{{64}}$")
-OFFER_QUERY = (
-    f"gpu_name={VAST_GPU_ENUM} num_gpus=1 verified=true "
-    "cpu_cores>=8 cpu_ram>=64 disk_space>=200 reliability>0.98 "
-    "gpu_max_power>=300 driver_version>=580.0.0"
-)
 CONTAINER_ONSTART = (
     "set -eu; install -d -m 0755 /cache/dataset /cache/hf /results; "
     "touch /etc/environment; "
@@ -35,6 +30,16 @@ CONTAINER_ONSTART = (
     'if [ -n "$value" ]; then sed -i "/^${name}=/d" /etc/environment; '
     'printf \'%s=%s\\n\' "$name" "$value" >> /etc/environment; fi; done'
 )
+
+
+def offer_query(disk_gb: int) -> str:
+    if disk_gb < DEFAULT_VAST_DISK_GB:
+        raise ValueError(f"Vast disk must be at least {DEFAULT_VAST_DISK_GB} GB")
+    return (
+        f"gpu_name={VAST_GPU_ENUM} num_gpus=1 verified=true "
+        f"cpu_cores>=8 cpu_ram>=64 disk_space>={disk_gb} reliability>0.98 "
+        "gpu_max_power>=300 driver_version>=580.0.0"
+    )
 
 
 def validate_image_reference(image_reference: str) -> str:
@@ -165,16 +170,21 @@ class VastClient:
         except json.JSONDecodeError as error:
             raise RuntimeError(f"Vast.ai CLI returned invalid JSON: {error}") from error
 
-    def search_offers(self, *, max_dph: float | None = None) -> list[dict[str, Any]]:
+    def search_offers(
+        self,
+        *,
+        max_dph: float | None = None,
+        disk_gb: int = DEFAULT_VAST_DISK_GB,
+    ) -> list[dict[str, Any]]:
         payload = self._invoke(
             [
                 "search",
                 "offers",
-                OFFER_QUERY,
+                offer_query(disk_gb),
                 "--order",
                 "dph_total",
                 "--storage",
-                str(VAST_DISK_GB),
+                str(disk_gb),
             ]
         )
         if not isinstance(payload, list):
@@ -184,8 +194,15 @@ class VastClient:
             offers = [offer for offer in offers if float(offer["dph_total"]) <= max_dph]
         return sorted(offers, key=lambda offer: (float(offer["dph_total"]), int(offer["id"])))
 
-    def create_instance(self, offer_id: int, image_reference: str) -> int:
+    def create_instance(
+        self,
+        offer_id: int,
+        image_reference: str,
+        *,
+        disk_gb: int = DEFAULT_VAST_DISK_GB,
+    ) -> int:
         image_reference = validate_image_reference(image_reference)
+        offer_query(disk_gb)
         digest = image_reference.rsplit("@", maxsplit=1)[1]
         payload = self._invoke(
             [
@@ -197,7 +214,7 @@ class VastClient:
                 "--ssh",
                 "--direct",
                 "--disk",
-                str(VAST_DISK_GB),
+                str(disk_gb),
                 "--label",
                 VAST_LABEL,
                 "--env",
@@ -304,6 +321,7 @@ def provision_official_container(
     image_reference: str,
     *,
     max_dph: float | None = None,
+    disk_gb: int = DEFAULT_VAST_DISK_GB,
     maximum_attempts: int = 3,
     excluded_offer_ids: frozenset[int] | None = None,
 ) -> ProvisionedInstance:
@@ -343,7 +361,9 @@ def provision_official_container(
 
     excluded = excluded_offer_ids or frozenset()
     offers = [
-        offer for offer in client.search_offers(max_dph=max_dph) if int(offer["id"]) not in excluded
+        offer
+        for offer in client.search_offers(max_dph=max_dph, disk_gb=disk_gb)
+        if int(offer["id"]) not in excluded
     ]
     if not offers:
         raise RuntimeError(
@@ -356,7 +376,7 @@ def provision_official_container(
         instance_id: int | None = None
         LOGGER.info("Trying Vast.ai offer", extra={"offer_id": offer_id, "dph_total": dph_total})
         try:
-            instance_id = client.create_instance(offer_id, image_reference)
+            instance_id = client.create_instance(offer_id, image_reference, disk_gb=disk_gb)
             instance = client.wait_until_running(instance_id)
             _require_instance_image(instance, image_reference)
             host = client.ssh_url(instance)

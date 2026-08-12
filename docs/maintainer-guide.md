@@ -44,6 +44,10 @@ allocates 200 GB. `cloud up` tries a bounded number of offers; every rejected or
 destroyed before the next offer, and only the doctor defines acceptance. Because the carrier is
 large, a continuously loading instance gets up to one hour to become SSH-ready.
 
+Large campaigns must total the size of every pinned Hub snapshot because prefetch retains all
+repository files. Use `cloud up --disk-gb <size>` to request more than the 200 GB default while
+preserving the doctor's 100 GiB free-space floor.
+
 If Vast reports a host-side provisioning failure before SSH or doctor execution, record its offer
 ID and exclude it from the next attempt rather than paying to reproduce the same failure:
 
@@ -97,6 +101,36 @@ uv run peste cloud down
 
 Destroying the container erases remote state. Result copy-back must be complete first. Stopping is not a
 substitute because disk remains billable.
+
+## Multi-model campaigns
+
+A tracked campaign manifest fixes exact candidate identities and ordering. Keep verbose evidence
+outside git and use the campaign commands so progress is written atomically and reused only when
+the suite, model, source, image, hardware-profile, and GPU identities still match:
+
+```bash
+uv run peste campaign qualify \
+  --campaign compatible-37-20260811 \
+  --host <ssh-url> \
+  --evidence-dir campaign-evidence/compatible-37-20260811
+uv run peste campaign apply-profiles \
+  --campaign compatible-37-20260811 \
+  --evidence-dir campaign-evidence/compatible-37-20260811 \
+  --remove-failed
+uv run peste campaign summarize \
+  --campaign compatible-37-20260811 \
+  --evidence-dir campaign-evidence/compatible-37-20260811 \
+  --output campaigns/compatible-37-20260811/qualification-summary.json
+```
+
+After applying profiles, destroy the calibration instance and rebuild from the exact commit with
+the reviewed batch sizes. On a fresh accepted host, use `peste campaign run` with the same
+evidence directory. It skips an exact successful bundle, never resumes for speed, records each
+failure, and continues to the next independent model. Read the complete failure before explicitly
+retrying; never change precision, decoding, or batching merely to get a score.
+
+`peste leaderboard --include-untracked` may render reviewed bundles before publication. Final
+publication still requires tracked bundles and `peste check-generated`.
 
 ## Publishing
 

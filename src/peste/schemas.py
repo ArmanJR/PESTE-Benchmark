@@ -81,6 +81,38 @@ class ModelSpec(SchemaV2Model):
     speed_profile: SpeedProfile
 
 
+class CampaignCandidate(ContractModel):
+    """Immutable identity for one model considered by a benchmark campaign."""
+
+    model_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
+    repository: str = Field(pattern=r"^[^/\s]+/[^/\s]+$")
+    revision: str = Field(pattern=r"^[0-9a-f]{40}$")
+    adapter: Literal[
+        "transformers-whisper",
+        "transformers-qwen",
+        "transformers-ctc",
+        "nemo-rnnt",
+    ]
+
+
+class CampaignSpec(SchemaV2Model):
+    """Tracked definition of an exact, ordered model qualification campaign."""
+
+    campaign_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
+    suite_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
+    candidates: tuple[CampaignCandidate, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def candidates_are_unique(self) -> Self:
+        model_ids = [candidate.model_id for candidate in self.candidates]
+        identities = [(candidate.repository, candidate.revision) for candidate in self.candidates]
+        if len(model_ids) != len(set(model_ids)):
+            raise ValueError("Campaign model IDs must be unique")
+        if len(identities) != len(set(identities)):
+            raise ValueError("Campaign repository revisions must be unique")
+        return self
+
+
 class ManifestRow(SchemaV2Model):
     sample_id: str
     split: Literal["train", "validation", "test"]

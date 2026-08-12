@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "model_id": "shenava-rizeh-v1-0",
+  "repository": "Reza2kn/Shenava-Rizeh-v1.0",
+  "revision": "74c96b7c23d8611dd4d0c775744f43bc4fb9c2ec",
+  "adapter": "nemo-rnnt",
+  "native_dtype": "float32",
+  "license": "Apache-2.0",
+  "language": "fa",
+  "generation": {"decoder": "rnnt", "external_language_model": false},
+  "runtime": {"name": "nemo", "image": "ghcr.io/armanjr/peste-benchmark:2.0.0", "dockerfile": "runtimes/Dockerfile"},
+  "speed_profile": {"hardware_profile_id": "rtx-6000-ada-v1", "batch_size": 1}
+}

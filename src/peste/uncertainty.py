@@ -3,6 +3,7 @@
 import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
+from functools import lru_cache
 
 import numpy as np
 from numpy.typing import NDArray
@@ -47,11 +48,24 @@ def _interval(values: NDArray[np.float64], confidence_level: float) -> tuple[flo
     return float(lower), float(upper)
 
 
+@lru_cache(maxsize=16)
 def _bootstrap_indices(sample_count: int, replicates: int, seed: int) -> NDArray[np.int64]:
     if replicates <= 0:
         raise ValueError("Bootstrap replicates must be positive")
     generator = np.random.default_rng(seed)
     return generator.integers(0, sample_count, size=(replicates, sample_count), dtype=np.int64)
+
+
+@lru_cache(maxsize=256)
+def _sampled_rates(
+    errors: tuple[int, ...],
+    reference_units: tuple[int, ...],
+    replicates: int,
+    seed: int,
+) -> NDArray[np.float64]:
+    error_array, reference_array = _validated_counts(errors, reference_units)
+    indices = _bootstrap_indices(len(error_array), replicates, seed)
+    return error_array[indices].sum(axis=1) / reference_array[indices].sum(axis=1)
 
 
 def bootstrap_rate(
@@ -64,8 +78,12 @@ def bootstrap_rate(
 ) -> BootstrapEstimate:
     """Estimate a percentile interval for one corpus error rate."""
     error_array, reference_array = _validated_counts(errors, reference_units)
-    indices = _bootstrap_indices(len(error_array), replicates, seed)
-    sampled_rates = error_array[indices].sum(axis=1) / reference_array[indices].sum(axis=1)
+    sampled_rates = _sampled_rates(
+        tuple(int(value) for value in error_array),
+        tuple(int(value) for value in reference_array),
+        replicates,
+        seed,
+    )
     lower, upper = _interval(sampled_rates, confidence_level)
     estimate = BootstrapEstimate(
         point=float(error_array.sum() / reference_array.sum()),
@@ -101,12 +119,19 @@ def bootstrap_paired_rate_difference(
     second_array, second_reference = _validated_counts(second_errors, reference_units)
     if not np.array_equal(reference_array, second_reference):
         raise ValueError("Paired systems must use identical reference units")
-    indices = _bootstrap_indices(len(first_array), replicates, seed)
-    sampled_reference = reference_array[indices].sum(axis=1)
-    sampled_differences = (
-        first_array[indices].sum(axis=1) / sampled_reference
-        - second_array[indices].sum(axis=1) / sampled_reference
+    first_rates = _sampled_rates(
+        tuple(int(value) for value in first_array),
+        tuple(int(value) for value in reference_array),
+        replicates,
+        seed,
     )
+    second_rates = _sampled_rates(
+        tuple(int(value) for value in second_array),
+        tuple(int(value) for value in reference_array),
+        replicates,
+        seed,
+    )
+    sampled_differences = first_rates - second_rates
     lower, upper = _interval(sampled_differences, confidence_level)
     estimate = BootstrapEstimate(
         point=float((first_array.sum() - second_array.sum()) / reference_array.sum()),

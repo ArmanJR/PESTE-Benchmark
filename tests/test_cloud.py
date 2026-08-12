@@ -57,6 +57,19 @@ def test_offer_query_filters_price_and_sorts_recorded_raw_json(tmp_path: Path) -
     assert "--raw" in command
 
 
+def test_offer_query_and_creation_use_campaign_disk_size(tmp_path: Path) -> None:
+    search_run = RecordedRun([[{"id": 1, "dph_total": 0.5}]])
+    _configured_client(tmp_path, search_run).search_offers(disk_gb=400)
+    search_command = search_run.commands[0]
+    assert "disk_space>=400" in search_command[3]
+    assert search_command[search_command.index("--storage") + 1] == "400"
+
+    create_run = RecordedRun([{"success": True, "new_contract": 123}])
+    _configured_client(tmp_path, create_run).create_instance(55, IMAGE, disk_gb=400)
+    create_command = create_run.commands[0]
+    assert create_command[create_command.index("--disk") + 1] == "400"
+
+
 def test_create_uses_digest_pinned_image_direct_ssh_and_container_policy(tmp_path: Path) -> None:
     run = RecordedRun([{"success": True, "new_contract": 123}])
     assert _configured_client(tmp_path, run).create_instance(55, IMAGE) == 123
@@ -207,14 +220,18 @@ class LifecycleClient:
         self.created: list[int] = []
         self.wait_failure = wait_failure
 
-    def search_offers(self, *, max_dph: float | None = None) -> list[dict[str, Any]]:
+    def search_offers(
+        self, *, max_dph: float | None = None, disk_gb: int = 200
+    ) -> list[dict[str, Any]]:
+        assert disk_gb >= 200
         return self.offers
 
     def show_instances(self) -> list[dict[str, Any]]:
         return []
 
-    def create_instance(self, offer_id: int, image_reference: str) -> int:
+    def create_instance(self, offer_id: int, image_reference: str, *, disk_gb: int = 200) -> int:
         assert image_reference == IMAGE
+        assert disk_gb >= 200
         self.created.append(offer_id)
         return offer_id + 100
 

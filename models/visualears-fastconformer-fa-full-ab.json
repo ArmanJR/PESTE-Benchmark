@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "model_id": "visualears-fastconformer-fa-full-ab",
+  "repository": "Reza2kn/visualears-fastconformer-fa-full-ab",
+  "revision": "7f43a9d41d06328605257f0f28542c2f2332ed55",
+  "adapter": "nemo-rnnt",
+  "native_dtype": "float32",
+  "license": "Apache-2.0",
+  "language": "fa",
+  "generation": {"decoder": "rnnt", "external_language_model": false},
+  "runtime": {"name": "nemo", "image": "ghcr.io/armanjr/peste-benchmark:2.0.0", "dockerfile": "runtimes/Dockerfile"},
+  "speed_profile": {"hardware_profile_id": "rtx-6000-ada-v1", "batch_size": 1}
+}

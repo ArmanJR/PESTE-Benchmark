@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "model_id": "whisper-v3-turbo-persian-v1-0-nezamisafa",
+  "repository": "nezamisafa/whisper-v3-turbo-persian-v1.0",
+  "revision": "d9dfe321e0bcbd0bfe2ae1f5d72e1f8b580518cf",
+  "adapter": "transformers-whisper",
+  "native_dtype": "float16",
+  "license": "MIT",
+  "language": "fa",
+  "generation": {"task": "transcribe", "max_new_tokens": 444, "return_timestamps": false},
+  "runtime": {"name": "modern", "image": "ghcr.io/armanjr/peste-benchmark:2.0.0", "dockerfile": "runtimes/Dockerfile"},
+  "speed_profile": {"hardware_profile_id": "rtx-6000-ada-v1", "batch_size": 1}
+}

@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "model_id": "whisper-small-persian-v1-aliyzd95",
+  "repository": "aliyzd95/whisper-small-persian-v1",
+  "revision": "6f667ff324f2a4918e7df54d52f638a1c8d8263c",
+  "adapter": "transformers-whisper",
+  "native_dtype": "float16",
+  "license": "Apache-2.0",
+  "language": "fa",
+  "generation": {"task": "transcribe", "max_new_tokens": 444, "return_timestamps": false},
+  "runtime": {"name": "modern", "image": "ghcr.io/armanjr/peste-benchmark:2.0.0", "dockerfile": "runtimes/Dockerfile"},
+  "speed_profile": {"hardware_profile_id": "rtx-6000-ada-v1", "batch_size": 1}
+}

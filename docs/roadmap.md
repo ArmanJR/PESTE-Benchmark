@@ -17,9 +17,13 @@
   to schema 2.
 - [x] Preserve `fleurs-fa-ir-v1`, `fa-v1`, checkpoint revisions, accuracy metrics, uncertainty, and
   paired comparisons.
-- [ ] Calibrate all eight model batch sizes on an official host.
-- [ ] Produce one fresh uninterrupted schema-2 bundle for every model.
-- [ ] Publish the complete RTX accuracy and speed boards.
+- [x] Calibrate all eight initial model batch sizes on an official host.
+- [x] Produce one fresh uninterrupted schema-2 bundle for every initial model.
+- [x] Publish the initial RTX accuracy and speed boards.
+- [ ] Qualify and batch-calibrate the 37 additional adapter-compatible candidates from the
+  `compatible-37-20260811` campaign.
+- [ ] Produce one fresh uninterrupted schema-2 bundle for every successful campaign qualifier.
+- [ ] Publish the expanded accuracy, speed, and Pareto boards.
 
 ## Version 3 — `fa-v2` normalization milestone
 
