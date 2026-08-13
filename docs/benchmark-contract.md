@@ -135,7 +135,9 @@ when the paired 95% CER-difference interval for A minus B remains below zero. CE
 measure test-set sampling uncertainty; the single-run speed coordinate has no confidence interval.
 Pareto efficiency is a classification, not a total ranking, and no composite score is defined.
 The Pareto SVG inverts the logarithmic CER axis so improving directions are visually up and right;
-its tick labels remain the untransformed CER values.
+its tick labels remain the untransformed CER values. Confidence bars are hidden by default and can
+be toggled in interactive SVG rendering. The displayed axis ends at CER 1; any worse point is
+labeled at the lower boundary as off-scale without changing its stored or tabulated value.
 
 ## Resume and artifacts
 

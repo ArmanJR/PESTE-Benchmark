@@ -274,7 +274,6 @@ def campaign_summarize(
 def check_generated() -> None:
     suite = load_suite(DEFAULT_SUITE_ID)
     tracked_files = (
-        "leaderboard.md",
         "leaderboard.json",
         "leaderboard.csv",
         "leaderboard-accuracy.svg",
@@ -303,6 +302,12 @@ def check_generated() -> None:
                 raise RuntimeError(f"Generated output is stale: generated/{name}")
         if not filecmp.cmp(PROJECT_ROOT / "README.md", temporary_readme, shallow=False):
             raise RuntimeError("Generated README leaderboard is stale")
+        if not filecmp.cmp(
+            PROJECT_ROOT / "docs" / "full-leaderboard.md",
+            temporary_root / "docs" / "full-leaderboard.md",
+            shallow=False,
+        ):
+            raise RuntimeError("Generated full leaderboard is stale: docs/full-leaderboard.md")
     LOGGER.info("Generated leaderboard outputs are current")
 
 

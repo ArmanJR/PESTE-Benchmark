@@ -6,10 +6,14 @@ from pathlib import Path
 import pytest
 
 from peste.leaderboard import (
+    LeaderboardRow,
+    PairedComparison,
+    ParetoEfficiency,
     accuracy_order,
     collect_rows,
     generate_leaderboards,
     pareto_dominators,
+    render_markdown,
     speed_order,
 )
 from peste.specs import load_model, spec_digest
@@ -189,17 +193,18 @@ def test_static_speed_outputs_are_deterministic_and_have_no_memory_fields(
     second = tmp_path / "second"
     generate_leaderboards(suite, results, first, require_tracked=False, root=tmp_path)  # type: ignore[arg-type]
     first_readme = (tmp_path / "README.md").read_bytes()
+    first_full_leaderboard = (tmp_path / "docs" / "full-leaderboard.md").read_bytes()
     generate_leaderboards(suite, results, second, require_tracked=False, root=tmp_path)  # type: ignore[arg-type]
     for name in (
         "leaderboard.json",
         "leaderboard.csv",
-        "leaderboard.md",
         "leaderboard-accuracy.svg",
         "leaderboard-speed.svg",
         "leaderboard-pareto.svg",
     ):
         assert (first / name).read_bytes() == (second / name).read_bytes()
     assert (tmp_path / "README.md").read_bytes() == first_readme
+    assert (tmp_path / "docs" / "full-leaderboard.md").read_bytes() == first_full_leaderboard
     payload = json.loads((first / "leaderboard.json").read_text())
     assert payload["schema_version"] == 2
     assert payload["speed"][0]["model_id"] == "model-a"
@@ -276,18 +281,107 @@ def test_markdown_links_models_and_presents_speed_board(
     generate_leaderboards(suite, results, output, require_tracked=False, root=tmp_path)  # type: ignore[arg-type]
 
     expected_link = "[model](https://huggingface.co/organization/checkpoint)"
-    markdown = (output / "leaderboard.md").read_text()
+    markdown = (tmp_path / "docs" / "full-leaderboard.md").read_text()
     assert expected_link in markdown
     assert "## Steady-state speed" in markdown
     assert "| Rank | Model | Batch | Throughput | RTF | Processing s | Audio s |" in markdown
     assert "## Accuracy-speed Pareto efficiency" in markdown
-    assert "| Order | Model | CER | Throughput | Point frontier | Supported frontier |" in markdown
+    assert "| Model | CER (95% CI) | Throughput (× real time) |" in markdown
+    readme = (tmp_path / "README.md").read_text()
+    assert expected_link in readme
+    assert "[full leaderboard and paired CER comparisons](docs/full-leaderboard.md)" in readme
     speed_svg = (output / "leaderboard-speed.svg").read_text()
     assert "PESTE steady-state speed leaderboard" in speed_svg
     assert "https://huggingface.co/organization/checkpoint" in speed_svg
     pareto_svg = (output / "leaderboard-pareto.svg").read_text()
     assert "PESTE accuracy-speed Pareto efficiency" in pareto_svg
     assert "https://huggingface.co/organization/checkpoint" in pareto_svg
+
+
+def test_readme_markdown_limits_standings_and_pareto_table_to_frontier(
+    tiny_suite: tuple[object, Path, list[object]],
+) -> None:
+    suite, _, _ = tiny_suite
+    rows = [
+        LeaderboardRow(
+            model_id=f"model-{index:02d}",
+            run_id=f"run-{index:02d}",
+            wer=0.1 + index / 100,
+            wer_ci_lower=0.09 + index / 100,
+            wer_ci_upper=0.11 + index / 100,
+            cer=0.05 + index / 100,
+            cer_ci_lower=0.04 + index / 100,
+            cer_ci_upper=0.06 + index / 100,
+            word_accuracy_pct=90.0 - index,
+            speed_valid=True,
+            batch_size=8,
+            audio_throughput_x=20.0 - index,
+            rtf=1 / (20.0 - index),
+            processing_seconds=5.0 + index,
+            total_audio_seconds=100.0,
+            checkpoint_gib=1.0,
+            parameter_count=100,
+            native_dtype="float16",
+        )
+        for index in range(12)
+    ]
+    comparisons = [
+        PairedComparison(
+            first_model_id="model-00",
+            second_model_id="model-01",
+            cer_difference=-0.01,
+            ci_lower=-0.02,
+            ci_upper=0.0,
+            resolved=False,
+        )
+    ]
+    pareto_entries = [
+        ParetoEfficiency(
+            row=row,
+            pareto_efficient=index == 0,
+            statistically_pareto_efficient=index == 0,
+            dominated_by=() if index == 0 else ("model-00",),
+            statistically_dominated_by=() if index == 0 else ("model-00",),
+        )
+        for index, row in enumerate(rows)
+    ]
+
+    readme = render_markdown(
+        suite,  # type: ignore[arg-type]
+        rows,
+        comparisons=comparisons,
+        pareto_entries=pareto_entries,
+        image_prefix="generated/",
+        heading_level=3,
+        table_limit=10,
+        include_comparisons=False,
+        full_leaderboard_link="docs/full-leaderboard.md",
+    )
+    full = render_markdown(
+        suite,  # type: ignore[arg-type]
+        rows,
+        comparisons=comparisons,
+        pareto_entries=pareto_entries,
+        image_prefix="../generated/",
+    )
+
+    readme_accuracy = readme.split("### Normalized accuracy", 1)[1].split(
+        "### Steady-state speed", 1
+    )[0]
+    readme_speed = readme.split("### Steady-state speed", 1)[1].split(
+        "### Accuracy-speed Pareto efficiency", 1
+    )[0]
+    readme_pareto = readme.split("### Accuracy-speed Pareto efficiency", 1)[1]
+    assert "| 10 | model-09 |" in readme_accuracy
+    assert "| 11 | model-10 |" not in readme_accuracy
+    assert "| 10 | model-09 |" in readme_speed
+    assert "| 11 | model-10 |" not in readme_speed
+    assert "Paired adjacent CER comparisons" not in readme
+    assert "[full leaderboard and paired CER comparisons](docs/full-leaderboard.md)" in readme
+    assert "| model-00 |" in readme_pareto
+    assert "model-01" not in readme_pareto
+    assert "| 11 | model-10 |" in full
+    assert "### Paired adjacent CER comparisons" in full
 
 
 def test_uncertainty_requires_prediction_counts_to_match_aggregates(

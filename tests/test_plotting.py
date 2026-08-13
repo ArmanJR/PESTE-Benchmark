@@ -66,13 +66,14 @@ def test_pareto_plot_renders_frontier_dominance_and_uncertainty() -> None:
         PlotRow("fast-frontier", 0.20, 0.20, 100.0, 0.01, cer_ci_lower=0.18, cer_ci_upper=0.22),
         PlotRow("accurate-frontier", 0.10, 0.05, 10.0, 0.1, cer_ci_lower=0.04, cer_ci_upper=0.06),
         PlotRow("dominated", 0.30, 0.30, 5.0, 0.2, cer_ci_lower=0.25, cer_ci_upper=0.35),
+        PlotRow("off-scale", 0.90, 1.30, 3.0, 1 / 3, cer_ci_lower=1.20, cer_ci_upper=1.40),
         PlotRow("resumed", 0.01, 0.01, 500.0, 0.002, speed_valid=False),
     ]
     svg = render_pareto_svg(
         "future-suite",
         rows,
         {"fast-frontier", "accurate-frontier"},
-        {"dominated"},
+        {"dominated", "off-scale"},
     )
     assert "PESTE accuracy-speed Pareto efficiency" in svg
     assert "Audio throughput (× real time, log scale)" in svg
@@ -82,7 +83,18 @@ def test_pareto_plot_renders_frontier_dominance_and_uncertainty() -> None:
     assert 'class="frontier-line"' in svg
     assert 'class="point frontier"' in svg
     assert 'class="point supported-dominated"' in svg
-    assert 'class="error-bar"' in svg
+    assert 'id="cer-confidence-intervals" class="cer-ci"' in svg
+    assert ".cer-ci { display: none; }" in svg
+    assert ".ci-visible .cer-ci { display: inline; }" in svg
+    assert "Show CER 95% CI" in svg
+    assert "aria-pressed': 'false'" in svg
+    assert 'class="model-label frontier-label"' in svg
+    assert 'class="point supported-dominated off-scale"' in svg
+    assert "CER &gt; 1 shown at boundary" in svg
+    assert ">fast-frontier</text>" in svg
+    assert ">accurate-frontier</text>" in svg
+    assert ">dominated</text>" in svg
+    assert "Numbered in speed order" not in svg
     assert ">resumed</text>" not in svg
     root = ElementTree.fromstring(svg)
     namespace = {"svg": "http://www.w3.org/2000/svg"}
@@ -92,9 +104,18 @@ def test_pareto_plot_renders_frontier_dominance_and_uncertainty() -> None:
         if (title := circle.find("svg:title", namespace)) is not None and title.text is not None
     }
     assert point_y["accurate-frontier"] < point_y["fast-frontier"]
+    frontier_label_y = {
+        title.tail: float(text.attrib["y"])
+        for text in root.findall(".//svg:text", namespace)
+        if text.attrib.get("class") == "model-label frontier-label"
+        and (title := text.find("svg:title", namespace)) is not None
+        and title.tail is not None
+    }
+    assert abs(frontier_label_y["accurate-frontier"] - point_y["accurate-frontier"]) >= 30
+    assert abs(frontier_label_y["fast-frontier"] - point_y["fast-frontier"]) >= 30
 
 
-def test_large_leaderboards_keep_all_visible_model_names() -> None:
+def test_large_leaderboards_keep_all_model_names_visible_and_accessible() -> None:
     rows = [
         PlotRow(
             f"model-{index:02d}-with-a-complete-visible-name",
@@ -109,8 +130,8 @@ def test_large_leaderboards_keep_all_visible_model_names() -> None:
     pareto = render_pareto_svg("large-suite", rows, {rows[0].model_id}, set())
 
     assert 'height="1704"' in accuracy
-    assert 'width="1440" height="959"' in pareto
-    assert "Numbered in speed order" in pareto
+    assert 'width="1440" height="1480"' in pareto
+    assert "Numbered in speed order" not in pareto
     for row in rows:
         assert f">{row.model_id}</text>" in accuracy
-        assert row.model_id in pareto
+        assert f">{row.model_id}</text>" in pareto

@@ -23,6 +23,8 @@ from peste.uncertainty import (
 
 LOGGER = logging.getLogger(__name__)
 
+README_TABLE_LIMIT = 10
+
 
 @dataclass(frozen=True, slots=True)
 class LeaderboardRow:
@@ -403,7 +405,14 @@ def _percentage_points(value: float) -> str:
     return f"{value * 100:.2f}".replace("-", "−")
 
 
-def _table(rows: list[LeaderboardRow], speed: bool, repositories: dict[str, str]) -> str:
+def _table(
+    rows: list[LeaderboardRow],
+    speed: bool,
+    repositories: dict[str, str],
+    *,
+    limit: int | None = None,
+) -> str:
+    displayed_rows = rows if limit is None else rows[:limit]
     if speed:
         headings = "| Rank | Model | Batch | Throughput | RTF | Processing s | Audio s |"
         separator = "|---:|---|---:|---:|---:|---:|---:|"
@@ -411,7 +420,7 @@ def _table(rows: list[LeaderboardRow], speed: bool, repositories: dict[str, str]
             f"| {rank} | {_model_cell(row.model_id, repositories)} | "
             f"{row.batch_size} | {row.audio_throughput_x:.3f}× | {row.rtf:.5f} | "
             f"{row.processing_seconds:.3f} | {row.total_audio_seconds:.3f} |"
-            for rank, row in enumerate(rows, start=1)
+            for rank, row in enumerate(displayed_rows, start=1)
         ]
     else:
         headings = "| Order | Model | CER | WER | Word accuracy |"
@@ -421,7 +430,7 @@ def _table(rows: list[LeaderboardRow], speed: bool, repositories: dict[str, str]
             f"{_rate_with_interval(row.cer, row.cer_ci_lower, row.cer_ci_upper)} | "
             f"{_rate_with_interval(row.wer, row.wer_ci_lower, row.wer_ci_upper)} | "
             f"{row.word_accuracy_pct:.2f}% |"
-            for rank, row in enumerate(rows, start=1)
+            for rank, row in enumerate(displayed_rows, start=1)
         ]
     if not values:
         columns = 7 if speed else 5
@@ -448,30 +457,18 @@ def _comparison_table(comparisons: list[PairedComparison], repositories: dict[st
     return "\n".join([headings, separator, *values])
 
 
-def _model_list(model_ids: tuple[str, ...], repositories: dict[str, str]) -> str:
-    if not model_ids:
-        return "—"
-    return "<br>".join(_model_cell(model_id, repositories) for model_id in model_ids)
-
-
 def _pareto_table(entries: list[ParetoEfficiency], repositories: dict[str, str]) -> str:
-    headings = (
-        "| Order | Model | CER | Throughput | Point frontier | Supported frontier | "
-        "Point dominators | Supported dominators |"
-    )
-    separator = "|---:|---|---:|---:|---|---|---|---|"
+    headings = "| Model | CER (95% CI) | Throughput (× real time) |"
+    separator = "|---|---:|---:|"
+    frontier = [entry for entry in entries if entry.pareto_efficient]
     values = [
-        f"| {order} | {_model_cell(entry.row.model_id, repositories)} | "
-        f"{_rate_with_interval(entry.row.cer, entry.row.cer_ci_lower, entry.row.cer_ci_upper)} | "
-        f"{entry.row.audio_throughput_x:.3f}× | "
-        f"{'Yes' if entry.pareto_efficient else 'No'} | "
-        f"{'Yes' if entry.statistically_pareto_efficient else 'No'} | "
-        f"{_model_list(entry.dominated_by, repositories)} | "
-        f"{_model_list(entry.statistically_dominated_by, repositories)} |"
-        for order, entry in enumerate(entries, start=1)
+        f"| {_model_cell(entry.row.model_id, repositories)} | "
+        f"{entry.row.cer:.4f} ({entry.row.cer_ci_lower:.4f}–{entry.row.cer_ci_upper:.4f}) | "
+        f"{entry.row.audio_throughput_x:.3f}× |"
+        for entry in frontier
     ]
     if not values:
-        values = ["| — | No complete speed-valid results yet | — | — | — | — | — | — |"]
+        values = ["| No complete speed-valid results yet | — | — |"]
     return "\n".join([headings, separator, *values])
 
 
@@ -484,6 +481,9 @@ def render_markdown(
     *,
     image_prefix: str = "",
     heading_level: int = 2,
+    table_limit: int | None = None,
+    include_comparisons: bool = True,
+    full_leaderboard_link: str | None = None,
 ) -> str:
     model_repositories = repositories or {}
     paired_comparisons = comparisons or []
@@ -491,16 +491,29 @@ def render_markdown(
     heading = "#" * heading_level
     subheading = "#" * (heading_level + 1)
     comparison_section = ""
-    if paired_comparisons:
+    if include_comparisons and paired_comparisons:
         comparison_section = (
             f"\n\n{subheading} Paired adjacent CER comparisons\n\n"
             + _comparison_table(paired_comparisons, model_repositories)
         )
+    summary_note = ""
+    if table_limit is not None and full_leaderboard_link is not None:
+        summary_note = (
+            f"The tables show the top {table_limit} models. See the "
+            f"[full leaderboard and paired CER comparisons]({full_leaderboard_link}) for "
+            "complete standings.\n\n"
+        )
     return (
-        f"# PESTE leaderboard — `{suite.suite_id}`\n\n"
-        f"{heading} Normalized accuracy\n\n"
+        f"# Full PESTE leaderboard — `{suite.suite_id}`\n\n"
+        + summary_note
+        + f"{heading} Normalized accuracy\n\n"
         f"![Normalized accuracy leaderboard]({image_prefix}leaderboard-accuracy.svg)\n\n"
-        + _table(accuracy_order(rows), speed=False, repositories=model_repositories)
+        + _table(
+            accuracy_order(rows),
+            speed=False,
+            repositories=model_repositories,
+            limit=table_limit,
+        )
         + "\n\nCER is the primary ranking metric because Persian WER is orthography-sensitive: "
         "fa-v1 converts ZWNJ to spaces, while CER ignores normalized whitespace. WER and "
         "derived word accuracy remain complementary, segmentation-sensitive measurements."
@@ -512,20 +525,28 @@ def render_markdown(
         + comparison_section
         + f"\n\n{heading} Steady-state speed\n\n"
         f"![Steady-state speed leaderboard]({image_prefix}leaderboard-speed.svg)\n\n"
-        + _table(speed_order(rows), speed=True, repositories=model_repositories)
+        + _table(
+            speed_order(rows),
+            speed=True,
+            repositories=model_repositories,
+            limit=table_limit,
+        )
         + "\n\nThroughput is total audio seconds divided by measured processing seconds; "
         "RTF is its reciprocal. Resumed runs retain accuracy but are excluded here.\n"
         + f"\n{heading} Accuracy-speed Pareto efficiency\n\n"
         f"![Accuracy-speed Pareto efficiency]({image_prefix}leaderboard-pareto.svg)\n\n"
         + _pareto_table(efficiency_entries, model_repositories)
         + "\n\nA speed-valid model is Pareto-efficient when no other model has both equal-or-lower "
-        "CER and equal-or-higher throughput, with at least one strict advantage. Point dominators "
-        "use the published estimates. Supported dominators additionally require the paired 95% "
-        "CER-difference interval to remain below zero. CER intervals measure test-set sampling "
-        "uncertainty; speed is a single deterministic run without a confidence interval. The plot "
-        "inverts its logarithmic CER axis so visually better directions are up and right while "
-        "tick labels remain raw CER. Pareto status is a trade-off classification, not a composite "
-        "score.\n"
+        "CER and equal-or-higher throughput, with at least one strict advantage. The table lists "
+        "only that point-estimate frontier; the machine-readable artifacts retain classifications "
+        "and dominators for every speed-valid model. Supported dominance additionally requires the "
+        "paired 95% CER-difference interval to remain below zero. CER intervals measure test-set "
+        "sampling uncertainty; speed is a single deterministic run without a confidence interval. "
+        "The plot inverts its logarithmic CER axis so visually better directions are up and right "
+        "while tick labels remain raw CER. CER confidence bars are hidden by default and can be "
+        "toggled when the SVG is rendered interactively. The displayed CER axis ends at 1; worse "
+        "values remain labeled at the lower boundary as off-scale points. Pareto status is a "
+        "trade-off classification, not a composite score.\n"
     )
 
 
@@ -568,9 +589,20 @@ def generate_leaderboards(
         suite.expected_split_counts[suite.evaluation_split],
     )
     repositories = {model.model_id: model.repository for model in discover_models(root)}
-    markdown = render_markdown(suite, rows, repositories, comparisons, pareto_entries)
     generated_directory.mkdir(parents=True, exist_ok=True)
-    (generated_directory / "leaderboard.md").write_text(markdown, encoding="utf-8")
+    full_leaderboard_path = root / "docs" / "full-leaderboard.md"
+    full_leaderboard_path.parent.mkdir(parents=True, exist_ok=True)
+    full_leaderboard_path.write_text(
+        render_markdown(
+            suite,
+            rows,
+            repositories,
+            comparisons,
+            pareto_entries,
+            image_prefix="../generated/",
+        ),
+        encoding="utf-8",
+    )
     (generated_directory / "leaderboard-accuracy.svg").write_text(
         render_accuracy_svg(suite.suite_id, rows, repositories), encoding="utf-8"
     )
@@ -658,7 +690,10 @@ def generate_leaderboards(
             pareto_entries,
             image_prefix="generated/",
             heading_level=3,
-        ).removeprefix(f"# PESTE leaderboard — `{suite.suite_id}`\n\n")
+            table_limit=README_TABLE_LIMIT,
+            include_comparisons=False,
+            full_leaderboard_link="docs/full-leaderboard.md",
+        ).removeprefix(f"# Full PESTE leaderboard — `{suite.suite_id}`\n\n")
         readme_path.write_text(
             f"{before}{start_marker}\n\n{embedded}\n{end_marker}{after}", encoding="utf-8"
         )

@@ -52,9 +52,11 @@ If result inputs or rendering change, regenerate with:
 uv run peste leaderboard --suite fleurs-fa-ir-v1
 ```
 
-That command owns `generated/leaderboard.md`, `generated/leaderboard-accuracy.svg`,
+That command owns `docs/full-leaderboard.md`, `generated/leaderboard-accuracy.svg`,
 `generated/leaderboard-speed.svg`, `generated/leaderboard-pareto.svg`,
-`generated/leaderboard.json`, `generated/leaderboard.csv`, and the README marker block.
+`generated/leaderboard.json`, `generated/leaderboard.csv`, and the README marker block. The README
+contains top-10 accuracy and speed tables; the dedicated document contains the complete standings
+and paired CER comparisons.
 
 Framework/interface changes also require the manual GHCR carrier workflow, a real multi-item smoke,
 and speed calibration on the doctor-approved RTX profile. State the changed contract, affected

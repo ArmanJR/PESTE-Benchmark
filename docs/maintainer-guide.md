@@ -141,8 +141,9 @@ uv run peste leaderboard --suite fleurs-fa-ir-v1
 uv run peste check-generated
 ```
 
-Review Markdown, accuracy/speed/Pareto SVGs, JSON, CSV, and the README block. Do not edit derived
-metrics or plots directly. Failed attempts may remain as diagnostics but never rank.
+Review `docs/full-leaderboard.md`, accuracy/speed/Pareto SVGs, JSON, CSV, and the README block. Do
+not edit derived metrics, standings, or plots directly. Failed attempts may remain as diagnostics
+but never rank.
 
 ## Creating a suite
 
