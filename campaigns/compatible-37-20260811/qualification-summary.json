@@ -55,6 +55,17 @@
     "competing_gpu_processes": "",
     "cloud_provenance": "CONTAINER_ID=47547367 VAST_CONTAINERLABEL=C.47547367"
   },
+  "rizeh_remediation": {
+    "calibration_image_reference": "ghcr.io/armanjr/peste-benchmark@sha256:7dfc34aa7e5aa11ba3cd7915824703fa43cb2fb304c0306c9ca9bc1deddb26ea",
+    "calibration_source_revision": "f79ae6eb0159fcc3a829984e27efd4cee879d25e",
+    "calibration_gpu_uuid": "GPU-ff48866e-697e-f1d7-fea8-c5b698f8bca0",
+    "selected_batch_size": 16,
+    "profile_sha256": "33d1d071887d0bc22fec6b97a3277eeb49f75deea5ada3e7de3876a522e2b698",
+    "official_image_reference": "ghcr.io/armanjr/peste-benchmark@sha256:057776af47665dc404fc58884c9f46961afeb2f641bbb2b734c282b8a6c507a0",
+    "official_source_revision": "1b1386addb75d2fed55bda91c5b9558c71e38481",
+    "official_gpu_uuid": "GPU-955f06a9-3603-ff23-81d5-658496491d0e",
+    "run_id": "fleurs-fa-ir-v1-shenava-rizeh-v1-0-20260813T083709Z"
+  },
   "models": [
     {
       "model_id": "whisper-small-persian-steja",
@@ -360,13 +371,13 @@
       "model_id": "shenava-rizeh-v1-0",
       "repository": "Reza2kn/Shenava-Rizeh-v1.0",
       "revision": "74c96b7c23d8611dd4d0c775744f43bc4fb9c2ec",
-      "adapter": "nemo-rnnt",
+      "adapter": "nemo-ctc",
       "qualification_status": "qualified",
-      "selected_batch_size": 128,
-      "profile_sha256": "162d150e9abe5ce608d2964c479b478a4f255ad01f56c62d18bbcc54e5e7d80f",
-      "final_model_digest": "58f3193894a282ab7d55f86a7f72fe605100c93ae38cbad3509f6d0f79313c96",
-      "run_status": "failed",
-      "run_id": "fleurs-fa-ir-v1-shenava-rizeh-v1-0-20260812T150617Z"
+      "selected_batch_size": 16,
+      "profile_sha256": "33d1d071887d0bc22fec6b97a3277eeb49f75deea5ada3e7de3876a522e2b698",
+      "final_model_digest": "8e0edc854ccf0b5cd8c93f66723401365bdc977578ad7ad264eba316f67dd3c7",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-shenava-rizeh-v1-0-20260813T083709Z"
     },
     {
       "model_id": "visualears-fastconformer-fa-full-ab",

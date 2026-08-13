@@ -46,8 +46,8 @@ The tables show the top 10 models. See the [full leaderboard and paired CER comp
 | 6 | [whisper-large-v3](https://huggingface.co/openai/whisper-large-v3) | 0.0605<br><sub>95% CI: 0.0560–0.0655</sub> | 0.2044<br><sub>95% CI: 0.1961–0.2129</sub> | 79.56% |
 | 7 | [persian-whisper-large-v3-10-percent-17-0-one-epoch-mohammadreza-halakoo](https://huggingface.co/MohammadReza-Halakoo/persian-whisper-large-v3-10-percent-17-0-one-epoch) | 0.0623<br><sub>95% CI: 0.0574–0.0675</sub> | 0.2743<br><sub>95% CI: 0.2654–0.2831</sub> | 72.57% |
 | 8 | [whisper-large-v3-turbo](https://huggingface.co/openai/whisper-large-v3-turbo) | 0.0629<br><sub>95% CI: 0.0570–0.0699</sub> | 0.2042<br><sub>95% CI: 0.1951–0.2135</sub> | 79.58% |
-| 9 | [whisper-medium-fa-aictsharif](https://huggingface.co/aictsharif/whisper-medium-fa) | 0.0658<br><sub>95% CI: 0.0517–0.0836</sub> | 0.2604<br><sub>95% CI: 0.2434–0.2804</sub> | 73.96% |
-| 10 | [neuraspeech-whisperbase-neurai](https://huggingface.co/Neurai/NeuraSpeech_WhisperBase) | 0.0670<br><sub>95% CI: 0.0616–0.0730</sub> | 0.2163<br><sub>95% CI: 0.2074–0.2255</sub> | 78.37% |
+| 9 | [shenava-rizeh-v1-0](https://huggingface.co/Reza2kn/Shenava-Rizeh-v1.0) | 0.0640<br><sub>95% CI: 0.0589–0.0694</sub> | 0.1555<br><sub>95% CI: 0.1470–0.1638</sub> | 84.45% |
+| 10 | [whisper-medium-fa-aictsharif](https://huggingface.co/aictsharif/whisper-medium-fa) | 0.0658<br><sub>95% CI: 0.0517–0.0836</sub> | 0.2604<br><sub>95% CI: 0.2434–0.2804</sub> | 73.96% |
 
 CER is the primary ranking metric because Persian WER is orthography-sensitive: fa-v1 converts ZWNJ to spaces, while CER ignores normalized whitespace. WER and derived word accuracy remain complementary, segmentation-sensitive measurements.
 
@@ -60,15 +60,15 @@ Point-estimate order does not establish statistical significance. Intervals use 
 | Rank | Model | Batch | Throughput | RTF | Processing s | Audio s |
 |---:|---|---:|---:|---:|---:|---:|
 | 1 | [nvidia-fastconformer-fa](https://huggingface.co/nvidia/stt_fa_fastconformer_hybrid_large) | 32 | 1199.914× | 0.00083 | 11.102 | 13321.860 |
-| 2 | [wav2vec2-large-xlsr-53-persian](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-persian) | 1 | 470.167× | 0.00213 | 28.334 | 13321.860 |
-| 3 | [visualears-fastconformer-fa-full-ab](https://huggingface.co/Reza2kn/visualears-fastconformer-fa-full-ab) | 32 | 378.349× | 0.00264 | 35.211 | 13321.860 |
-| 4 | [wav2vec2-large-xlsr-persian-v3-masoumehb](https://huggingface.co/masoumehb/wav2vec2-large-xlsr-persian-v3) | 1 | 296.335× | 0.00337 | 44.955 | 13321.860 |
-| 5 | [wav2vec2-xls-r-300m-fa-alifarokh](https://huggingface.co/alifarokh/wav2vec2-xls-r-300m-fa) | 1 | 291.422× | 0.00343 | 45.713 | 13321.860 |
-| 6 | [xls-r-1b-fa-cv8-ghofrani](https://huggingface.co/ghofrani/xls-r-1b-fa-cv8) | 1 | 289.030× | 0.00346 | 46.092 | 13321.860 |
-| 7 | [wav2vec2-large-xlsr-persian-v2-m3hrdadfi](https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian-v2) | 1 | 288.740× | 0.00346 | 46.138 | 13321.860 |
-| 8 | [persian-speech-transcription-wav2vec2-v1-seyedali](https://huggingface.co/SeyedAli/Persian-Speech-Transcription-Wav2Vec2-V1) | 1 | 286.634× | 0.00349 | 46.477 | 13321.860 |
-| 9 | [wav2vec2-large-xlsr-persian-shemo-m3hrdadfi](https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian-shemo) | 1 | 285.490× | 0.00350 | 46.663 | 13321.860 |
-| 10 | [wav2vec2-large-xlsr-persian-m3hrdadfi](https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian) | 1 | 281.193× | 0.00356 | 47.376 | 13321.860 |
+| 2 | [shenava-rizeh-v1-0](https://huggingface.co/Reza2kn/Shenava-Rizeh-v1.0) | 16 | 675.031× | 0.00148 | 19.735 | 13321.860 |
+| 3 | [wav2vec2-large-xlsr-53-persian](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-persian) | 1 | 470.167× | 0.00213 | 28.334 | 13321.860 |
+| 4 | [visualears-fastconformer-fa-full-ab](https://huggingface.co/Reza2kn/visualears-fastconformer-fa-full-ab) | 32 | 378.349× | 0.00264 | 35.211 | 13321.860 |
+| 5 | [wav2vec2-large-xlsr-persian-v3-masoumehb](https://huggingface.co/masoumehb/wav2vec2-large-xlsr-persian-v3) | 1 | 296.335× | 0.00337 | 44.955 | 13321.860 |
+| 6 | [wav2vec2-xls-r-300m-fa-alifarokh](https://huggingface.co/alifarokh/wav2vec2-xls-r-300m-fa) | 1 | 291.422× | 0.00343 | 45.713 | 13321.860 |
+| 7 | [xls-r-1b-fa-cv8-ghofrani](https://huggingface.co/ghofrani/xls-r-1b-fa-cv8) | 1 | 289.030× | 0.00346 | 46.092 | 13321.860 |
+| 8 | [wav2vec2-large-xlsr-persian-v2-m3hrdadfi](https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian-v2) | 1 | 288.740× | 0.00346 | 46.138 | 13321.860 |
+| 9 | [persian-speech-transcription-wav2vec2-v1-seyedali](https://huggingface.co/SeyedAli/Persian-Speech-Transcription-Wav2Vec2-V1) | 1 | 286.634× | 0.00349 | 46.477 | 13321.860 |
+| 10 | [wav2vec2-large-xlsr-persian-shemo-m3hrdadfi](https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian-shemo) | 1 | 285.490× | 0.00350 | 46.663 | 13321.860 |
 
 Throughput is total audio seconds divided by measured processing seconds; RTF is its reciprocal. Resumed runs retain accuracy but are excluded here.
 
@@ -79,7 +79,7 @@ Throughput is total audio seconds divided by measured processing seconds; RTF is
 | Model | CER (95% CI) | Throughput (× real time) |
 |---|---:|---:|
 | [nvidia-fastconformer-fa](https://huggingface.co/nvidia/stt_fa_fastconformer_hybrid_large) | 0.2646 (0.2552–0.2741) | 1199.914× |
-| [wav2vec2-large-xlsr-53-persian](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-persian) | 0.0741 (0.0690–0.0793) | 470.167× |
+| [shenava-rizeh-v1-0](https://huggingface.co/Reza2kn/Shenava-Rizeh-v1.0) | 0.0640 (0.0589–0.0694) | 675.031× |
 | [visualears-fastconformer-fa-full-ab](https://huggingface.co/Reza2kn/visualears-fastconformer-fa-full-ab) | 0.0518 (0.0475–0.0565) | 378.349× |
 | [whisper-large-v2-fa-aictsharif](https://huggingface.co/aictsharif/whisper-large-v2-fa) | 0.0510 (0.0445–0.0589) | 4.597× |
 | [whisper-persian-v4-nezamisafa](https://huggingface.co/nezamisafa/whisper-persian-v4) | 0.0493 (0.0443–0.0550) | 2.445× |

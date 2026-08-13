@@ -2,8 +2,8 @@
 
 This campaign covers exactly the 37 additional model-only candidates classified as compatible in
 [`asr-model-compatibility.md`](../../asr-model-compatibility.md): 25 Transformers Whisper, 10
-Transformers CTC, and 2 NeMo RNNT checkpoints. The eight already-published models and every
-conditional or incompatible repository are excluded.
+Transformers CTC, one NeMo RNNT checkpoint, and one NeMo CTC checkpoint. The eight
+already-published models and every conditional or incompatible repository are excluded.
 
 The pinned Hugging Face metadata was rechecked on 2026-08-12. All 37 revisions remained public,
 ungated, immutable, and licensed as recorded. Generic snapshot prefetch would retain
@@ -47,6 +47,22 @@ when NeMo's Conformer `conv2d` exceeded PyTorch's 32-bit tensor-indexing limit. 
 is retained as failed and unranked; changing the committed batch after seeing the result would
 violate the campaign contract. The three qualification failures were not run officially.
 
+### Shenava Rizeh remediation
+
+The retained failure exposed two Rizeh-specific admission errors: its hybrid checkpoint was
+trained with `ctc_loss_weight=1.0`, but PESTE had forced the inactive RNNT decoder, and the
+batch-128 profile did not stress the longest recordings. The isolated `nemo-ctc` adapter activates
+the checkpoint's CTC decoder without changing the successful NeMo RNNT path. Follow-up calibration
+on the longest recordings found batches 1 through 32 safe and selected batch 16 at the 95%
+throughput knee.
+
+The corrected carrier was built by GitHub Actions run
+[`31679741685`](https://github.com/ArmanJR/PESTE-Benchmark/actions/runs/31679741685) from source
+revision `1b1386addb75d2fed55bda91c5b9558c71e38481` and executed by immutable digest
+`sha256:057776af47665dc404fc58884c9f46961afeb2f641bbb2b734c282b8a6c507a0`. The fresh follow-up run
+completed all 871 recordings with valid uninterrupted speed. The original failed bundle remains
+tracked as historical evidence.
+
 | Model | Outcome | Batch | CER | WER | Throughput |
 |---|---|---:|---:|---:|---:|
 | `whisper-small-persian-steja` | Success | 1 | 9.38% | 34.91% | 6.369× |
@@ -74,7 +90,7 @@ violate the campaign contract. The three qualification failures were not run off
 | `whisper-small` | Success | 2 | 24.38% | 60.40% | 9.829× |
 | `whisper-medium` | Success | 1 | 14.19% | 38.80% | 3.292× |
 | `whisper-large-v2` | Success | 1 | 8.19% | 25.30% | 2.616× |
-| `shenava-rizeh-v1-0` | Official run failed | 128 | — | — | Invalid |
+| `shenava-rizeh-v1-0` | Remediated success | 16 | 6.40% | 15.55% | 675.031× |
 | `visualears-fastconformer-fa-full-ab` | Success | 32 | 5.18% | 15.52% | 378.349× |
 | `wav2vec2-large-xlsr-persian-m3hrdadfi` | Success | 1 | 8.52% | 33.80% | 281.193× |
 | `wav2vec2-large-xlsr-persian-v2-m3hrdadfi` | Success | 1 | 8.35% | 34.41% | 288.740× |
@@ -88,5 +104,5 @@ violate the campaign contract. The three qualification failures were not run off
 | `wav2vec2-large-xlsr-persian-v3-masoumehb` | Success | 1 | 91.83% | 100.00% | 296.335× |
 
 The authoritative uncertainty intervals, paired comparisons, ranking, and Pareto analysis are in
-the generated 41-model leaderboard. The tracked `qualification-summary.json` links every
+the generated 42-model leaderboard. The tracked `qualification-summary.json` links every
 qualified candidate to its official run ID and preserves the exact official environment.

@@ -24,7 +24,9 @@
   `compatible-37-20260811` campaign.
 - [x] Give every successful campaign qualifier one fresh uninterrupted schema-2 full-run attempt;
   33 completed and Shenava Rizeh retained one deterministic failed bundle.
-- [x] Publish the expanded 41-model accuracy, speed, and Pareto boards.
+- [x] Correct Shenava Rizeh's CTC admission and long-recording batch calibration, then publish its
+  fresh 871-recording follow-up run while retaining the original failed bundle.
+- [x] Publish the expanded 42-model accuracy, speed, and Pareto boards.
 
 ## Version 3 — `fa-v2` normalization milestone
 
