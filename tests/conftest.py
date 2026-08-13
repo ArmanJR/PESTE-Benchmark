@@ -37,12 +37,14 @@ def make_model(
             "clean_up_tokenization_spaces": False,
         },
         "nemo-rnnt": {"decoder": "rnnt", "external_language_model": False},
+        "nemo-ctc": {"decoder": "ctc", "external_language_model": False},
     }
     runtime_name = {
         "transformers-whisper": "modern",
         "transformers-qwen": "modern",
         "transformers-ctc": "modern",
         "nemo-rnnt": "nemo",
+        "nemo-ctc": "nemo",
     }[adapter]
     return ModelSpec.model_validate(
         {

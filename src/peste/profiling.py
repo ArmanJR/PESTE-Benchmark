@@ -18,6 +18,7 @@ from peste.schemas import ManifestRow
 
 LOGGER = logging.getLogger(__name__)
 CANDIDATE_BATCH_SIZES = (1, 2, 4, 8, 16, 32, 64, 128)
+MAX_BATCH_SIZE_BY_ADAPTER = {"nemo-ctc": 32}
 CALIBRATION_SAMPLES = 128
 CONFORMANCE_SAMPLES = 16
 WARMUP_PASSES = 2
@@ -76,6 +77,19 @@ def _is_oom(error: Exception, torch: Any) -> bool:
     )
 
 
+def _is_capacity_error(error: Exception, torch: Any) -> bool:
+    if _is_oom(error, torch):
+        return True
+    return isinstance(error, RuntimeError) and "canuse32bitindexmath" in str(error).casefold()
+
+
+def candidate_batch_sizes(adapter: ASRAdapter) -> tuple[int, ...]:
+    maximum = MAX_BATCH_SIZE_BY_ADAPTER.get(adapter.spec.adapter)
+    if maximum is None:
+        return CANDIDATE_BATCH_SIZES
+    return tuple(size for size in CANDIDATE_BATCH_SIZES if size <= maximum)
+
+
 def _transcribe_checked(adapter: ASRAdapter, paths: list[Path]) -> list[Transcription]:
     outputs = adapter.transcribe_batch(paths)
     return require_batch_cardinality(adapter.spec.model_id, paths, outputs)
@@ -117,7 +131,8 @@ def calibrate_batch_size(
         raise RuntimeError("CUDA device reported no VRAM")
 
     results: list[CandidateResult] = []
-    for candidate in CANDIDATE_BATCH_SIZES:
+    ordered_rows = sorted(rows, key=lambda row: (row.duration_seconds, row.upstream_row_index))
+    for candidate in candidate_batch_sizes(adapter):
         LOGGER.info(
             "Profiling batch-size candidate",
             extra={"model": adapter.spec.model_id, "batch_size": candidate},
@@ -125,7 +140,11 @@ def calibrate_batch_size(
         try:
             torch.cuda.empty_cache()
             torch.cuda.reset_peak_memory_stats()
-            stress_paths = calibration_paths[-candidate:]
+            stress_paths = (
+                [dataset_cache / row.audio_path for row in ordered_rows[-candidate:]]
+                if adapter.spec.adapter == "nemo-ctc"
+                else calibration_paths[-candidate:]
+            )
             _transcribe_checked(adapter, stress_paths)
             torch.cuda.synchronize()
             peak_fraction = float(torch.cuda.max_memory_reserved()) / total_vram
@@ -190,11 +209,15 @@ def calibrate_batch_size(
                 )
             )
         except Exception as error:
-            if not _is_oom(error, torch):
+            if not _is_capacity_error(error, torch):
                 raise
             LOGGER.warning(
-                "Rejected OOM batch-size candidate",
-                extra={"model": adapter.spec.model_id, "batch_size": candidate},
+                "Rejected capacity-limited batch-size candidate",
+                extra={
+                    "model": adapter.spec.model_id,
+                    "batch_size": candidate,
+                    "error": str(error),
+                },
             )
             results.append(
                 CandidateResult(
@@ -202,7 +225,7 @@ def calibrate_batch_size(
                     safe=False,
                     throughput_x=None,
                     peak_vram_fraction=None,
-                    rejection_reason=f"CUDA OOM: {error}",
+                    rejection_reason=f"Runtime capacity limit: {error}",
                 )
             )
             torch.cuda.empty_cache()

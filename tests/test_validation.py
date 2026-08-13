@@ -64,3 +64,16 @@ def test_transformers_ctc_policy_rejects_wrong_runtime(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="Transformers CTC policy mismatch"):
         validate_model_policy(_ctc_model(runtime=runtime), tmp_path)
+
+
+def test_nemo_ctc_policy_accepts_only_ctc_decoder(tmp_path: Path) -> None:
+    _make_runtime(tmp_path)
+    model = make_model("nemo-ctc", dtype="float32")
+
+    validate_model_policy(model, tmp_path)
+
+    invalid = model.model_copy(
+        update={"generation": {"decoder": "rnnt", "external_language_model": False}}
+    )
+    with pytest.raises(ValueError, match="NeMo CTC policy mismatch"):
+        validate_model_policy(invalid, tmp_path)

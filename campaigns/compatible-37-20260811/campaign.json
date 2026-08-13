@@ -28,7 +28,7 @@
     {"model_id": "whisper-small", "repository": "openai/whisper-small", "revision": "973afd24965f72e36ca33b3055d56a652f456b4d", "adapter": "transformers-whisper"},
     {"model_id": "whisper-medium", "repository": "openai/whisper-medium", "revision": "abdf7c39ab9d0397620ccaea8974cc764cd0953e", "adapter": "transformers-whisper"},
     {"model_id": "whisper-large-v2", "repository": "openai/whisper-large-v2", "revision": "ae4642769ce2ad8fc292556ccea8e901f1530655", "adapter": "transformers-whisper"},
-    {"model_id": "shenava-rizeh-v1-0", "repository": "Reza2kn/Shenava-Rizeh-v1.0", "revision": "74c96b7c23d8611dd4d0c775744f43bc4fb9c2ec", "adapter": "nemo-rnnt"},
+    {"model_id": "shenava-rizeh-v1-0", "repository": "Reza2kn/Shenava-Rizeh-v1.0", "revision": "74c96b7c23d8611dd4d0c775744f43bc4fb9c2ec", "adapter": "nemo-ctc"},
     {"model_id": "visualears-fastconformer-fa-full-ab", "repository": "Reza2kn/visualears-fastconformer-fa-full-ab", "revision": "7f43a9d41d06328605257f0f28542c2f2332ed55", "adapter": "nemo-rnnt"},
     {"model_id": "wav2vec2-large-xlsr-persian-m3hrdadfi", "repository": "m3hrdadfi/wav2vec2-large-xlsr-persian", "revision": "a6fc7cdc898c6ec218e7f337a4835c3cd1ab8fab", "adapter": "transformers-ctc"},
     {"model_id": "wav2vec2-large-xlsr-persian-v2-m3hrdadfi", "repository": "m3hrdadfi/wav2vec2-large-xlsr-persian-v2", "revision": "599d7361d87b6ea3ca5d64a993e8ad8c942c48eb", "adapter": "transformers-ctc"},

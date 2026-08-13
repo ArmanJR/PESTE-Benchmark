@@ -42,8 +42,12 @@ def validate_model_policy(model: ModelSpec, root: Path) -> None:
     elif model.adapter == "nemo-rnnt":
         expected = {"decoder": "rnnt", "external_language_model": False}
         if model.generation != expected:
-            raise ValueError(f"NeMo policy mismatch for {model.model_id}")
-    expected_runtime = "nemo" if model.adapter == "nemo-rnnt" else "modern"
+            raise ValueError(f"NeMo RNNT policy mismatch for {model.model_id}")
+    elif model.adapter == "nemo-ctc":
+        expected = {"decoder": "ctc", "external_language_model": False}
+        if model.generation != expected:
+            raise ValueError(f"NeMo CTC policy mismatch for {model.model_id}")
+    expected_runtime = "nemo" if model.adapter in {"nemo-rnnt", "nemo-ctc"} else "modern"
     if model.runtime.name != expected_runtime:
         raise ValueError(
             f"Runtime {model.runtime.name} does not match adapter {model.adapter} "

@@ -4,6 +4,7 @@ from pathlib import Path
 
 from peste.adapters.base import ASRAdapter
 from peste.adapters.nemo import NemoRnntAdapter
+from peste.adapters.nemo_ctc import NemoCtcAdapter
 from peste.adapters.transformers import (
     TransformersCTCAdapter,
     TransformersQwenAdapter,
@@ -16,6 +17,7 @@ ADAPTERS: dict[str, type[ASRAdapter]] = {
     "transformers-qwen": TransformersQwenAdapter,
     "transformers-ctc": TransformersCTCAdapter,
     "nemo-rnnt": NemoRnntAdapter,
+    "nemo-ctc": NemoCtcAdapter,
 }
 
 

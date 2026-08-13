@@ -41,12 +41,14 @@ class ProfileAdapter(ASRAdapter):
         self,
         *args: Any,
         oom_at: int | None = None,
+        indexing_limit_at: int | None = None,
         bad_cardinality_at: int | None = None,
         diverge_at: int | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.oom_at = oom_at
+        self.indexing_limit_at = indexing_limit_at
         self.bad_cardinality_at = bad_cardinality_at
         self.diverge_at = diverge_at
         self.last_batch_size = 0
@@ -58,6 +60,8 @@ class ProfileAdapter(ASRAdapter):
         self.last_batch_size = len(audio_paths)
         if self.oom_at == len(audio_paths):
             raise FakeCuda.OutOfMemoryError("test OOM")
+        if self.indexing_limit_at == len(audio_paths):
+            raise RuntimeError("Expected canUse32BitIndexMath(input) to be true")
         outputs = [Transcription(path.stem) for path in audio_paths]
         if self.bad_cardinality_at == len(audio_paths):
             return outputs[:-1]
@@ -148,6 +152,26 @@ def test_profiler_rejects_oom_and_uses_next_best_candidate(
     )
     assert result.selected_batch_size == 2
     assert "OOM" in (result.candidates[-1].rejection_reason or "")
+
+
+def test_nemo_ctc_profiler_caps_candidates_and_rejects_indexing_limit(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    _configure_small_profile(monkeypatch)
+    monkeypatch.setattr(profiling, "MAX_BATCH_SIZE_BY_ADAPTER", {"nemo-ctc": 2})
+    adapter = ProfileAdapter(make_model("nemo-ctc", dtype="float32"), tmp_path, indexing_limit_at=2)
+    result = profiling.calibrate_batch_size(
+        adapter,
+        _rows_and_audio(tmp_path),
+        tmp_path,
+        "fa-v1",
+        SimpleNamespace(cuda=FakeCuda(adapter)),
+        clock=_clock(),
+    )
+
+    assert [candidate.batch_size for candidate in result.candidates] == [1, 2]
+    assert result.selected_batch_size == 1
+    assert "canUse32BitIndexMath" in (result.candidates[-1].rejection_reason or "")
 
 
 def test_profiler_rejects_candidate_above_vram_headroom(monkeypatch: Any, tmp_path: Path) -> None:

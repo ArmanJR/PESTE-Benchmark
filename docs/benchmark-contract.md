@@ -92,7 +92,7 @@ carrier image so all models can run on one accepted host:
 | Runtime | Adapters |
 |---|---|
 | `modern` | Transformers Whisper, Qwen, and greedy CTC |
-| `nemo` | NeMo default RNNT |
+| `nemo` | NeMo RNNT and hybrid-model greedy CTC |
 
 ## Batch calibration
 
@@ -105,6 +105,10 @@ batch, violates output cardinality/order, or differs from singleton normalized o
 16-recording conformance set. Among safe candidates, the smallest reaching at least 95% of the
 best safe throughput is selected. Memory telemetry exists only during calibration and is not a
 published benchmark metric.
+
+NeMo CTC calibration is conservatively capped at batch 32 and stresses the actual longest
+recordings. This avoids PyTorch convolution kernels whose padded tensor dimensions exceed the
+32-bit indexing limit while leaving existing RNNT profiles unchanged.
 
 ## Official timing protocol
 

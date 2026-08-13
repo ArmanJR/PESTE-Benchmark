@@ -60,7 +60,8 @@ def test_compatible_campaign_contains_exact_new_adapter_split() -> None:
     assert Counter(candidate.adapter for candidate in campaign.candidates) == {
         "transformers-whisper": 25,
         "transformers-ctc": 10,
-        "nemo-rnnt": 2,
+        "nemo-rnnt": 1,
+        "nemo-ctc": 1,
     }
     existing = {
         "whisper-large-persian-steja",

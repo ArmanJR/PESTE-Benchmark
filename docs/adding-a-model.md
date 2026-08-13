@@ -12,6 +12,7 @@ run it on the official RTX hardware profile.
 | `transformers-qwen` | `AutoProcessor.apply_transcription_request` + `AutoModelForMultimodalLM`, native padded multi-audio request | [`qwen3-asr-1-7b.json`](../models/qwen3-asr-1-7b.json) |
 | `transformers-ctc` | `AutoProcessor` + `AutoModelForCTC`, padded greedy CTC batch with fixed token policy | [`wav2vec2-large-xlsr-53-persian.json`](../models/wav2vec2-large-xlsr-53-persian.json) |
 | `nemo-rnnt` | one `.nemo` checkpoint, default RNNT, native `transcribe(paths, batch_size=n)` | [`nvidia-fastconformer-fa.json`](../models/nvidia-fastconformer-fa.json) |
+| `nemo-ctc` | one hybrid `.nemo` checkpoint, auxiliary greedy CTC decoder, native `transcribe(paths, batch_size=n)` | [`shenava-rizeh-v1-0.json`](../models/shenava-rizeh-v1-0.json) |
 
 The adapter must return exactly one ordered transcription per input and preserve singleton-
 normalized output under batching. A checkpoint is incompatible with a model-only proposal when it

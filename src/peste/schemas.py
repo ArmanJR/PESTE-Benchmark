@@ -72,6 +72,7 @@ class ModelSpec(SchemaV2Model):
         "transformers-qwen",
         "transformers-ctc",
         "nemo-rnnt",
+        "nemo-ctc",
     ]
     native_dtype: Literal["float16", "bfloat16", "float32"]
     license: str
@@ -92,6 +93,7 @@ class CampaignCandidate(ContractModel):
         "transformers-qwen",
         "transformers-ctc",
         "nemo-rnnt",
+        "nemo-ctc",
     ]
 
 

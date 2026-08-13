@@ -14,6 +14,7 @@ from conftest import make_model
 from peste.adapters import create_adapter
 from peste.adapters.base import AdapterOutputError
 from peste.adapters.nemo import NemoRnntAdapter
+from peste.adapters.nemo_ctc import NemoCtcAdapter
 from peste.adapters.transformers import (
     TransformersCTCAdapter,
     TransformersCTCOutputError,
@@ -465,3 +466,51 @@ def test_nemo_uses_native_batch_and_checks_cardinality(monkeypatch: Any, tmp_pat
     model.transcribe = lambda paths, batch_size, verbose: [SimpleNamespace(text="only")]
     with pytest.raises(AdapterOutputError, match="2 audio paths but returned 1"):
         adapter.transcribe_batch(paths)
+
+
+def test_nemo_ctc_selects_ctc_without_rnnt_cuda_graphs(monkeypatch: Any, tmp_path: Path) -> None:
+    checkpoint = tmp_path / "models--organization--model" / "snapshots" / ("a" * 40) / "model.nemo"
+    checkpoint.parent.mkdir(parents=True)
+    checkpoint.touch()
+
+    class NemoModel(FakeModel):
+        def __init__(self) -> None:
+            super().__init__()
+            self.cur_decoder = "rnnt"
+            self.ctc_loss_weight = 1.0
+
+        def change_decoding_strategy(self, **kwargs: Any) -> None:
+            self.decoder_kwargs = kwargs
+            self.cur_decoder = str(kwargs["decoder_type"])
+
+        def transcribe(self, paths: list[str], batch_size: int, verbose: bool) -> list[Any]:
+            self.transcribe_args = (paths, batch_size, verbose)
+            return [SimpleNamespace(text="اول"), SimpleNamespace(text="دوم")][: len(paths)]
+
+    model = NemoModel()
+
+    class Factory:
+        def restore_from(self, *args: Any, **kwargs: Any) -> NemoModel:
+            self.args = args
+            self.kwargs = kwargs
+            return model
+
+    factory = Factory()
+    module = ModuleType("nemo.collections.asr.models")
+    module.ASRModel = factory  # type: ignore[attr-defined]
+    for name in ("nemo", "nemo.collections", "nemo.collections.asr"):
+        monkeypatch.setitem(sys.modules, name, ModuleType(name))
+    monkeypatch.setitem(sys.modules, module.__name__, module)
+    adapter = NemoCtcAdapter(make_model("nemo-ctc", dtype="float32"), tmp_path)
+    adapter.load()
+    paths = _audio_batch(tmp_path)
+
+    results = adapter.transcribe_batch(paths)
+
+    assert [result.text for result in results] == ["اول", "دوم"]
+    assert model.decoder_kwargs == {"decoder_type": "ctc"}
+    assert model.transcribe_args == ([str(path) for path in paths], 2, False)
+    assert factory.kwargs["map_location"] == "cuda"
+    assert isinstance(
+        create_adapter(make_model("nemo-ctc", dtype="float32"), tmp_path), NemoCtcAdapter
+    )

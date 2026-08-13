@@ -3,12 +3,12 @@
   "model_id": "shenava-rizeh-v1-0",
   "repository": "Reza2kn/Shenava-Rizeh-v1.0",
   "revision": "74c96b7c23d8611dd4d0c775744f43bc4fb9c2ec",
-  "adapter": "nemo-rnnt",
+  "adapter": "nemo-ctc",
   "native_dtype": "float32",
   "license": "Apache-2.0",
   "language": "fa",
   "generation": {
-    "decoder": "rnnt",
+    "decoder": "ctc",
     "external_language_model": false
   },
   "runtime": {
@@ -18,6 +18,6 @@
   },
   "speed_profile": {
     "hardware_profile_id": "rtx-6000-ada-v1",
-    "batch_size": 128
+    "batch_size": 1
   }
 }
