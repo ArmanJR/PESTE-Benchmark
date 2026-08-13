@@ -8,6 +8,13 @@ passed real offline smoke, multi-item singleton equivalence, cardinality/order c
 limits, and deterministic batch calibration. Three Zoha checkpoints failed the attention-mask
 requirement for padding-safe CTC decoding and their provisional specifications were removed.
 
+Official campaign update: **2026-08-13**. All 34 qualifiers received one fresh, uninterrupted
+attempt on a new doctor-approved RTX 6000 Ada host using the final digest-pinned image. Thirty-three
+completed all 871 evaluation recordings with valid speed measurements. Shenava Rizeh completed
+768 recordings in six batch-128 measurements, then failed on the final 103 longest recordings at
+NeMo's Conformer `conv2d` with PyTorch's 32-bit tensor-indexing limit. Its partial bundle is
+retained as failed and unranked; it was not retried with a post-qualification batch change.
+
 Base inventory: [`asr-models-on-hf.md`](asr-models-on-hf.md) (**82 repositories**, Hub audit
 performed **2026-08-01**). Four subsequently requested independent ASR checkpoints are also
 counted below, for **86 models total**.
@@ -18,8 +25,9 @@ Of the 86 counted models:
 
 | Status | Models | Meaning |
 |---|---:|---|
-| Already evaluated successfully | 8 | A pinned schema-2 model specification and successful official v2 result bundle exist. |
-| Qualified; official evaluation pending | 34 | Real v2 qualification passed and the reviewed RTX batch profile is committed, but no official result bundle exists yet. |
+| Already evaluated successfully | 41 | A pinned schema-2 model specification and successful official v2 result bundle exist. |
+| Qualified; official evaluation failed | 1 | Shenava Rizeh passed qualification, but its fixed batch-128 full run hit a deterministic tensor-indexing limit on the final batch; the partial bundle is unranked. |
+| Qualified; official evaluation pending | 0 | Every successful qualifier received an official full-run attempt. |
 | Compatible candidate not yet qualified | 0 | Every admitted candidate in the campaign has reached a qualification outcome. |
 | Conditional candidate | 9 | The inference interface fits, but access or a repository-declared license blocks admission. |
 | Interface-compatible, but failed v2 qualification | 3 | The three Zoha processors did not emit the attention mask required for padding-safe batched CTC decoding. |
@@ -27,20 +35,22 @@ Of the 86 counted models:
 | **Total** | **86** | The 82-model base inventory and four subsequent additions are each classified once below. |
 
 The current evidence supports **42 models that use the existing adapters and satisfy the v2
-qualification contract**: 8 proven by completed v2 runs and 34 newly qualified models awaiting a
-fresh uninterrupted official run. The original interface/packaging audit found 37 additional
-candidates, but qualification correctly rejected three; interface compatibility alone is not a
-benchmark admission guarantee.
+qualification contract**: 41 now have complete official results, while Shenava Rizeh retains a
+failed full-run bundle. The original interface/packaging audit found 37 additional candidates,
+but qualification correctly rejected three; interface compatibility alone is not a benchmark
+admission guarantee, and qualification does not guarantee completion on every evaluation length.
 
 PESTE 1.0.0 used schema 1, batch-size-one inference, and a Jetson AGX Orin. Those result bundles
 are retired and are not evidence of current evaluation status. The classifications below use the
 v2 schema, the `rtx-6000-ada-v1` hardware profile, calibrated native batching, and the four current
 adapters: `transformers-whisper`, `transformers-qwen`, `transformers-ctc`, and `nemo-rnnt`.
 
-## Already evaluated successfully (8)
+## Successful official evaluations (41)
 
-These are the strongest evidence: each repository already has a pinned specification under
-`models/` and a successful result bundle under `results/fleurs-fa-ir-v1/`.
+These are the strongest evidence: each repository has a pinned specification under `models/` and
+a successful result bundle under `results/fleurs-fa-ir-v1/`. The eight entries below predate the
+37-model campaign; the other 33 successful bundles are documented in the campaign outcomes that
+follow.
 
 | Hugging Face model card | Current adapter | Pinned revision | Evidence |
 |---|---|---|---|
@@ -58,14 +68,15 @@ uninterrupted speed measurements. The NVIDIA result supersedes its retired v1 CU
 the v2 adapter disables RNNT CUDA graphs for variable-length batched inference and the v2 run
 completed under the fixed current policy.
 
-## Qualification campaign outcomes (37)
+## Qualification and official campaign outcomes (37)
 
 These repositories matched an existing adapter and declared a usable license. The campaign fixed
 their exact identities and tested all 37 without changing precision, decoding policy, or model
-artifacts. Thirty-four now have calibrated schema-2 specifications and are eligible for official
-evaluation; the three failed provisional specifications were removed. Except where explicitly
-identified as a subsequent audit, “Observed revision” is the immutable Hub commit recorded on
-2026-08-01; metadata and access were rechecked on 2026-08-12.
+artifacts. Thirty-four received calibrated schema-2 specifications; 33 subsequently completed the
+official evaluation and one produced a failed, unranked full-run attempt. The three failed
+provisional specifications were removed. Except where explicitly identified as a subsequent
+audit, “Observed revision” is the immutable Hub commit recorded on 2026-08-01; metadata and access
+were rechecked on 2026-08-12.
 
 ### Persian Whisper fine-tunes (20)
 
@@ -74,7 +85,7 @@ pinned Transformers 5.14.1 stack, `AutoConfig` and `AutoProcessor` loaded withou
 their tokenizers contained `<|fa|>`, `<|transcribe|>`, and `<|notimestamps|>`. They fit the loading
 and decoding policy of `transformers-whisper`; checkpoints lacking modern generation metadata are
 covered by its legacy-generation shim. All 20 passed real v2 qualification: 16 selected batch 1,
-three selected batch 2, and one selected batch 4.
+three selected batch 2, and one selected batch 4. All 20 then completed successful official runs.
 
 | Hugging Face model card | Observed revision | Declared license |
 |---|---|---|
@@ -102,7 +113,8 @@ three selected batch 2, and one selected batch 4.
 
 The cards use the same `AutoProcessor` plus `AutoModelForSpeechSeq2Seq` interface as the current
 adapter, and these are the multilingual checkpoints (not the English-only `.en` variants). All
-five passed v2 qualification; `whisper-small` selected batch 2 and the other four selected batch 1.
+five passed v2 qualification and completed successful official runs; `whisper-small` selected
+batch 2 and the other four selected batch 1.
 
 | Hugging Face model card | Observed revision | Declared license |
 |---|---|---|
@@ -116,17 +128,17 @@ five passed v2 qualification; `whisper-small` selected batch 2 and the other fou
 
 | Hugging Face model card | Observed revision | Declared license | Compatibility evidence |
 |---|---|---|---|
-| [`Reza2kn/Shenava-Rizeh-v1.0`](https://huggingface.co/Reza2kn/Shenava-Rizeh-v1.0) | `74c96b7c23d8611dd4d0c775744f43bc4fb9c2ec` | Apache-2.0 | Passed real v2 smoke and singleton-equivalence checks; calibrated batch 128 |
-| [`Reza2kn/visualears-fastconformer-fa-full-ab`](https://huggingface.co/Reza2kn/visualears-fastconformer-fa-full-ab) | `7f43a9d41d06328605257f0f28542c2f2332ed55` | Apache-2.0 | Passed real v2 smoke and singleton-equivalence checks; calibrated batch 32 |
+| [`Reza2kn/Shenava-Rizeh-v1.0`](https://huggingface.co/Reza2kn/Shenava-Rizeh-v1.0) | `74c96b7c23d8611dd4d0c775744f43bc4fb9c2ec` | Apache-2.0 | Qualified at batch 128; official run failed unranked after 768/871 samples when the final longest batch exceeded PyTorch's 32-bit tensor-indexing limit |
+| [`Reza2kn/visualears-fastconformer-fa-full-ab`](https://huggingface.co/Reza2kn/visualears-fastconformer-fa-full-ab) | `7f43a9d41d06328605257f0f28542c2f2332ed55` | Apache-2.0 | Successful complete official run; batch 32; CER 5.18%; WER 15.52%; 378.349× throughput |
 
 ### Transformers CTC candidates (10)
 
 The `transformers-ctc` adapter supports standard root-level `AutoProcessor` plus
 `AutoModelForCTC` checkpoints using deterministic padded batches and greedy decoding without an
 external language model. Seven candidates passed real v2 smoke, attention-mask-safe decoding,
-singleton equivalence, and RTX calibration at batch 1. The three Zoha checkpoints loaded but
-failed smoke because their processors did not emit an attention mask; the adapter refuses to
-publish padding-unsafe batched output.
+singleton equivalence, and RTX calibration at batch 1, then completed successful official runs.
+The three Zoha checkpoints loaded but failed smoke because their processors did not emit an
+attention mask; the adapter refuses to publish padding-unsafe batched output.
 
 | Hugging Face model card | Observed revision | Declared license | Compatibility evidence |
 |---|---|---|---|
@@ -141,9 +153,10 @@ publish padding-unsafe batched output.
 | [`zoha/wav2vec2-xlsr-persian-50p`](https://huggingface.co/zoha/wav2vec2-xlsr-persian-50p) | `e780f1e94a4b181fc88fef263281996c491cd60f` | Apache-2.0 | Failed v2 smoke: processor omitted the required attention mask |
 | [`masoumehb/wav2vec2-large-xlsr-persian-v3`](https://huggingface.co/masoumehb/wav2vec2-large-xlsr-persian-v3) | `918f655ca45ef4b729b496288139114a3fdf2b1a` | Apache-2.0 | Qualified v2; batch 1 |
 
-The tracked summary records compact qualification status, selected batches, and evidence hashes.
-Verbose smoke, calibration, and failure logs remain outside git. Qualification throughput is not
-a benchmark score; the 34 successful qualifiers still require fresh uninterrupted official runs.
+The tracked summary records compact qualification status, selected batches, evidence hashes, and
+official run outcomes. Verbose smoke, calibration, and failure logs remain outside git. All 33
+complete campaign bundles are published on the 41-model leaderboard; the failed Shenava Rizeh
+bundle remains diagnostic and unranked. Qualification throughput is not a benchmark score.
 
 ## Conditional candidates (9)
 
@@ -254,8 +267,8 @@ Collection: [`Reza2kn/Shenava 1.0`](https://huggingface.co/collections/Reza2kn/s
 
 | Repository or group | Current status | PESTE v2 assessment |
 |---|---|---|
-| [`Reza2kn/Shenava-Rizeh-v1.0`](https://huggingface.co/Reza2kn/Shenava-Rizeh-v1.0) | **Qualified; official evaluation pending** | Already counted above. Revision `74c96b7c23d8611dd4d0c775744f43bc4fb9c2ec` passed real offline smoke, multi-item conformance, and RTX calibration at batch 128. |
-| [`Reza2kn/visualears-fastconformer-fa-full-ab`](https://huggingface.co/Reza2kn/visualears-fastconformer-fa-full-ab) | **Qualified; official evaluation pending** | Counted above as a subsequent addition. Revision `7f43a9d41d06328605257f0f28542c2f2332ed55` passed real offline smoke, multi-item conformance, and RTX calibration at batch 32. |
+| [`Reza2kn/Shenava-Rizeh-v1.0`](https://huggingface.co/Reza2kn/Shenava-Rizeh-v1.0) | **Qualified; official evaluation failed** | Already counted above. Revision `74c96b7c23d8611dd4d0c775744f43bc4fb9c2ec` qualified at batch 128. Its official run completed 768/871 recordings before the final longest batch hit PyTorch's 32-bit tensor-indexing limit; the bundle is failed and unranked. |
+| [`Reza2kn/visualears-fastconformer-fa-full-ab`](https://huggingface.co/Reza2kn/visualears-fastconformer-fa-full-ab) | **Official evaluation successful** | Counted above as a subsequent addition. Revision `7f43a9d41d06328605257f0f28542c2f2332ed55` completed all 871 recordings at batch 32 with valid speed. |
 | [`Reza2kn/Shenava-Koochik-v1.0`](https://huggingface.co/Reza2kn/Shenava-Koochik-v1.0) | **Not compatible with the current adapter** | Already counted above. Its current revision has two root `.nemo` files, while `nemo-rnnt` deliberately requires exactly one. Selecting one by filename would be a loader/policy change, not a model-only proposal. |
 | [`Reza2kn/Shenava-Rizeh-Pizeh-v1.0`](https://huggingface.co/Reza2kn/Shenava-Rizeh-Pizeh-v1.0) | **Not compatible with the current adapter** | Already counted above. Its sole archive embeds `EncDecCTCModelBPE`; the current NeMo adapter forces RNNT and PESTE has no NeMo-CTC adapter. |
 | [`Reza2kn/visualears-fastconformer-fa-69m-256x40-warmstart`](https://huggingface.co/Reza2kn/visualears-fastconformer-fa-69m-256x40-warmstart) | **Not compatible with the current adapter** | Counted above as a subsequent addition. Revision `9416a62bf215edcb85b6945332f462604e423e63` stores the final `.nemo` under `final/`, so the exact-one-root loader sees zero checkpoints. Supporting a selected nested artifact requires a loader contract change and subsequent decoder qualification. |
@@ -265,7 +278,8 @@ Collection: [`Reza2kn/Shenava 1.0`](https://huggingface.co/collections/Reza2kn/s
 
 The actionable result is **two qualified Shenava NeMo models** for the existing backend: Rizeh
 v1.0 and `visualears-fastconformer-fa-full-ab`. Only the latter is a new addition to the frozen
-inventory. Neither has an official PESTE result until it completes the fresh full-run lifecycle.
+inventory. VisualEars now has a complete official result; Rizeh has only a failed diagnostic
+bundle and therefore no PESTE score.
 
 Compatibility does not validate the collection's published scores. The cards report a different
 ITN/digit-normalization and attention-context convention, and the collection includes FLEURS-fa
@@ -282,8 +296,8 @@ The PESTE-side classification was reconciled on 2026-08-11 against:
   `src/peste/adapters/nemo.py`;
 - the schema-2 model and ranking contracts in `docs/adding-a-model.md` and
   `docs/benchmark-contract.md`;
-- the eight current specifications under `models/` and their eight successful, complete schema-2
-  bundles under `results/fleurs-fa-ir-v1/`;
+- the current pinned specifications under `models/`, 41 successful complete schema-2 bundles, and
+  the failed Shenava Rizeh diagnostic under `results/fleurs-fa-ir-v1/`;
 - the modern runtime pins, including Transformers 5.14.1 and PEFT 0.20.0, plus the isolated NeMo
   2.7.3 runtime; and
 - the current RTX batching, calibration, offline execution, and result-eligibility rules.

@@ -24,6 +24,9 @@ Breaking major release.
   read-only caches.
 - Retired every v1 result bundle instead of migrating it. All v2 result bundles must be generated
   fresh on the new contract.
+- Qualified 37 additional model-only candidates, rejected three padding-unsafe CTC processors,
+  published 33 new complete official bundles, and expanded the accuracy, speed, and Pareto boards
+  from 8 to 41 models. The Shenava Rizeh full-run failure remains auditable but unranked.
 
 ## 1.0.0
 

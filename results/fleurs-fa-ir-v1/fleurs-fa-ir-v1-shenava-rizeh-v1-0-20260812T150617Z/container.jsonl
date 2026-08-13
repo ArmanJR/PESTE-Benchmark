@@ -1,0 +1,118 @@
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+{"timestamp": "2026-08-12T15:06:20.138+00:00", "level": "INFO", "logger": "peste.remote", "message": "Starting constrained remote action", "action": "run", "runtime": "nemo", "offline": true}
+{"timestamp": "2026-08-12T15:06:24.780+00:00", "level": "INFO", "logger": "peste.runner", "message": "Starting batched benchmark run", "run": "fleurs-fa-ir-v1-shenava-rizeh-v1-0-20260812T150617Z", "model": "shenava-rizeh-v1-0", "batch_size": 128, "completed_batches": 0, "completed_samples": 0}
+{"timestamp": "2026-08-12T15:06:27.963+00:00", "level": "INFO", "logger": "matplotlib.font_manager", "message": "generated new fontManager"}
+[NeMo W 2026-08-12 15:06:31 megatron_init:62] Megatron num_microbatches_calculator not found, using Apex version.
+{"timestamp": "2026-08-12T15:06:31.275+00:00", "level": "WARNING", "logger": "nv_one_logger.api.config", "message": "OneLogger: Setting error_handling_strategy to DISABLE_QUIETLY_AND_REPORT_METRIC_ERROR for rank (rank=0) with OneLogger disabled. To override: explicitly set error_handling_strategy parameter."}
+{"timestamp": "2026-08-12T15:06:31.293+00:00", "level": "INFO", "logger": "nv_one_logger.exporter.export_config_manager", "message": "Final configuration contains 0 exporter(s)"}
+{"timestamp": "2026-08-12T15:06:31.293+00:00", "level": "WARNING", "logger": "nv_one_logger.training_telemetry.api.training_telemetry_provider", "message": "No exporters were provided. This means that no telemetry data will be collected."}
+[NeMo W 2026-08-12 15:06:32 nemo_logging:364] /opt/venvs/nemo/lib/python3.12/site-packages/pydub/utils.py:170: RuntimeWarning: Couldn't find ffmpeg or avconv - defaulting to ffmpeg, but may not work
+      warn("Couldn't find ffmpeg or avconv - defaulting to ffmpeg, but may not work", RuntimeWarning)
+    
+{"timestamp": "2026-08-12T15:06:33.064+00:00", "level": "INFO", "logger": "peste.adapters.nemo", "message": "Loading NeMo checkpoint", "model": "shenava-rizeh-v1-0"}
+[NeMo W 2026-08-12 15:06:36 modelPT:188] If you intend to do training or fine-tuning, please call the ModelPT.setup_training_data() method and provide a valid configuration file to setup the train data loader.
+    Train config : 
+    use_lhotse: true
+    manifest_filepath: phaseB_train_v5.jsonl
+    sample_rate: 16000
+    batch_size: null
+    batch_duration: 1600
+    quadratic_duration: 15
+    use_bucketing: true
+    bucket_buffer_size: 20000
+    shuffle_buffer_size: 10000
+    shuffle: true
+    num_workers: 12
+    pin_memory: true
+    max_duration: 45.0
+    min_duration: 0.3
+    is_tarred: false
+    tarred_audio_filepaths: null
+    shuffle_n: 2048
+    bucketing_strategy: fully_randomized
+    bucketing_batch_size: null
+    num_buckets: 30
+    pretokenize: false
+    perturb_speed: true
+    
+[NeMo W 2026-08-12 15:06:36 modelPT:195] If you intend to do validation, please call the ModelPT.setup_validation_data() or ModelPT.setup_multiple_validation_data() method and provide a valid configuration file to setup the validation data loader(s). 
+    Validation config : 
+    manifest_filepath: phaseB_val.jsonl
+    sample_rate: 16000
+    batch_size: null
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 12
+    pin_memory: true
+    is_tarred: false
+    use_lhotse: true
+    batch_duration: 1600
+    quadratic_duration: 15
+    use_bucketing: true
+    num_buckets: 30
+    bucket_buffer_size: 20000
+    shuffle_buffer_size: 10000
+    pretokenize: false
+    max_duration: 45.0
+    min_duration: 0.3
+    
+[NeMo W 2026-08-12 15:06:36 modelPT:202] Please call the ModelPT.setup_test_data() or ModelPT.setup_multiple_test_data() method and provide a valid configuration file to setup the test data loader(s).
+    Test config : 
+    manifest_filepath:
+    - /workdir/val_test/librispeech/audio_manifest_test_other_librispeech_no_pc.json
+    - /workdir/val_test/librispeech/audio_manifest_test_clean_librispeech_no_pc.json
+    - /workdir/val_test/europarl/audio_manifest_test_europarl_no_pc.json
+    - /workdir/val_test/fisher/audio_manifest_test_fisher_no_pc.json
+    - /workdir/val_test/mcv11/audio_manifest_test_mcv11_no_pc.json
+    - /workdir/val_test/mls/test/audio_manifest_test_mls_no_pc.json
+    - /workdir/val_test/nsc1/audio_manifest_test_nsc1_no_pc.json
+    - /workdir/val_test/SPGI/audio_manifest_test_spgi_no_pc.json
+    - /workdir/val_test/voxpopuli/audio_manifest_test_voxpopuli_no_pc.json
+    - /workdir/val_test/ps/audio_manifest_ps_no_pc.json
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    
+{"timestamp": "2026-08-12T15:06:39.716+00:00", "level": "INFO", "logger": "peste.adapters.nemo", "message": "Disabled NeMo CUDA graph decoder for variable-length batched inference", "model": "shenava-rizeh-v1-0", "decoder_changed": true}
+[NeMo W 2026-08-12 15:06:39 dataloader:826] The following configuration keys are ignored by Lhotse dataloader: use_start_end_token
+{"timestamp": "2026-08-12T15:06:39.760+00:00", "level": "INFO", "logger": "root", "message": "Initializing Lhotse CutSet from a single NeMo manifest\n            (is_tarred=False): '/tmp/tmpdmsg0b9o/manifest.json'"}
+[NeMo W 2026-08-12 15:06:39 dataloader:523] You are using a non-tarred dataset and requested tokenization during data sampling (pretokenize=True). This will cause the tokenization to happen in the main (GPU) process,possibly impacting the training speed if your tokenizer is very large.If the impact is noticable, set pretokenize=False in dataloader config.(note: that will disable token-per-second filtering and 2D bucketing features)
+{"timestamp": "2026-08-12T15:06:47.145+00:00", "level": "INFO", "logger": "peste.runner", "message": "Completed excluded warmup batch", "run": "fleurs-fa-ir-v1-shenava-rizeh-v1-0-20260812T150617Z", "warmup": 1}
+[NeMo W 2026-08-12 15:06:47 dataloader:826] The following configuration keys are ignored by Lhotse dataloader: use_start_end_token
+{"timestamp": "2026-08-12T15:06:47.179+00:00", "level": "INFO", "logger": "root", "message": "Initializing Lhotse CutSet from a single NeMo manifest\n            (is_tarred=False): '/tmp/tmpj5_xiqkc/manifest.json'"}
+[NeMo W 2026-08-12 15:06:47 dataloader:523] You are using a non-tarred dataset and requested tokenization during data sampling (pretokenize=True). This will cause the tokenization to happen in the main (GPU) process,possibly impacting the training speed if your tokenizer is very large.If the impact is noticable, set pretokenize=False in dataloader config.(note: that will disable token-per-second filtering and 2D bucketing features)
+{"timestamp": "2026-08-12T15:06:53.817+00:00", "level": "INFO", "logger": "peste.runner", "message": "Completed excluded warmup batch", "run": "fleurs-fa-ir-v1-shenava-rizeh-v1-0-20260812T150617Z", "warmup": 2}
+[NeMo W 2026-08-12 15:06:53 dataloader:826] The following configuration keys are ignored by Lhotse dataloader: use_start_end_token
+{"timestamp": "2026-08-12T15:06:53.856+00:00", "level": "INFO", "logger": "root", "message": "Initializing Lhotse CutSet from a single NeMo manifest\n            (is_tarred=False): '/tmp/tmpct_o65p5/manifest.json'"}
+[NeMo W 2026-08-12 15:06:53 dataloader:523] You are using a non-tarred dataset and requested tokenization during data sampling (pretokenize=True). This will cause the tokenization to happen in the main (GPU) process,possibly impacting the training speed if your tokenizer is very large.If the impact is noticable, set pretokenize=False in dataloader config.(note: that will disable token-per-second filtering and 2D bucketing features)
+{"timestamp": "2026-08-12T15:07:53.180+00:00", "level": "INFO", "logger": "peste.runner", "message": "Completed measured batch", "run": "fleurs-fa-ir-v1-shenava-rizeh-v1-0-20260812T150617Z", "model": "shenava-rizeh-v1-0", "batch": 1, "completed_samples": 128, "total_samples": 871, "processing_seconds": 4.881865227944218}
+[NeMo W 2026-08-12 15:07:53 dataloader:826] The following configuration keys are ignored by Lhotse dataloader: use_start_end_token
+{"timestamp": "2026-08-12T15:07:53.221+00:00", "level": "INFO", "logger": "root", "message": "Initializing Lhotse CutSet from a single NeMo manifest\n            (is_tarred=False): '/tmp/tmpqnfw0nzu/manifest.json'"}
+[NeMo W 2026-08-12 15:07:53 dataloader:523] You are using a non-tarred dataset and requested tokenization during data sampling (pretokenize=True). This will cause the tokenization to happen in the main (GPU) process,possibly impacting the training speed if your tokenizer is very large.If the impact is noticable, set pretokenize=False in dataloader config.(note: that will disable token-per-second filtering and 2D bucketing features)
+{"timestamp": "2026-08-12T15:09:36.988+00:00", "level": "INFO", "logger": "peste.runner", "message": "Completed measured batch", "run": "fleurs-fa-ir-v1-shenava-rizeh-v1-0-20260812T150617Z", "model": "shenava-rizeh-v1-0", "batch": 2, "completed_samples": 256, "total_samples": 871, "processing_seconds": 5.114197409013286}
+[NeMo W 2026-08-12 15:09:37 dataloader:826] The following configuration keys are ignored by Lhotse dataloader: use_start_end_token
+{"timestamp": "2026-08-12T15:09:37.035+00:00", "level": "INFO", "logger": "root", "message": "Initializing Lhotse CutSet from a single NeMo manifest\n            (is_tarred=False): '/tmp/tmpnlx0qwcb/manifest.json'"}
+[NeMo W 2026-08-12 15:09:37 dataloader:523] You are using a non-tarred dataset and requested tokenization during data sampling (pretokenize=True). This will cause the tokenization to happen in the main (GPU) process,possibly impacting the training speed if your tokenizer is very large.If the impact is noticable, set pretokenize=False in dataloader config.(note: that will disable token-per-second filtering and 2D bucketing features)
+{"timestamp": "2026-08-12T15:11:29.812+00:00", "level": "INFO", "logger": "peste.runner", "message": "Completed measured batch", "run": "fleurs-fa-ir-v1-shenava-rizeh-v1-0-20260812T150617Z", "model": "shenava-rizeh-v1-0", "batch": 3, "completed_samples": 384, "total_samples": 871, "processing_seconds": 6.213497247023042}
+[NeMo W 2026-08-12 15:11:29 dataloader:826] The following configuration keys are ignored by Lhotse dataloader: use_start_end_token
+{"timestamp": "2026-08-12T15:11:29.857+00:00", "level": "INFO", "logger": "root", "message": "Initializing Lhotse CutSet from a single NeMo manifest\n            (is_tarred=False): '/tmp/tmpkintnkmx/manifest.json'"}
+[NeMo W 2026-08-12 15:11:29 dataloader:523] You are using a non-tarred dataset and requested tokenization during data sampling (pretokenize=True). This will cause the tokenization to happen in the main (GPU) process,possibly impacting the training speed if your tokenizer is very large.If the impact is noticable, set pretokenize=False in dataloader config.(note: that will disable token-per-second filtering and 2D bucketing features)
+{"timestamp": "2026-08-12T15:13:50.510+00:00", "level": "INFO", "logger": "peste.runner", "message": "Completed measured batch", "run": "fleurs-fa-ir-v1-shenava-rizeh-v1-0-20260812T150617Z", "model": "shenava-rizeh-v1-0", "batch": 4, "completed_samples": 512, "total_samples": 871, "processing_seconds": 7.1958880219608545}
+[NeMo W 2026-08-12 15:13:50 dataloader:826] The following configuration keys are ignored by Lhotse dataloader: use_start_end_token
+{"timestamp": "2026-08-12T15:13:50.548+00:00", "level": "INFO", "logger": "root", "message": "Initializing Lhotse CutSet from a single NeMo manifest\n            (is_tarred=False): '/tmp/tmp20ccyhxp/manifest.json'"}
+[NeMo W 2026-08-12 15:13:50 dataloader:523] You are using a non-tarred dataset and requested tokenization during data sampling (pretokenize=True). This will cause the tokenization to happen in the main (GPU) process,possibly impacting the training speed if your tokenizer is very large.If the impact is noticable, set pretokenize=False in dataloader config.(note: that will disable token-per-second filtering and 2D bucketing features)
+{"timestamp": "2026-08-12T15:16:55.634+00:00", "level": "INFO", "logger": "peste.runner", "message": "Completed measured batch", "run": "fleurs-fa-ir-v1-shenava-rizeh-v1-0-20260812T150617Z", "model": "shenava-rizeh-v1-0", "batch": 5, "completed_samples": 640, "total_samples": 871, "processing_seconds": 7.368463322985917}
+[NeMo W 2026-08-12 15:16:55 dataloader:826] The following configuration keys are ignored by Lhotse dataloader: use_start_end_token
+{"timestamp": "2026-08-12T15:16:55.669+00:00", "level": "INFO", "logger": "root", "message": "Initializing Lhotse CutSet from a single NeMo manifest\n            (is_tarred=False): '/tmp/tmpt5928l9x/manifest.json'"}
+[NeMo W 2026-08-12 15:16:55 dataloader:523] You are using a non-tarred dataset and requested tokenization during data sampling (pretokenize=True). This will cause the tokenization to happen in the main (GPU) process,possibly impacting the training speed if your tokenizer is very large.If the impact is noticable, set pretokenize=False in dataloader config.(note: that will disable token-per-second filtering and 2D bucketing features)
+{"timestamp": "2026-08-12T15:21:00.266+00:00", "level": "INFO", "logger": "peste.runner", "message": "Completed measured batch", "run": "fleurs-fa-ir-v1-shenava-rizeh-v1-0-20260812T150617Z", "model": "shenava-rizeh-v1-0", "batch": 6, "completed_samples": 768, "total_samples": 871, "processing_seconds": 9.358729775005486}
+[NeMo W 2026-08-12 15:21:00 dataloader:826] The following configuration keys are ignored by Lhotse dataloader: use_start_end_token
+{"timestamp": "2026-08-12T15:21:00.307+00:00", "level": "INFO", "logger": "root", "message": "Initializing Lhotse CutSet from a single NeMo manifest\n            (is_tarred=False): '/tmp/tmpxe9220bs/manifest.json'"}
+[NeMo W 2026-08-12 15:21:00 dataloader:523] You are using a non-tarred dataset and requested tokenization during data sampling (pretokenize=True). This will cause the tokenization to happen in the main (GPU) process,possibly impacting the training speed if your tokenizer is very large.If the impact is noticable, set pretokenize=False in dataloader config.(note: that will disable token-per-second filtering and 2D bucketing features)
+{"timestamp": "2026-08-12T15:21:01.981+00:00", "level": "ERROR", "logger": "peste.runner", "message": "Benchmark run failed", "run": "fleurs-fa-ir-v1-shenava-rizeh-v1-0-20260812T150617Z", "model": "shenava-rizeh-v1-0", "exception": "Traceback (most recent call last):\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/peste/runner.py\", line 417, in run_benchmark\n    transcriptions, elapsed = _timed_transcribe_batch(active_adapter, audio_paths, torch)\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/peste/runner.py\", line 210, in _timed_transcribe_batch\n    transcriptions = adapter.transcribe_batch(audio_paths)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/peste/adapters/nemo.py\", line 50, in transcribe_batch\n    hypotheses = self.model.transcribe(\n                 ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/torch/utils/_contextlib.py\", line 116, in decorate_context\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/nemo/collections/asr/models/hybrid_rnnt_ctc_models.py\", line 165, in transcribe\n    return ASRTranscriptionMixin.transcribe(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/torch/utils/_contextlib.py\", line 116, in decorate_context\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/nemo/collections/asr/parts/mixins/transcription.py\", line 298, in transcribe\n    for processed_outputs in generator:\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/nemo/collections/asr/parts/mixins/transcription.py\", line 397, in transcribe_generator\n    model_outputs = self._transcribe_forward(test_batch, transcribe_cfg)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/nemo/collections/asr/models/hybrid_rnnt_ctc_models.py\", line 193, in _transcribe_forward\n    return super()._transcribe_forward(batch, trcfg)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/nemo/collections/asr/models/rnnt_models.py\", line 946, in _transcribe_forward\n    encoded, encoded_len = self.forward(input_signal=batch[0], input_signal_length=batch[1])\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/nemo/core/classes/common.py\", line 1198, in wrapped_call\n    outputs = wrapped(*args, **kwargs)\n              ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/nemo/collections/asr/models/rnnt_models.py\", line 716, in forward\n    encoded, encoded_len = self.encoder(audio_signal=processed_signal, length=processed_signal_length)\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1751, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1762, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/nemo/core/classes/common.py\", line 1198, in wrapped_call\n    outputs = wrapped(*args, **kwargs)\n              ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/nemo/collections/asr/modules/conformer_encoder.py\", line 584, in forward\n    return self.forward_internal(\n           ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/nemo/collections/asr/modules/conformer_encoder.py\", line 633, in forward_internal\n    audio_signal, length = self.pre_encode(x=audio_signal, lengths=length)\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1751, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1762, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/nemo/collections/asr/parts/submodules/subsampling.py\", line 424, in forward\n    x, lengths = self.conv(x, lengths)\n                 ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1751, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1762, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/nemo/collections/asr/parts/submodules/subsampling.py\", line 738, in forward\n    x = layer(x)\n        ^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1751, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1762, in _call_impl\n    return forward_call(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/nemo/collections/asr/parts/submodules/causal_convs.py\", line 68, in forward\n    x = super().forward(x)\n        ^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/torch/nn/modules/conv.py\", line 554, in forward\n    return self._conv_forward(input, self.weight, self.bias)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venvs/nemo/lib/python3.12/site-packages/torch/nn/modules/conv.py\", line 549, in _conv_forward\n    return F.conv2d(\n           ^^^^^^^^^\nRuntimeError: Expected canUse32BitIndexMath(input) && canUse32BitIndexMath(output) to be true, but got false.  (Could this error message be improved?  If so, please report an enhancement request to PyTorch.)"}
+{"timestamp": "2026-08-12T15:21:02.306+00:00", "level": "INFO", "logger": "peste.runner", "message": "Benchmark run finalized", "run": "fleurs-fa-ir-v1-shenava-rizeh-v1-0-20260812T150617Z", "model": "shenava-rizeh-v1-0", "status": "failed", "speed_valid": false}
+{"timestamp": "2026-08-12T15:21:05.182+00:00", "level": "INFO", "logger": "peste.remote", "message": "Remote action finished", "action": "run", "runtime": "nemo", "returncode": 1, "result_path": "/results/fleurs-fa-ir-v1-shenava-rizeh-v1-0-20260812T150617Z"}

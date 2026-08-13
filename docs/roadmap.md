@@ -22,8 +22,9 @@
 - [x] Publish the initial RTX accuracy and speed boards.
 - [x] Qualify and batch-calibrate the 37 additional adapter-compatible candidates from the
   `compatible-37-20260811` campaign.
-- [ ] Produce one fresh uninterrupted schema-2 bundle for every successful campaign qualifier.
-- [ ] Publish the expanded accuracy, speed, and Pareto boards.
+- [x] Give every successful campaign qualifier one fresh uninterrupted schema-2 full-run attempt;
+  33 completed and Shenava Rizeh retained one deterministic failed bundle.
+- [x] Publish the expanded 41-model accuracy, speed, and Pareto boards.
 
 ## Version 3 — `fa-v2` normalization milestone
 
