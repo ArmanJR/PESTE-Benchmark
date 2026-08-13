@@ -49,9 +49,7 @@
 | 41 | [whisper-tiny](https://huggingface.co/openai/whisper-tiny) | 0.9721<br><sub>95% CI: 0.8719–1.0799</sub> | 1.6505<br><sub>95% CI: 1.5106–1.8003</sub> | 0.00% |
 | 42 | [whisper-persian-paulwalker](https://huggingface.co/Paulwalker4884/whisper-persian) | 1.4278<br><sub>95% CI: 1.2999–1.5608</sub> | 0.9320<br><sub>95% CI: 0.8926–0.9774</sub> | 6.80% |
 
-CER is the primary ranking metric because Persian WER is orthography-sensitive: fa-v1 converts ZWNJ to spaces, while CER ignores normalized whitespace. WER and derived word accuracy remain complementary, segmentation-sensitive measurements.
-
-Point-estimate order does not establish statistical significance. Intervals use a deterministic 10,000-replicate utterance-level percentile bootstrap at 95% confidence with seed 20250731. Paired intervals containing zero are reported as no clear difference; these intervals measure test-set sampling uncertainty only.
+CER is primary because Persian WER is sensitive to word segmentation. The 95% intervals use a deterministic 10,000-replicate utterance bootstrap with seed 20250731; point-estimate order alone does not establish a significant difference.
 
 ### Paired adjacent CER comparisons
 
@@ -162,4 +160,4 @@ Throughput is total audio seconds divided by measured processing seconds; RTF is
 | [whisper-large-v2-fa-aictsharif](https://huggingface.co/aictsharif/whisper-large-v2-fa) | 0.0510 (0.0445–0.0589) | 4.597× |
 | [whisper-persian-v4-nezamisafa](https://huggingface.co/nezamisafa/whisper-persian-v4) | 0.0493 (0.0443–0.0550) | 2.445× |
 
-A speed-valid model is Pareto-efficient when no other model has both equal-or-lower CER and equal-or-higher throughput, with at least one strict advantage. The table lists only that point-estimate frontier; the machine-readable artifacts retain classifications and dominators for every speed-valid model. Supported dominance additionally requires the paired 95% CER-difference interval to remain below zero. CER intervals measure test-set sampling uncertainty; speed is a single deterministic run without a confidence interval. The plot inverts its logarithmic CER axis so visually better directions are up and right while tick labels remain raw CER. CER confidence bars are hidden by default and can be toggled when the SVG is rendered interactively. The displayed CER axis ends at 1; worse values remain labeled at the lower boundary as off-scale points. Pareto status is a trade-off classification, not a composite score.
+A model is Pareto-efficient when no other speed-valid model has equal-or-lower CER and equal-or-higher throughput with at least one strict advantage. This is a trade-off classification, not a composite score; JSON and CSV artifacts retain the full dominance analysis.

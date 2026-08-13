@@ -500,8 +500,7 @@ def render_markdown(
     if table_limit is not None and full_leaderboard_link is not None:
         summary_note = (
             f"The tables show the top {table_limit} models. See the "
-            f"[full leaderboard and paired CER comparisons]({full_leaderboard_link}) for "
-            "complete standings.\n\n"
+            f"[full leaderboard]({full_leaderboard_link}) for complete standings.\n\n"
         )
     return (
         f"# Full PESTE leaderboard — `{suite.suite_id}`\n\n"
@@ -514,14 +513,10 @@ def render_markdown(
             repositories=model_repositories,
             limit=table_limit,
         )
-        + "\n\nCER is the primary ranking metric because Persian WER is orthography-sensitive: "
-        "fa-v1 converts ZWNJ to spaces, while CER ignores normalized whitespace. WER and "
-        "derived word accuracy remain complementary, segmentation-sensitive measurements."
-        "\n\nPoint-estimate order does not establish statistical significance. Intervals use "
-        f"a deterministic {DEFAULT_BOOTSTRAP_REPLICATES:,}-replicate utterance-level percentile "
-        f"bootstrap at {DEFAULT_CONFIDENCE_LEVEL:.0%} confidence with seed {DEFAULT_SEED}. "
-        "Paired intervals containing zero are reported as no clear difference; these intervals "
-        "measure test-set sampling uncertainty only."
+        + "\n\nCER is primary because Persian WER is sensitive to word segmentation. The "
+        f"{DEFAULT_CONFIDENCE_LEVEL:.0%} intervals use a deterministic "
+        f"{DEFAULT_BOOTSTRAP_REPLICATES:,}-replicate utterance bootstrap with seed "
+        f"{DEFAULT_SEED}; point-estimate order alone does not establish a significant difference."
         + comparison_section
         + f"\n\n{heading} Steady-state speed\n\n"
         f"![Steady-state speed leaderboard]({image_prefix}leaderboard-speed.svg)\n\n"
@@ -536,17 +531,10 @@ def render_markdown(
         + f"\n{heading} Accuracy-speed Pareto efficiency\n\n"
         f"![Accuracy-speed Pareto efficiency]({image_prefix}leaderboard-pareto.svg)\n\n"
         + _pareto_table(efficiency_entries, model_repositories)
-        + "\n\nA speed-valid model is Pareto-efficient when no other model has both equal-or-lower "
-        "CER and equal-or-higher throughput, with at least one strict advantage. The table lists "
-        "only that point-estimate frontier; the machine-readable artifacts retain classifications "
-        "and dominators for every speed-valid model. Supported dominance additionally requires the "
-        "paired 95% CER-difference interval to remain below zero. CER intervals measure test-set "
-        "sampling uncertainty; speed is a single deterministic run without a confidence interval. "
-        "The plot inverts its logarithmic CER axis so visually better directions are up and right "
-        "while tick labels remain raw CER. CER confidence bars are hidden by default and can be "
-        "toggled when the SVG is rendered interactively. The displayed CER axis ends at 1; worse "
-        "values remain labeled at the lower boundary as off-scale points. Pareto status is a "
-        "trade-off classification, not a composite score.\n"
+        + "\n\nA model is Pareto-efficient when no other speed-valid model has equal-or-lower "
+        "CER and equal-or-higher throughput with at least one strict advantage. This is a "
+        "trade-off classification, not a composite score; JSON and CSV artifacts retain the full "
+        "dominance analysis.\n"
     )
 
 

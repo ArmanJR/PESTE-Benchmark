@@ -289,7 +289,7 @@ def test_markdown_links_models_and_presents_speed_board(
     assert "| Model | CER (95% CI) | Throughput (× real time) |" in markdown
     readme = (tmp_path / "README.md").read_text()
     assert expected_link in readme
-    assert "[full leaderboard and paired CER comparisons](docs/full-leaderboard.md)" in readme
+    assert "[full leaderboard](docs/full-leaderboard.md)" in readme
     speed_svg = (output / "leaderboard-speed.svg").read_text()
     assert "PESTE steady-state speed leaderboard" in speed_svg
     assert "https://huggingface.co/organization/checkpoint" in speed_svg
@@ -377,7 +377,7 @@ def test_readme_markdown_limits_standings_and_pareto_table_to_frontier(
     assert "| 10 | model-09 |" in readme_speed
     assert "| 11 | model-10 |" not in readme_speed
     assert "Paired adjacent CER comparisons" not in readme
-    assert "[full leaderboard and paired CER comparisons](docs/full-leaderboard.md)" in readme
+    assert "[full leaderboard](docs/full-leaderboard.md)" in readme
     assert "| model-00 |" in readme_pareto
     assert "model-01" not in readme_pareto
     assert "| 11 | model-10 |" in full

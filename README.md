@@ -15,22 +15,16 @@ Persian automatic speech recognition.
 - **Accuracy:** corpus CER (primary), WER, deterministic bootstrap uncertainty, and paired CER
   comparisons
 - **Speed:** steady-state end-to-end audio throughput and real-time factor (RTF)
-- **Official profile:** one NVIDIA RTX 6000 Ada Generation 48 GB GPU, driver major 580 or newer, 300 W,
-  ECC disabled, at least 8 vCPUs, 64 GiB RAM, and 100 GiB free local storage
+- **Official profile:** one NVIDIA RTX 6000 Ada Generation 48 GB GPU (`rtx-6000-ada-v1`)
 - **Inference:** deterministic per-model batching, checkpoint-native precision, offline execution,
   and read-only dataset/checkpoint caches
-- **Carrier image:** a digest-pinned public GHCR image with isolated modern and NeMo environments,
-  built from x86-64 NGC PyTorch 25.06,
-  `nvcr.io/nvidia/pytorch@sha256:3cb18e2c438db8af2d3a659ca27fac5da328640261c38c48a34edcd223c38af9`
-
-The hardware-profile identifier is `rtx-6000-ada-v1`. Its `-v1` suffix versions the hardware
-contract itself and is independent of the PESTE release version.
+- **Runtime:** digest-pinned public GHCR image with isolated modern and NeMo environments
 
 ## Leaderboard
 
 <!-- LEADERBOARD:START -->
 
-The tables show the top 10 models. See the [full leaderboard and paired CER comparisons](docs/full-leaderboard.md) for complete standings.
+The tables show the top 10 models. See the [full leaderboard](docs/full-leaderboard.md) for complete standings.
 
 ### Normalized accuracy
 
@@ -49,9 +43,7 @@ The tables show the top 10 models. See the [full leaderboard and paired CER comp
 | 9 | [shenava-rizeh-v1-0](https://huggingface.co/Reza2kn/Shenava-Rizeh-v1.0) | 0.0640<br><sub>95% CI: 0.0589–0.0694</sub> | 0.1555<br><sub>95% CI: 0.1470–0.1638</sub> | 84.45% |
 | 10 | [whisper-medium-fa-aictsharif](https://huggingface.co/aictsharif/whisper-medium-fa) | 0.0658<br><sub>95% CI: 0.0517–0.0836</sub> | 0.2604<br><sub>95% CI: 0.2434–0.2804</sub> | 73.96% |
 
-CER is the primary ranking metric because Persian WER is orthography-sensitive: fa-v1 converts ZWNJ to spaces, while CER ignores normalized whitespace. WER and derived word accuracy remain complementary, segmentation-sensitive measurements.
-
-Point-estimate order does not establish statistical significance. Intervals use a deterministic 10,000-replicate utterance-level percentile bootstrap at 95% confidence with seed 20250731. Paired intervals containing zero are reported as no clear difference; these intervals measure test-set sampling uncertainty only.
+CER is primary because Persian WER is sensitive to word segmentation. The 95% intervals use a deterministic 10,000-replicate utterance bootstrap with seed 20250731; point-estimate order alone does not establish a significant difference.
 
 ### Steady-state speed
 
@@ -84,131 +76,35 @@ Throughput is total audio seconds divided by measured processing seconds; RTF is
 | [whisper-large-v2-fa-aictsharif](https://huggingface.co/aictsharif/whisper-large-v2-fa) | 0.0510 (0.0445–0.0589) | 4.597× |
 | [whisper-persian-v4-nezamisafa](https://huggingface.co/nezamisafa/whisper-persian-v4) | 0.0493 (0.0443–0.0550) | 2.445× |
 
-A speed-valid model is Pareto-efficient when no other model has both equal-or-lower CER and equal-or-higher throughput, with at least one strict advantage. The table lists only that point-estimate frontier; the machine-readable artifacts retain classifications and dominators for every speed-valid model. Supported dominance additionally requires the paired 95% CER-difference interval to remain below zero. CER intervals measure test-set sampling uncertainty; speed is a single deterministic run without a confidence interval. The plot inverts its logarithmic CER axis so visually better directions are up and right while tick labels remain raw CER. CER confidence bars are hidden by default and can be toggled when the SVG is rendered interactively. The displayed CER axis ends at 1; worse values remain labeled at the lower boundary as off-scale points. Pareto status is a trade-off classification, not a composite score.
+A model is Pareto-efficient when no other speed-valid model has equal-or-lower CER and equal-or-higher throughput with at least one strict advantage. This is a trade-off classification, not a composite score; JSON and CSV artifacts retain the full dominance analysis.
 
 <!-- LEADERBOARD:END -->
 
-Accuracy ties resolve by WER and model ID. Speed ties resolve by CER, WER, and model ID. The Pareto
-table contains only the point-estimate frontier; the generated JSON and CSV retain point-estimate
-and paired-CER-supported dominance for every speed-valid model.
+## Reproduce
 
-## What is timed
-
-The model is loaded and all evaluation audio is validated and primed into the OS cache before
-timing. Evaluation rows are ordered deterministically by duration and original sequence. Two
-representative median-duration batches warm the model without contributing to the measurement.
-The timed region around each subsequent adapter call includes audio loading, preprocessing,
-device transfer, inference/generation, decoding, and postprocessing. CUDA is synchronized
-immediately before starting and immediately after completing each timed call.
-
-One complete pass over all 871 test recordings is measured. Predictions are then restored to
-manifest order. A resumed run keeps recovered predictions and accuracy, but its speed is marked
-invalid; publication on the speed board requires a fresh uninterrupted run.
-
-## Model batch calibration
-
-Each model specification carries a `speed_profile` with the hardware-profile ID and a fixed batch
-size. Maintainers determine it with:
-
-```bash
-uv run peste model profile-speed --model <model-id> --host <ssh-url>
-```
-
-Calibration uses 128 duration-quantile recordings, candidates from 1 through 128, two warmups and
-three measured passes. It rejects OOM, more than 85% VRAM use on the longest-duration stress batch,
-output cardinality/order failures, and normalized divergence from a fixed singleton conformance
-set. The smallest safe candidate reaching at least 95% of the best throughput is selected. Full
-runs never retune or silently fall back.
-
-## Reproduce on Vast.ai
-
-Ordinary Vast.ai container instances are the reference acquisition path, not part of the
-comparison contract. Any SSH-accessible carrier container accepted by `peste doctor` is eligible.
-Timed execution occurs directly inside the digest-pinned PESTE carrier image.
-
-Install the locked environment and configure the Vast.ai API key once outside the repository:
+Install the locked environment, configure Vast.ai, and use the immutable image reference from a
+successful `Runtime image` workflow artifact:
 
 ```bash
 uv sync --frozen --all-groups
 uv run vastai set api-key <key>
-```
-
-`VAST_API_KEY` can override the stored key. Keys are redacted from subprocess logging and must not
-be committed.
-
-Build the selected commit with the manually triggered `Runtime image` GitHub Actions workflow.
-The workflow publishes `ghcr.io/armanjr/peste-benchmark`, verifies both isolated runtime
-environments and the native offline guard, and uploads `runtime-image.json` containing the
-immutable image reference. The GHCR package must be public so Vast can pull it without receiving a
-registry credential.
-
-```bash
-gh workflow run runtime-image.yml --ref <40-character-commit>
-# Wait for the run, then download its runtime-image-<commit> artifact.
-```
-
-Provision and validate an ordinary container using that exact digest:
-
-```bash
 image_ref=$(jq -r .image_reference runtime-image.json)
 uv run peste cloud up --image "$image_ref" --max-dph <maximum-hourly-price>
-uv run peste cloud status
-```
-
-The normal allocation is 200 GB. Multi-model campaigns must total the pinned Hub snapshots first
-and request sufficient storage with `cloud up --disk-gb <size>` while retaining the doctor's
-required 100 GiB free-space reserve.
-
-`cloud up` preselects one verified RTX 6000 Ada offer with driver 580 or newer, allocates 200 GB,
-allows up to one hour for the large carrier to become SSH-ready, destroys every rejected attempt,
-and prints the instance ID, accepted price, image digest, and a direct
-`ssh://root@<ip>:<port>` URL. Use that URL unchanged with the existing commands:
-
-```bash
-uv run peste doctor --host <ssh-url>
 uv run peste dataset prepare --suite fleurs-fa-ir-v1 --host <ssh-url>
 uv run peste model validate --model <model-id> --host <ssh-url>
-uv run peste model profile-speed --model <model-id> --host <ssh-url>
-```
-
-Repeat validation and profiling for every model, write each reported
-`selected_batch_size` into its model JSON, review the candidate evidence, and commit all reviewed
-profiles together. Because model specifications are copied into the carrier image and contribute
-to request digests, destroy the calibration instance, build the updated commit, and provision a
-fresh container from the new workflow digest before any full run:
-
-```bash
-uv run peste validate-specs
-uv run peste cloud down
-# Trigger the Runtime image workflow for the commit containing calibrated profiles.
-image_ref=$(jq -r .image_reference runtime-image.json)
-uv run peste cloud up --image "$image_ref" --max-dph <maximum-hourly-price>
-uv run peste dataset prepare --suite fleurs-fa-ir-v1 --host <ssh-url>
-uv run peste run-all --suite fleurs-fa-ir-v1 --host <ssh-url>
+uv run peste run --suite fleurs-fa-ir-v1 --model <model-id> --host <ssh-url>
 uv run peste leaderboard --suite fleurs-fa-ir-v1
-uv run peste check-generated
 uv run peste cloud down
 ```
 
-The two Python dependency stacks remain isolated in `/opt/venvs/modern` and `/opt/venvs/nemo`
-inside one image, so every model can use the same physical host. Fresh container storage is
-ephemeral: audio and checkpoints are recreated for every session. Result bundles are copied back
-to this checkout after each run. `cloud down` destroys labeled instances because stopped instances
-continue billing storage.
-
-If an instance dies during a run, resume can recover predictions and accuracy, but the speed result
-is invalid. Repeat that model from a fresh run on a new doctor-approved host for publication.
+Always destroy the instance after copying results. See the [maintainer guide](docs/maintainer-guide.md)
+for image builds, batch calibration, campaigns, recovery, and publication checks.
 
 ## Dataset and scoring
 
-Dataset preparation materializes the pinned FLEURS Persian audio as 16-kHz mono PCM-16 WAV and
-verifies every file against the committed 4,341-row manifest. The `fa-v1` normalizer applies NFKC,
-letter folding, diacritic and punctuation removal, digit-glyph folding, ZWNJ-to-space conversion,
-and whitespace collapse to both reference and prediction.
-
-CER removes normalized whitespace before scoring. WER preserves normalized word boundaries. Both
-are corpus rates formed by summing edit and reference counts across all recordings. Empty
-predictions remain scoreable; empty normalized references are invalid suite data.
+The suite verifies pinned FLEURS audio against its committed manifest and applies immutable `fa-v1`
+normalization to references and predictions. CER ignores normalized whitespace; WER preserves word
+boundaries. See the [benchmark contract](docs/benchmark-contract.md) for the complete rules.
 
 ## Documentation
 
@@ -218,12 +114,6 @@ predictions remain scoreable; empty normalized references are invalid suite data
 - [Contributing source changes](docs/contributing.md)
 - [Version roadmap](docs/roadmap.md)
 - [Changelog](CHANGELOG.md)
-
-## Version history
-
-PESTE 1.0.0 used a Jetson AGX Orin host, batch-size-one inference, and a memory-efficiency board.
-Those results are retired and not comparable with v2; they remain preserved at git tag `1.0.0`.
-Version 2.0.0 rebases all official results on the RTX profile and schema 2.
 
 ## Scope and limitations
 
