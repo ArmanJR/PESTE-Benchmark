@@ -39,10 +39,11 @@ def _run_smoke(
     outputs: list[str],
 ) -> None:
     suite, suite_directory, rows = tiny_suite
-    test_row = next(row for row in rows if row.split == "test")
-    audio_path = tmp_path / "cache" / test_row.audio_path
-    audio_path.parent.mkdir(parents=True)
-    sf.write(audio_path, [0.0] * 160, 16_000)
+    test_rows = [row for row in rows if row.split == "test"]
+    for index, test_row in enumerate(test_rows, start=1):
+        audio_path = tmp_path / "cache" / test_row.audio_path
+        audio_path.parent.mkdir(parents=True, exist_ok=True)
+        sf.write(audio_path, [0.0] * (160 * index), 16_000)
     cuda = SimpleNamespace(
         empty_cache=lambda: None,
         reset_peak_memory_stats=lambda: None,
@@ -71,7 +72,12 @@ def test_smoke_accepts_identical_normalized_output(
     tmp_path: Path,
     tiny_suite: tuple[SuiteSpec, Path, list[Any]],
 ) -> None:
-    _run_smoke(monkeypatch, tmp_path, tiny_suite, ["مي روم", "می\u200cروم"])
+    _run_smoke(
+        monkeypatch,
+        tmp_path,
+        tiny_suite,
+        ["مي روم", "متن دوم", "می\u200cروم", "متن دوم"],
+    )
 
 
 def test_smoke_rejects_nondeterministic_output(
@@ -80,4 +86,4 @@ def test_smoke_rejects_nondeterministic_output(
     tiny_suite: tuple[SuiteSpec, Path, list[Any]],
 ) -> None:
     with pytest.raises(RuntimeError, match="different normalized text"):
-        _run_smoke(monkeypatch, tmp_path, tiny_suite, ["الف", "ب"])
+        _run_smoke(monkeypatch, tmp_path, tiny_suite, ["الف", "ثابت", "ب", "ثابت"])

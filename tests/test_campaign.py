@@ -12,7 +12,7 @@ from peste import campaign as campaign_module
 from peste.constants import PROJECT_ROOT
 from peste.digests import sha256_file
 from peste.schemas import CampaignSpec
-from peste.specs import load_campaign
+from peste.specs import load_campaign, load_model
 
 
 def _profile(selected: int = 2) -> dict[str, Any]:
@@ -74,6 +74,19 @@ def test_compatible_campaign_contains_exact_new_adapter_split() -> None:
         "nvidia-fastconformer-fa",
     }
     assert not existing.intersection(candidate.model_id for candidate in campaign.candidates)
+
+
+def test_whisper_longform_campaign_contains_every_whisper_model() -> None:
+    campaign = load_campaign("whisper-longform-2-1-0")
+    expected = {
+        path.stem
+        for path in (PROJECT_ROOT / "models").glob("*.json")
+        if load_model(path.stem).adapter == "transformers-whisper"
+    }
+
+    assert len(campaign.candidates) == 29
+    assert {candidate.model_id for candidate in campaign.candidates} == expected
+    assert {candidate.adapter for candidate in campaign.candidates} == {"transformers-whisper"}
     failed = {
         "wav2vec2-base-common-voice-persian-colab-zoha",
         "wav2vec2-base-common-voice-40p-persian-colab-zoha",

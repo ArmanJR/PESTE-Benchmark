@@ -30,6 +30,10 @@ README_TABLE_LIMIT = 10
 class LeaderboardRow:
     model_id: str
     run_id: str
+    model_digest: str
+    runtime_image_tag: str
+    runtime_image_digest: str
+    source_revision: str
     wer: float
     wer_ci_lower: float
     wer_ci_upper: float
@@ -153,7 +157,8 @@ def collect_rows(
 ) -> list[LeaderboardRow]:
     rows: list[LeaderboardRow] = []
     suite_digest = spec_digest(suite)
-    model_digests = {model.model_id: spec_digest(model) for model in discover_models(root)}
+    models = {model.model_id: model for model in discover_models(root)}
+    model_digests = {model_id: spec_digest(model) for model_id, model in models.items()}
     for path in sorted(results_directory.glob("*/run.json")):
         if require_tracked and not _is_tracked(path, root):
             LOGGER.warning("Ignoring uncommitted result bundle", extra={"path": str(path)})
@@ -199,6 +204,14 @@ def collect_rows(
             LeaderboardRow(
                 model_id=bundle.model_id,
                 run_id=bundle.run_id,
+                model_digest=bundle.model_digest,
+                runtime_image_tag=(
+                    models[bundle.model_id].runtime.image
+                    if bundle.model_id in models
+                    else "unregistered"
+                ),
+                runtime_image_digest=bundle.environment.image_digest,
+                source_revision=bundle.environment.peste_revision,
                 wer=bundle.aggregates.wer,
                 wer_ci_lower=wer_estimate.lower,
                 wer_ci_upper=wer_estimate.upper,
@@ -502,9 +515,25 @@ def render_markdown(
             f"The tables show the top {table_limit} models. See the "
             f"[full leaderboard]({full_leaderboard_link}) for complete standings.\n\n"
         )
+    runtime_counts: dict[str, int] = {}
+    for row in rows:
+        runtime_counts[row.runtime_image_tag] = runtime_counts.get(row.runtime_image_tag, 0) + 1
+    provenance = ", ".join(
+        f"{count} result{'s' if count != 1 else ''} from `{runtime}`"
+        for runtime, count in sorted(runtime_counts.items())
+    )
+    provenance_note = (
+        "Result provenance: "
+        + provenance
+        + ". The generated JSON and CSV include each row's model digest, image digest, and source "
+        "revision.\n\n"
+        if provenance
+        else ""
+    )
     return (
         f"# Full PESTE leaderboard — `{suite.suite_id}`\n\n"
         + summary_note
+        + provenance_note
         + f"{heading} Normalized accuracy\n\n"
         f"![Normalized accuracy leaderboard]({image_prefix}leaderboard-accuracy.svg)\n\n"
         + _table(

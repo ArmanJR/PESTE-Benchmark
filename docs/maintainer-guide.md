@@ -132,6 +132,29 @@ retrying; never change precision, decoding, or batching merely to get a score.
 `peste leaderboard --include-untracked` may render reviewed bundles before publication. Final
 publication still requires tracked bundles and `peste check-generated`.
 
+### PESTE 2.1.0 Whisper refresh
+
+The tracked `whisper-longform-2-1-0` campaign contains all 29 Whisper specifications affected by
+the corrected non-truncating input policy. Use provisional batch size 1 in the calibration image:
+
+```bash
+uv run peste campaign qualify \
+  --campaign whisper-longform-2-1-0 \
+  --host <ssh-url> \
+  --evidence-dir campaign-evidence/whisper-longform-2-1-0
+uv run peste campaign apply-profiles \
+  --campaign whisper-longform-2-1-0 \
+  --evidence-dir campaign-evidence/whisper-longform-2-1-0
+uv run peste campaign summarize \
+  --campaign whisper-longform-2-1-0 \
+  --evidence-dir campaign-evidence/whisper-longform-2-1-0 \
+  --output campaigns/whisper-longform-2-1-0/qualification-summary.json
+```
+
+Rebuild the 2.1 carrier after applying every reviewed profile, provision a fresh accepted host,
+prepare the dataset, and run the same campaign. Preserve the old Whisper bundles as stale audit
+evidence. Do not remove or regenerate the 13 unchanged non-Whisper 2.0 bundles.
+
 ## Publishing
 
 Track one complete successful bundle per model and regenerate all derived outputs together:

@@ -36,9 +36,6 @@ def _upgrade_legacy_whisper_generation_config(
 ) -> None:
     """Supply modern Whisper generation metadata absent from older checkpoints."""
     generation_config = model.generation_config
-    if hasattr(generation_config, "lang_to_id") and hasattr(generation_config, "task_to_id"):
-        return
-
     tokenizer = processor.tokenizer
     language_token = f"<|{language}|>"
     language_token_id = tokenizer.convert_tokens_to_ids(language_token)
@@ -48,14 +45,46 @@ def _upgrade_legacy_whisper_generation_config(
     if invalid_id in {language_token_id, task_token_id, no_timestamps_token_id}:
         raise ValueError(f"Legacy Whisper tokenizer for {model_id} lacks required decoder tokens")
 
+    language_ids = getattr(generation_config, "lang_to_id", {})
+    task_ids = getattr(generation_config, "task_to_id", {})
+    if not isinstance(language_ids, dict):
+        language_ids = {}
+    if not isinstance(task_ids, dict):
+        task_ids = {}
+    if (
+        language_ids.get(language_token) == language_token_id
+        and task_ids.get("transcribe") == task_token_id
+        and getattr(generation_config, "no_timestamps_token_id", None) == no_timestamps_token_id
+    ):
+        return
+
     generation_config.is_multilingual = True
-    generation_config.lang_to_id = {language_token: language_token_id}
-    generation_config.task_to_id = {"transcribe": task_token_id}
+    generation_config.lang_to_id = {**language_ids, language_token: language_token_id}
+    generation_config.task_to_id = {**task_ids, "transcribe": task_token_id}
     generation_config.no_timestamps_token_id = no_timestamps_token_id
     LOGGER.warning(
         "Supplied missing in-memory Whisper generation metadata",
-        extra={"model": model_id, "language": language},
+        extra={
+            "model": model_id,
+            "language": language,
+            "required_fields": ["lang_to_id", "task_to_id", "no_timestamps_token_id"],
+        },
     )
+
+
+def _whisper_segment_frames(model: Any) -> int:
+    """Return the maximum mel frames accepted by one native Whisper segment."""
+    encoder = model.get_encoder()
+    input_stride = int(encoder.conv1.stride[0]) * int(encoder.conv2.stride[0])
+    segment_frames = input_stride * int(model.config.max_source_positions)
+    if segment_frames <= 0:
+        raise ValueError("Whisper model reported a non-positive segment-frame limit")
+    return segment_frames
+
+
+def _requires_whisper_long_form(model: Any, input_features: Any) -> bool:
+    """Select native sequential decoding only when a batch exceeds one segment."""
+    return int(input_features.shape[-1]) > _whisper_segment_frames(model)
 
 
 class TransformersWhisperAdapter(ASRAdapter):
@@ -83,6 +112,15 @@ class TransformersWhisperAdapter(ASRAdapter):
         _upgrade_legacy_whisper_generation_config(
             self.processor, self.model, self.spec.language, self.spec.model_id
         )
+        LOGGER.info(
+            "Configured automatic Whisper long-form decoding",
+            extra={
+                "model": self.spec.model_id,
+                "segment_frames": _whisper_segment_frames(self.model),
+                "timestamp_policy": self.spec.generation["return_timestamps"],
+                "attention_mask": True,
+            },
+        )
 
     def transcribe_batch(self, audio_paths: list[Path]) -> list[Transcription]:
         import torch
@@ -98,8 +136,19 @@ class TransformersWhisperAdapter(ASRAdapter):
             [audio for audio, _ in decoded_audio],
             sampling_rate=sample_rate,
             return_tensors="pt",
-            padding=True,
+            truncation=False,
+            padding="longest",
+            return_attention_mask=True,
         )
+        if "input_features" not in inputs:
+            raise AdapterOutputError(
+                f"Whisper processor for {self.spec.model_id} returned no input_features"
+            )
+        if "attention_mask" not in inputs:
+            raise AdapterOutputError(
+                f"Whisper processor for {self.spec.model_id} returned no attention_mask"
+            )
+        return_timestamps = _requires_whisper_long_form(self.model, inputs["input_features"])
         model_inputs = {
             name: tensor.to("cuda", dtype=_torch_dtype(self.spec.native_dtype))
             if tensor.is_floating_point()
@@ -110,9 +159,9 @@ class TransformersWhisperAdapter(ASRAdapter):
             generated = self.model.generate(
                 **model_inputs,
                 language=self.spec.language,
-                task="transcribe",
+                task=str(self.spec.generation["task"]),
                 max_new_tokens=int(self.spec.generation["max_new_tokens"]),
-                return_timestamps=False,
+                return_timestamps=return_timestamps,
             )
         decoded = self.processor.batch_decode(generated, skip_special_tokens=True)
         transcriptions = [Transcription(text=text) for text in decoded]

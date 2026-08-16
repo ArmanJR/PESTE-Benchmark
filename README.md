@@ -9,15 +9,15 @@ Persian automatic speech recognition.
 
 ## At a glance
 
-- **Release:** `v2`
+- **Release:** `v2.1.0`
 - **Suite:** [`fleurs-fa-ir-v1`](suites/fleurs-fa-ir-v1/suite.json), 871 test recordings
 - **Normalization:** immutable `fa-v1`
 - **Accuracy:** corpus CER (primary), WER, deterministic bootstrap uncertainty, and paired CER
   comparisons
 - **Speed:** steady-state end-to-end audio throughput and real-time factor (RTF)
 - **Official profile:** one NVIDIA RTX 6000 Ada Generation 48 GB GPU (`rtx-6000-ada-v1`)
-- **Inference:** deterministic per-model batching, checkpoint-native precision, offline execution,
-  and read-only dataset/checkpoint caches
+- **Inference:** deterministic per-model batching, checkpoint-native precision, automatic native
+  Whisper long-form decoding, offline execution, and read-only dataset/checkpoint caches
 - **Runtime:** digest-pinned public GHCR image with isolated modern and NeMo environments
 
 ## Leaderboard
@@ -123,6 +123,11 @@ does not evaluate timestamps, diarization, punctuation quality, training uncerta
 robustness, or production suitability. Prompts, hotwords, quantization, offload, compilation,
 external language models, and policy-changing fallbacks are excluded.
 
+Accuracy intervals describe test-utterance sampling uncertainty. Speed is one uninterrupted pass
+per model and has no repeated-run confidence interval. PESTE 2.1 regenerates the 29 affected
+Whisper results while retaining 13 unchanged non-Whisper 2.0 bundles; the generated JSON/CSV and
+individual result bundles carry the exact model, image, source, and hardware provenance.
+
 The Shenava collection includes FLEURS-fa evaluation artifacts, and the
 [`visualears-fastconformer-fa-full-ab`](https://huggingface.co/Reza2kn/visualears-fastconformer-fa-full-ab)
 card reports external-language-model calibration on a FLEURS-256 slice. PESTE used the fixed
@@ -139,6 +144,6 @@ PESTE code and definitions are Apache-2.0. FLEURS content is CC BY 4.0; see [`NO
   title   = {PESTE: Persian Speech to Text benchmark},
   year    = {2026},
   url     = {https://github.com/ArmanJR/PESTE-Benchmark},
-  version = {2.0.0}
+  version = {2.1.0}
 }
 ```

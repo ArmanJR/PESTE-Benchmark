@@ -28,6 +28,50 @@ def test_transformers_ctc_policy_accepts_exact_configuration(tmp_path: Path) -> 
     validate_model_policy(_ctc_model(), tmp_path)
 
 
+def test_whisper_policy_requires_automatic_timestamps_and_current_runtime(tmp_path: Path) -> None:
+    _make_runtime(tmp_path)
+    model = make_model()
+
+    validate_model_policy(model, tmp_path)
+
+    invalid_generation = model.model_copy(
+        update={
+            "generation": {
+                "task": "transcribe",
+                "max_new_tokens": 444,
+                "return_timestamps": False,
+            }
+        }
+    )
+    with pytest.raises(ValueError, match="Whisper policy mismatch"):
+        validate_model_policy(invalid_generation, tmp_path)
+
+
+def test_only_grandfathered_models_accept_the_legacy_runtime(tmp_path: Path) -> None:
+    _make_runtime(tmp_path)
+    current = make_model("transformers-qwen", model_id="new-qwen")
+    legacy_runtime = current.runtime.model_copy(
+        update={"image": "ghcr.io/armanjr/peste-benchmark:2.0.0"}
+    )
+
+    with pytest.raises(ValueError, match="Runtime image mismatch"):
+        validate_model_policy(current.model_copy(update={"runtime": legacy_runtime}), tmp_path)
+
+    grandfathered = make_model("transformers-qwen", model_id="qwen3-asr-0-6b").model_copy(
+        update={
+            "repository": "Qwen/Qwen3-ASR-0.6B-hf",
+            "revision": "7f1569a48a89f3e3f4dc3a5c9d28bddd903bc76c",
+            "runtime": legacy_runtime,
+        }
+    )
+    validate_model_policy(grandfathered, tmp_path)
+
+    with pytest.raises(ValueError, match="Legacy runtime identity mismatch"):
+        validate_model_policy(
+            grandfathered.model_copy(update={"repository": "other/model"}), tmp_path
+        )
+
+
 @pytest.mark.parametrize(
     ("field", "invalid_value"),
     [

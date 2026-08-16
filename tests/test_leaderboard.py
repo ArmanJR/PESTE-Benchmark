@@ -208,6 +208,9 @@ def test_static_speed_outputs_are_deterministic_and_have_no_memory_fields(
     payload = json.loads((first / "leaderboard.json").read_text())
     assert payload["schema_version"] == 2
     assert payload["speed"][0]["model_id"] == "model-a"
+    assert payload["speed"][0]["model_digest"] == "b" * 64
+    assert payload["speed"][0]["runtime_image_digest"] == "digest"
+    assert payload["speed"][0]["source_revision"] == "rev"
     pareto = {entry["model_id"]: entry for entry in payload["pareto"]}
     assert pareto["model-a"]["pareto_efficient"] is True
     assert pareto["model-a"]["statistically_pareto_efficient"] is True
@@ -255,11 +258,11 @@ def test_markdown_links_models_and_presents_speed_board(
                 "generation": {
                     "task": "transcribe",
                     "max_new_tokens": 444,
-                    "return_timestamps": False,
+                    "return_timestamps": "auto",
                 },
                 "runtime": {
                     "name": "modern",
-                    "image": "ghcr.io/armanjr/peste-benchmark:2.0.0",
+                    "image": "ghcr.io/armanjr/peste-benchmark:2.1.0",
                     "dockerfile": "runtimes/Dockerfile",
                 },
                 "speed_profile": {
@@ -283,12 +286,14 @@ def test_markdown_links_models_and_presents_speed_board(
     expected_link = "[model](https://huggingface.co/organization/checkpoint)"
     markdown = (tmp_path / "docs" / "full-leaderboard.md").read_text()
     assert expected_link in markdown
+    assert "1 result from `ghcr.io/armanjr/peste-benchmark:2.1.0`" in markdown
     assert "## Steady-state speed" in markdown
     assert "| Rank | Model | Batch | Throughput | RTF | Processing s | Audio s |" in markdown
     assert "## Accuracy-speed Pareto efficiency" in markdown
     assert "| Model | CER (95% CI) | Throughput (× real time) |" in markdown
     readme = (tmp_path / "README.md").read_text()
     assert expected_link in readme
+    assert "model digest, image digest, and source revision" in readme
     assert "[full leaderboard](docs/full-leaderboard.md)" in readme
     speed_svg = (output / "leaderboard-speed.svg").read_text()
     assert "PESTE steady-state speed leaderboard" in speed_svg
@@ -306,6 +311,10 @@ def test_readme_markdown_limits_standings_and_pareto_table_to_frontier(
         LeaderboardRow(
             model_id=f"model-{index:02d}",
             run_id=f"run-{index:02d}",
+            model_digest="b" * 64,
+            runtime_image_tag="ghcr.io/armanjr/peste-benchmark:2.1.0",
+            runtime_image_digest="sha256:digest",
+            source_revision="a" * 40,
             wer=0.1 + index / 100,
             wer_ci_lower=0.09 + index / 100,
             wer_ci_upper=0.11 + index / 100,

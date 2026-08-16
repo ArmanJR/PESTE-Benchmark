@@ -8,7 +8,7 @@ run it on the official RTX hardware profile.
 
 | Adapter | Contract | Reference |
 |---|---|---|
-| `transformers-whisper` | `AutoProcessor` + `AutoModelForSpeechSeq2Seq`, padded audio batch, Persian transcription without timestamps | [`whisper-large-v3.json`](../models/whisper-large-v3.json) |
+| `transformers-whisper` | `AutoProcessor` + `AutoModelForSpeechSeq2Seq`, non-truncating padded audio, automatic internal long-form timestamps, Persian text output | [`whisper-large-v3.json`](../models/whisper-large-v3.json) |
 | `transformers-qwen` | `AutoProcessor.apply_transcription_request` + `AutoModelForMultimodalLM`, native padded multi-audio request | [`qwen3-asr-1-7b.json`](../models/qwen3-asr-1-7b.json) |
 | `transformers-ctc` | `AutoProcessor` + `AutoModelForCTC`, padded greedy CTC batch with fixed token policy | [`wav2vec2-large-xlsr-53-persian.json`](../models/wav2vec2-large-xlsr-53-persian.json) |
 | `nemo-rnnt` | one `.nemo` checkpoint, default RNNT, native `transcribe(paths, batch_size=n)` | [`nvidia-fastconformer-fa.json`](../models/nvidia-fastconformer-fa.json) |
@@ -37,11 +37,11 @@ example is:
   "generation": {
     "task": "transcribe",
     "max_new_tokens": 444,
-    "return_timestamps": false
+    "return_timestamps": "auto"
   },
   "runtime": {
     "name": "modern",
-    "image": "ghcr.io/armanjr/peste-benchmark:2.0.0",
+    "image": "ghcr.io/armanjr/peste-benchmark:2.1.0",
     "dockerfile": "runtimes/Dockerfile"
   },
   "speed_profile": {
@@ -65,6 +65,11 @@ example is:
 
 The `-v1` hardware-profile revision is independent of the PESTE release. Both speed-profile fields
 affect the model digest and force results to regenerate when changed.
+
+For Whisper, `return_timestamps = "auto"` means timestamp tokens are internal control tokens only:
+the adapter enables them when the processed batch exceeds one native 30-second segment, then
+decodes text with special tokens removed. Contributors must not replace this with manual
+truncation, ad-hoc chunks, or published timestamp output.
 
 For a tracked multi-model campaign, batch size 1 may appear in the calibration-image commit as an
 explicitly provisional value because schema 2 requires a positive integer. It is not an official

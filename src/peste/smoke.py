@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 
 from peste.adapters import create_adapter
+from peste.adapters.base import require_batch_cardinality
 from peste.digests import sha256_bytes
 from peste.manifest import validate_manifest
 from peste.normalization import normalize
@@ -23,55 +24,73 @@ def smoke_adapter(
 ) -> None:
     """Load one adapter and require identical normalized text from two passes."""
     rows = validate_manifest(suite, suite_directory)
-    sample = next(row for row in rows if row.split == suite.evaluation_split)
-    audio_path = dataset_cache / sample.audio_path
-    if not audio_path.is_file():
-        raise FileNotFoundError(f"Smoke-test audio is missing: {audio_path}")
+    evaluation_rows = [row for row in rows if row.split == suite.evaluation_split]
+    if model.adapter == "transformers-whisper":
+        ordered = sorted(
+            evaluation_rows, key=lambda row: (row.duration_seconds, row.upstream_row_index)
+        )
+        samples = [ordered[0], ordered[-1]]
+    else:
+        samples = [evaluation_rows[0]]
+    audio_paths = [dataset_cache / sample.audio_path for sample in samples]
+    missing = [path for path in audio_paths if not path.is_file()]
+    if missing:
+        raise FileNotFoundError(f"Smoke-test audio is missing: {missing[0]}")
     torch = _seed_runtime(seed)
     torch.cuda.empty_cache()
     adapter = create_adapter(model, model_cache)
     try:
         LOGGER.info(
             "Starting real adapter smoke test",
-            extra={"model": model.model_id, "sample": sample.sample_id, "seed": seed},
+            extra={
+                "model": model.model_id,
+                "samples": [sample.sample_id for sample in samples],
+                "durations_seconds": [sample.duration_seconds for sample in samples],
+                "seed": seed,
+            },
         )
         adapter.load()
         _seed_runtime(seed)
-        first = normalize(
-            adapter.transcribe_batch([audio_path])[0].text, suite.normalization_version
-        )
+        first = [
+            normalize(output.text, suite.normalization_version)
+            for output in require_batch_cardinality(
+                model.model_id, audio_paths, adapter.transcribe_batch(audio_paths)
+            )
+        ]
         _seed_runtime(seed)
-        second = normalize(
-            adapter.transcribe_batch([audio_path])[0].text, suite.normalization_version
-        )
+        second = [
+            normalize(output.text, suite.normalization_version)
+            for output in require_batch_cardinality(
+                model.model_id, audio_paths, adapter.transcribe_batch(audio_paths)
+            )
+        ]
         if first != second:
             LOGGER.error(
                 "Repeated smoke transcriptions diverged",
                 extra={
                     "model": model.model_id,
-                    "sample": sample.sample_id,
-                    "first_characters": len(first),
-                    "second_characters": len(second),
-                    "first_sha256": sha256_bytes(first.encode("utf-8")),
-                    "second_sha256": sha256_bytes(second.encode("utf-8")),
+                    "samples": [sample.sample_id for sample in samples],
+                    "first_characters": [len(text) for text in first],
+                    "second_characters": [len(text) for text in second],
+                    "first_sha256": [sha256_bytes(text.encode("utf-8")) for text in first],
+                    "second_sha256": [sha256_bytes(text.encode("utf-8")) for text in second],
                 },
             )
             raise RuntimeError("Repeated smoke transcriptions produced different normalized text")
-        output_digest = sha256_bytes(first.encode("utf-8"))
         LOGGER.info(
             "Real adapter smoke test passed",
             extra={
                 "model": model.model_id,
-                "sample": sample.sample_id,
-                "normalized_characters": len(first),
-                "normalized_sha256": output_digest,
+                "samples": [sample.sample_id for sample in samples],
+                "normalized_characters": [len(text) for text in first],
+                "normalized_sha256": [sha256_bytes(text.encode("utf-8")) for text in first],
                 "parameter_count": adapter.parameter_count,
             },
         )
     except Exception:
         LOGGER.exception(
             "Real adapter smoke test failed",
-            extra={"model": model.model_id, "sample": sample.sample_id},
+            extra={"model": model.model_id, "samples": [sample.sample_id for sample in samples]},
         )
         raise
     finally:

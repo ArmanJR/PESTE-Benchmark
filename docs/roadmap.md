@@ -6,7 +6,7 @@
 - [x] Publish the 871-recording `fa-v1` accuracy benchmark and uncertainty analysis.
 - [x] Preserve the release and retired results at git tag `1.0.0`.
 
-## Version 2 — current release
+## Version 2.0 — completed
 
 - [x] Rebase the hardware contract on one NVIDIA RTX 6000 Ada Generation 48 GB GPU.
 - [x] Replace singleton adapter calls with deterministic per-model native batching.
@@ -27,6 +27,17 @@
 - [x] Correct Shenava Rizeh's CTC admission and long-recording batch calibration, then publish its
   fresh 871-recording follow-up run while retaining the original failed bundle.
 - [x] Publish the expanded 42-model accuracy, speed, and Pareto boards.
+
+## Version 2.1 — Whisper long-form correction
+
+- [x] Make Whisper preprocessing non-truncating and return frame-level attention masks.
+- [x] Automatically enable native sequential decoding only beyond the model's 30-second limit.
+- [x] Add boundary, batching, legacy-metadata, runtime-policy, and long-recording smoke coverage.
+- [x] Define the exact 29-model `whisper-longform-2-1-0` refresh campaign.
+- [ ] Recalibrate all 29 Whisper batch sizes on the official hardware profile.
+- [ ] Produce one fresh uninterrupted 2.1 bundle for every qualified Whisper model.
+- [ ] Regenerate and independently audit the mixed-provenance 2.1 leaderboard.
+- [ ] Freeze the reviewed code, results, documentation, and paper-facing artifacts.
 
 ## Version 3 — `fa-v2` normalization milestone
 

@@ -1,6 +1,6 @@
 # Benchmark contract
 
-This document defines PESTE 2.0.0 inputs, execution policy, metrics, artifacts, and ranking rules.
+This document defines PESTE 2.1.0 inputs, execution policy, metrics, artifacts, and ranking rules.
 A result is comparable only when its suite, normalization, model, speed profile, runtime, and
 hardware contracts match.
 
@@ -47,6 +47,13 @@ input in the same order. Whisper and CTC use padded processor batches, Qwen uses
 transcription request, and NeMo calls `model.transcribe(paths, batch_size=n)`. Output cardinality
 violations are hard failures.
 
+Whisper processing is non-truncating and pads each batch to its longest recording while returning
+a frame-level attention mask. Batches at or below the model's 30-second mel-frame limit use the
+ordinary short-form decoder. A batch exceeding that limit automatically enables Transformers'
+native sequential long-form decoder and its internal timestamp tokens. `batch_decode` removes
+those special tokens, so the benchmark still publishes text rather than timestamps. The active
+test split contains 13 recordings over 30 seconds, with a maximum duration of 39.24 seconds.
+
 Checkpoint-native precision, language, decoder, token handling, and generation limits remain
 fixed. Quantization, offload, compilation, external language models, and fallback behavior are
 prohibited.
@@ -70,6 +77,12 @@ The authoritative profile is
 CPU model and GPU UUID are recorded but not pinned. The exact driver, container OS, host kernel,
 image digest, and source revision are recorded. Timed execution occurs in the public PESTE carrier
 image selected by immutable GHCR digest and built from the pinned x86-64 NGC PyTorch base.
+
+Runtime tags contribute to model identity. PESTE 2.1.0 requires the 2.1 carrier for Whisper and
+new model specifications. The 13 unchanged non-Whisper specifications retain their exact 2.0
+runtime identities and successful bundles; this is an explicit compatibility exception, not a
+claim that results were regenerated. Generated JSON and CSV expose the model digest, carrier
+image digest, and source revision for every ranked row.
 
 `peste doctor` is authoritative. Marketplace filters only preselect plausible hosts. Vast.ai is
 the reference acquisition path, but any compatible SSH-accessible carrier container passing the

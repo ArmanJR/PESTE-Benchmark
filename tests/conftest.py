@@ -26,7 +26,7 @@ def make_model(
         "transformers-whisper": {
             "task": "transcribe",
             "max_new_tokens": 444,
-            "return_timestamps": False,
+            "return_timestamps": "auto",
         },
         "transformers-qwen": {"max_new_tokens": 256},
         "transformers-ctc": {
@@ -59,7 +59,7 @@ def make_model(
             "generation": generations[adapter],
             "runtime": RuntimeSpec(
                 name=runtime_name,
-                image="ghcr.io/armanjr/peste-benchmark:2.0.0",
+                image="ghcr.io/armanjr/peste-benchmark:2.1.0",
                 dockerfile="runtimes/Dockerfile",
             ),
             "speed_profile": SpeedProfile(

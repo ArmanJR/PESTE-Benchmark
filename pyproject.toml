@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "peste-benchmark"
-version = "2.0.0"
+version = "2.1.0"
 description = "Reproducible Persian speech-to-text benchmark and leaderboard"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"

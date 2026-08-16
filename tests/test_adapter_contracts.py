@@ -20,6 +20,7 @@ from peste.adapters.transformers import (
     TransformersCTCOutputError,
     TransformersQwenAdapter,
     TransformersWhisperAdapter,
+    _requires_whisper_long_form,
     _upgrade_legacy_whisper_generation_config,
 )
 
@@ -85,8 +86,19 @@ class FakeModel:
         self.dtype = "bf16"
         self.eval_called = False
         self.generation_config = SimpleNamespace(
-            lang_to_id={"<|fa|>": 1}, task_to_id={"transcribe": 2}
+            lang_to_id={"<|fa|>": 1},
+            task_to_id={"transcribe": 2},
+            no_timestamps_token_id=3,
         )
+        self.config = SimpleNamespace(max_source_positions=2)
+        encoder = SimpleNamespace(
+            conv1=SimpleNamespace(stride=(1,)),
+            conv2=SimpleNamespace(stride=(2,)),
+        )
+        self.model = SimpleNamespace(encoder=encoder)
+
+    def get_encoder(self) -> Any:
+        return self.model.encoder
 
     def to(self, device: str) -> "FakeModel":
         self.device = device
@@ -150,11 +162,19 @@ def test_whisper_uses_padded_ordered_batch(monkeypatch: Any, tmp_path: Path) -> 
     model = FakeModel()
 
     class Processor:
+        def __init__(self) -> None:
+            self.frame_count = 4
+            token_ids = {"<|fa|>": 1, "<|transcribe|>": 2, "<|notimestamps|>": 3}
+            self.tokenizer = SimpleNamespace(
+                convert_tokens_to_ids=lambda token: token_ids[token],
+                unk_token_id=0,
+            )
+
         def __call__(self, audio: Any, **kwargs: Any) -> FakeBatch:
             self.audio = audio
             self.kwargs = kwargs
             return FakeBatch(
-                input_features=FakeTensor(shape=(len(audio), 4)),
+                input_features=FakeTensor(shape=(len(audio), 80, self.frame_count)),
                 attention_mask=FakeTensor(floating=False, dtype="int64"),
             )
 
@@ -180,14 +200,27 @@ def test_whisper_uses_padded_ordered_batch(monkeypatch: Any, tmp_path: Path) -> 
     assert processor.kwargs == {
         "sampling_rate": 16_000,
         "return_tensors": "pt",
-        "padding": True,
+        "truncation": False,
+        "padding": "longest",
+        "return_attention_mask": True,
     }
     assert len(processor.audio) == 2
     assert model_factory.args == (str(snapshot),)
     assert model_factory.kwargs["dtype"] == "fp16"
     assert model.generate_kwargs["input_features"].moves == [("cuda", "fp16")]
     assert model.generate_kwargs["attention_mask"].moves == [("cuda", None)]
+    assert model.generate_kwargs["return_timestamps"] is False
     assert adapter.transcribe_batch(_audio_batch(tmp_path)[:1]) == results[:1]
+    processor.frame_count = 5
+    adapter.transcribe_batch(_audio_batch(tmp_path)[:1])
+    assert model.generate_kwargs["return_timestamps"] is True
+
+
+def test_whisper_enables_long_form_only_past_segment_boundary() -> None:
+    model = FakeModel()
+
+    assert _requires_whisper_long_form(model, FakeTensor(shape=(1, 80, 4))) is False
+    assert _requires_whisper_long_form(model, FakeTensor(shape=(1, 80, 5))) is True
 
 
 def test_whisper_rejects_output_cardinality(monkeypatch: Any, tmp_path: Path) -> None:
@@ -197,13 +230,30 @@ def test_whisper_rejects_output_cardinality(monkeypatch: Any, tmp_path: Path) ->
 
     class Processor:
         def __call__(self, *args: Any, **kwargs: Any) -> FakeBatch:
-            return FakeBatch(input_features=FakeTensor())
+            return FakeBatch(
+                input_features=FakeTensor(),
+                attention_mask=FakeTensor(floating=False, dtype="int64"),
+            )
 
         def batch_decode(self, *args: Any, **kwargs: Any) -> list[str]:
             return ["only one"]
 
     adapter.processor = Processor()
     with pytest.raises(AdapterOutputError, match="2 audio paths but returned 1"):
+        adapter.transcribe_batch(_audio_batch(tmp_path))
+
+
+def test_whisper_requires_processor_attention_mask(monkeypatch: Any, tmp_path: Path) -> None:
+    _fake_torch(monkeypatch)
+    adapter = TransformersWhisperAdapter(make_model(), tmp_path)
+    adapter.model = FakeModel()
+
+    class Processor:
+        def __call__(self, *args: Any, **kwargs: Any) -> FakeBatch:
+            return FakeBatch(input_features=FakeTensor())
+
+    adapter.processor = Processor()
+    with pytest.raises(AdapterOutputError, match="returned no attention_mask"):
         adapter.transcribe_batch(_audio_batch(tmp_path))
 
 
@@ -219,6 +269,28 @@ def test_legacy_whisper_generation_config_is_completed() -> None:
     )
     assert model.generation_config.lang_to_id == {"<|fa|>": 10}
     assert model.generation_config.task_to_id == {"transcribe": 20}
+    assert model.generation_config.no_timestamps_token_id == 30
+
+
+def test_partial_legacy_whisper_generation_config_is_completed() -> None:
+    token_ids = {"<|fa|>": 10, "<|transcribe|>": 20, "<|notimestamps|>": 30}
+    tokenizer = SimpleNamespace(
+        convert_tokens_to_ids=lambda token: token_ids[token],
+        unk_token_id=0,
+    )
+    generation_config = SimpleNamespace(
+        lang_to_id={"<|en|>": 40, "<|fa|>": 10},
+        task_to_id={"translate": 50, "transcribe": 20},
+    )
+    model = SimpleNamespace(generation_config=generation_config)
+
+    _upgrade_legacy_whisper_generation_config(
+        SimpleNamespace(tokenizer=tokenizer), model, "fa", "partial-legacy-whisper"
+    )
+
+    assert generation_config.lang_to_id == {"<|en|>": 40, "<|fa|>": 10}
+    assert generation_config.task_to_id == {"translate": 50, "transcribe": 20}
+    assert generation_config.no_timestamps_token_id == 30
 
 
 def test_qwen_uses_native_padded_batch_and_ordered_decode(monkeypatch: Any, tmp_path: Path) -> None:

@@ -39,7 +39,7 @@ jobs:
           push: true
           build-args: PESTE_SOURCE_REVISION=${{ github.sha }}
           tags: |
-            ${{ env.IMAGE_NAME }}:2.0.0
+            ${{ env.IMAGE_NAME }}:2.1.0
             ${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
 
       - name: Verify both runtime environments and offline guard

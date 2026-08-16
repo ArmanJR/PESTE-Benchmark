@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.1.0
+
+- Corrected the Transformers Whisper adapter so recordings longer than 30 seconds are no longer
+  truncated during feature extraction.
+- Added automatic native sequential long-form decoding: ordinary short-form decoding remains in
+  use through the model's segment limit, while longer batches use internal timestamp tokens and
+  still publish text-only transcriptions.
+- Strengthened legacy Whisper generation metadata, long-recording smoke coverage, semantic model
+  policy, and generated row-level runtime provenance.
+- Added the exact 29-model `whisper-longform-2-1-0` recalibration and result-refresh campaign.
+- Preserved schema 2, `fleurs-fa-ir-v1`, `fa-v1`, metrics, checkpoint revisions, dependency pins,
+  and the 13 unaffected non-Whisper 2.0 result identities.
+
 ## 2.0.0
 
 Breaking major release.
