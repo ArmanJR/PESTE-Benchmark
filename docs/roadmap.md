@@ -37,7 +37,7 @@
 - [x] Recalibrate all 29 Whisper batch sizes on the official hardware profile.
 - [x] Produce one fresh uninterrupted 2.1 bundle for every qualified Whisper model.
 - [x] Regenerate and independently audit the mixed-provenance 2.1 leaderboard.
-- [ ] Freeze the reviewed code, results, documentation, and paper-facing artifacts.
+- [x] Freeze the reviewed code, results, documentation, and paper-facing artifacts.
 
 ## Version 3 — `fa-v2` normalization milestone
 
