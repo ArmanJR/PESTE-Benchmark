@@ -49,335 +49,335 @@
 <text class="rank" x="24" y="88.0">1</text>
 <a href="https://huggingface.co/nezamisafa/whisper-persian-v4"><text class="model-label" x="48" y="88.0"><title>whisper-persian-v4-nezamisafa</title>whisper-persian-v4-nezamisafa</text></a>
 <rect class="track" x="563.0" y="76.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="76.0" width="7.8" height="16" rx="3" />
-<text class="value" x="809.5" y="88.0">4.9%</text>
+<rect class="bar cer" x="563.0" y="76.0" width="7.9" height="16" rx="3" />
+<text class="value" x="809.5" y="88.0">5.0%</text>
 <rect class="track" x="883.5" y="76.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="76.0" width="15.6" height="16" rx="3" />
-<text class="value" x="1130.0" y="88.0">13.1%</text>
+<rect class="bar wer" x="883.5" y="76.0" width="15.7" height="16" rx="3" />
+<text class="value" x="1130.0" y="88.0">13.2%</text>
 <line class="row-line" x1="24" y1="102" x2="1180" y2="102" />
 <text class="rank" x="24" y="124.0">2</text>
-<a href="https://huggingface.co/aictsharif/whisper-large-v2-fa"><text class="model-label" x="48" y="124.0"><title>whisper-large-v2-fa-aictsharif</title>whisper-large-v2-fa-aictsharif</text></a>
+<a href="https://huggingface.co/Reza2kn/visualears-fastconformer-fa-full-ab"><text class="model-label" x="48" y="124.0"><title>visualears-fastconformer-fa-full-ab</title>visualears-fastconformer-fa-full-ab</text></a>
 <rect class="track" x="563.0" y="112.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="112.0" width="8.1" height="16" rx="3" />
-<text class="value" x="809.5" y="124.0">5.1%</text>
+<rect class="bar cer" x="563.0" y="112.0" width="8.2" height="16" rx="3" />
+<text class="value" x="809.5" y="124.0">5.2%</text>
 <rect class="track" x="883.5" y="112.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="112.0" width="27.7" height="16" rx="3" />
-<text class="value" x="1130.0" y="124.0">23.3%</text>
+<rect class="bar wer" x="883.5" y="112.0" width="18.5" height="16" rx="3" />
+<text class="value" x="1130.0" y="124.0">15.5%</text>
 <line class="row-line" x1="24" y1="138" x2="1180" y2="138" />
 <text class="rank" x="24" y="160.0">3</text>
-<a href="https://huggingface.co/Reza2kn/visualears-fastconformer-fa-full-ab"><text class="model-label" x="48" y="160.0"><title>visualears-fastconformer-fa-full-ab</title>visualears-fastconformer-fa-full-ab</text></a>
+<a href="https://huggingface.co/vhdm/whisper-large-fa-v1"><text class="model-label" x="48" y="160.0"><title>whisper-large-fa-v1-vhdm</title>whisper-large-fa-v1-vhdm</text></a>
 <rect class="track" x="563.0" y="148.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="148.0" width="8.2" height="16" rx="3" />
-<text class="value" x="809.5" y="160.0">5.2%</text>
+<rect class="bar cer" x="563.0" y="148.0" width="8.7" height="16" rx="3" />
+<text class="value" x="809.5" y="160.0">5.5%</text>
 <rect class="track" x="883.5" y="148.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="148.0" width="18.5" height="16" rx="3" />
-<text class="value" x="1130.0" y="160.0">15.5%</text>
+<rect class="bar wer" x="883.5" y="148.0" width="17.4" height="16" rx="3" />
+<text class="value" x="1130.0" y="160.0">14.6%</text>
 <line class="row-line" x1="24" y1="174" x2="1180" y2="174" />
 <text class="rank" x="24" y="196.0">4</text>
-<a href="https://huggingface.co/vhdm/whisper-large-fa-v1"><text class="model-label" x="48" y="196.0"><title>whisper-large-fa-v1-vhdm</title>whisper-large-fa-v1-vhdm</text></a>
+<a href="https://huggingface.co/openai/whisper-large-v3"><text class="model-label" x="48" y="196.0"><title>whisper-large-v3</title>whisper-large-v3</text></a>
 <rect class="track" x="563.0" y="184.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="184.0" width="8.5" height="16" rx="3" />
-<text class="value" x="809.5" y="196.0">5.4%</text>
+<rect class="bar cer" x="563.0" y="184.0" width="9.5" height="16" rx="3" />
+<text class="value" x="809.5" y="196.0">6.0%</text>
 <rect class="track" x="883.5" y="184.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="184.0" width="17.3" height="16" rx="3" />
-<text class="value" x="1130.0" y="196.0">14.5%</text>
+<rect class="bar wer" x="883.5" y="184.0" width="24.3" height="16" rx="3" />
+<text class="value" x="1130.0" y="196.0">20.4%</text>
 <line class="row-line" x1="24" y1="210" x2="1180" y2="210" />
 <text class="rank" x="24" y="232.0">5</text>
-<a href="https://huggingface.co/steja/whisper-large-persian"><text class="model-label" x="48" y="232.0"><title>whisper-large-persian-steja</title>whisper-large-persian-steja</text></a>
+<a href="https://huggingface.co/openai/whisper-large-v3-turbo"><text class="model-label" x="48" y="232.0"><title>whisper-large-v3-turbo</title>whisper-large-v3-turbo</text></a>
 <rect class="track" x="563.0" y="220.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="220.0" width="9.3" height="16" rx="3" />
-<text class="value" x="809.5" y="232.0">5.8%</text>
+<rect class="bar cer" x="563.0" y="220.0" width="9.7" height="16" rx="3" />
+<text class="value" x="809.5" y="232.0">6.1%</text>
 <rect class="track" x="883.5" y="220.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="220.0" width="31.5" height="16" rx="3" />
-<text class="value" x="1130.0" y="232.0">26.4%</text>
+<rect class="bar wer" x="883.5" y="220.0" width="24.2" height="16" rx="3" />
+<text class="value" x="1130.0" y="232.0">20.3%</text>
 <line class="row-line" x1="24" y1="246" x2="1180" y2="246" />
 <text class="rank" x="24" y="268.0">6</text>
-<a href="https://huggingface.co/openai/whisper-large-v3"><text class="model-label" x="48" y="268.0"><title>whisper-large-v3</title>whisper-large-v3</text></a>
+<a href="https://huggingface.co/Reza2kn/Shenava-Rizeh-v1.0"><text class="model-label" x="48" y="268.0"><title>shenava-rizeh-v1-0</title>shenava-rizeh-v1-0</text></a>
 <rect class="track" x="563.0" y="256.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="256.0" width="9.6" height="16" rx="3" />
-<text class="value" x="809.5" y="268.0">6.1%</text>
+<rect class="bar cer" x="563.0" y="256.0" width="10.2" height="16" rx="3" />
+<text class="value" x="809.5" y="268.0">6.4%</text>
 <rect class="track" x="883.5" y="256.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="256.0" width="24.4" height="16" rx="3" />
-<text class="value" x="1130.0" y="268.0">20.4%</text>
+<rect class="bar wer" x="883.5" y="256.0" width="18.5" height="16" rx="3" />
+<text class="value" x="1130.0" y="268.0">15.5%</text>
 <line class="row-line" x1="24" y1="282" x2="1180" y2="282" />
 <text class="rank" x="24" y="304.0">7</text>
-<a href="https://huggingface.co/MohammadReza-Halakoo/persian-whisper-large-v3-10-percent-17-0-one-epoch"><text class="model-label" x="48" y="304.0"><title>persian-whisper-large-v3-10-percent-17-0-one-epoch-mohammadreza-halakoo</title>persian-whisper-large-v3-10-percent-17-0-one-epoch-mohammadreza-halakoo</text></a>
+<a href="https://huggingface.co/ghofrani/xls-r-1b-fa-cv8"><text class="model-label" x="48" y="304.0"><title>xls-r-1b-fa-cv8-ghofrani</title>xls-r-1b-fa-cv8-ghofrani</text></a>
 <rect class="track" x="563.0" y="292.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="292.0" width="9.9" height="16" rx="3" />
-<text class="value" x="809.5" y="304.0">6.2%</text>
+<rect class="bar cer" x="563.0" y="292.0" width="11.2" height="16" rx="3" />
+<text class="value" x="809.5" y="304.0">7.0%</text>
 <rect class="track" x="883.5" y="292.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="292.0" width="32.7" height="16" rx="3" />
-<text class="value" x="1130.0" y="304.0">27.4%</text>
+<rect class="bar wer" x="883.5" y="292.0" width="36.3" height="16" rx="3" />
+<text class="value" x="1130.0" y="304.0">30.4%</text>
 <line class="row-line" x1="24" y1="318" x2="1180" y2="318" />
 <text class="rank" x="24" y="340.0">8</text>
-<a href="https://huggingface.co/openai/whisper-large-v3-turbo"><text class="model-label" x="48" y="340.0"><title>whisper-large-v3-turbo</title>whisper-large-v3-turbo</text></a>
+<a href="https://huggingface.co/taesiri/whisper-small-fa-7"><text class="model-label" x="48" y="340.0"><title>whisper-small-fa-7-taesiri</title>whisper-small-fa-7-taesiri</text></a>
 <rect class="track" x="563.0" y="328.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="328.0" width="10.0" height="16" rx="3" />
-<text class="value" x="809.5" y="340.0">6.3%</text>
+<rect class="bar cer" x="563.0" y="328.0" width="11.6" height="16" rx="3" />
+<text class="value" x="809.5" y="340.0">7.3%</text>
 <rect class="track" x="883.5" y="328.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="328.0" width="24.4" height="16" rx="3" />
-<text class="value" x="1130.0" y="340.0">20.4%</text>
+<rect class="bar wer" x="883.5" y="328.0" width="33.4" height="16" rx="3" />
+<text class="value" x="1130.0" y="340.0">28.0%</text>
 <line class="row-line" x1="24" y1="354" x2="1180" y2="354" />
 <text class="rank" x="24" y="376.0">9</text>
-<a href="https://huggingface.co/Reza2kn/Shenava-Rizeh-v1.0"><text class="model-label" x="48" y="376.0"><title>shenava-rizeh-v1-0</title>shenava-rizeh-v1-0</text></a>
+<a href="https://huggingface.co/SeyedAli/Persian-Speech-Transcription-Wav2Vec2-V1"><text class="model-label" x="48" y="376.0"><title>persian-speech-transcription-wav2vec2-v1-seyedali</title>persian-speech-transcription-wav2vec2-v1-seyedali</text></a>
 <rect class="track" x="563.0" y="364.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="364.0" width="10.2" height="16" rx="3" />
-<text class="value" x="809.5" y="376.0">6.4%</text>
+<rect class="bar cer" x="563.0" y="364.0" width="11.8" height="16" rx="3" />
+<text class="value" x="809.5" y="376.0">7.4%</text>
 <rect class="track" x="883.5" y="364.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="364.0" width="18.5" height="16" rx="3" />
-<text class="value" x="1130.0" y="376.0">15.5%</text>
+<rect class="bar wer" x="883.5" y="364.0" width="35.4" height="16" rx="3" />
+<text class="value" x="1130.0" y="376.0">29.7%</text>
 <line class="row-line" x1="24" y1="390" x2="1180" y2="390" />
 <text class="rank" x="24" y="412.0">10</text>
-<a href="https://huggingface.co/aictsharif/whisper-medium-fa"><text class="model-label" x="48" y="412.0"><title>whisper-medium-fa-aictsharif</title>whisper-medium-fa-aictsharif</text></a>
+<a href="https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-persian"><text class="model-label" x="48" y="412.0"><title>wav2vec2-large-xlsr-53-persian</title>wav2vec2-large-xlsr-53-persian</text></a>
 <rect class="track" x="563.0" y="400.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="400.0" width="10.5" height="16" rx="3" />
-<text class="value" x="809.5" y="412.0">6.6%</text>
+<rect class="bar cer" x="563.0" y="400.0" width="11.8" height="16" rx="3" />
+<text class="value" x="809.5" y="412.0">7.4%</text>
 <rect class="track" x="883.5" y="400.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="400.0" width="31.1" height="16" rx="3" />
-<text class="value" x="1130.0" y="412.0">26.0%</text>
+<rect class="bar wer" x="883.5" y="400.0" width="39.0" height="16" rx="3" />
+<text class="value" x="1130.0" y="412.0">32.7%</text>
 <line class="row-line" x1="24" y1="426" x2="1180" y2="426" />
 <text class="rank" x="24" y="448.0">11</text>
 <a href="https://huggingface.co/Neurai/NeuraSpeech_WhisperBase"><text class="model-label" x="48" y="448.0"><title>neuraspeech-whisperbase-neurai</title>neuraspeech-whisperbase-neurai</text></a>
 <rect class="track" x="563.0" y="436.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="436.0" width="10.7" height="16" rx="3" />
-<text class="value" x="809.5" y="448.0">6.7%</text>
+<rect class="bar cer" x="563.0" y="436.0" width="12.2" height="16" rx="3" />
+<text class="value" x="809.5" y="448.0">7.7%</text>
 <rect class="track" x="883.5" y="436.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="436.0" width="25.8" height="16" rx="3" />
-<text class="value" x="1130.0" y="448.0">21.6%</text>
+<rect class="bar wer" x="883.5" y="436.0" width="27.1" height="16" rx="3" />
+<text class="value" x="1130.0" y="448.0">22.7%</text>
 <line class="row-line" x1="24" y1="462" x2="1180" y2="462" />
 <text class="rank" x="24" y="484.0">12</text>
-<a href="https://huggingface.co/ghofrani/xls-r-1b-fa-cv8"><text class="model-label" x="48" y="484.0"><title>xls-r-1b-fa-cv8-ghofrani</title>xls-r-1b-fa-cv8-ghofrani</text></a>
+<a href="https://huggingface.co/MohammadReza-Halakoo/persian-whisper-large-v3-10-percent-17-0-one-epoch"><text class="model-label" x="48" y="484.0"><title>persian-whisper-large-v3-10-percent-17-0-one-epoch-mohammadreza-halakoo</title>persian-whisper-large-v3-10-percent-17-0-one-epoch-mohammadreza-halakoo</text></a>
 <rect class="track" x="563.0" y="472.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="472.0" width="11.2" height="16" rx="3" />
-<text class="value" x="809.5" y="484.0">7.0%</text>
+<rect class="bar cer" x="563.0" y="472.0" width="12.5" height="16" rx="3" />
+<text class="value" x="809.5" y="484.0">7.9%</text>
 <rect class="track" x="883.5" y="472.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="472.0" width="36.3" height="16" rx="3" />
-<text class="value" x="1130.0" y="484.0">30.4%</text>
+<rect class="bar wer" x="883.5" y="472.0" width="34.6" height="16" rx="3" />
+<text class="value" x="1130.0" y="484.0">29.0%</text>
 <line class="row-line" x1="24" y1="498" x2="1180" y2="498" />
 <text class="rank" x="24" y="520.0">13</text>
-<a href="https://huggingface.co/SeyedAli/Persian-Speech-Transcription-Wav2Vec2-V1"><text class="model-label" x="48" y="520.0"><title>persian-speech-transcription-wav2vec2-v1-seyedali</title>persian-speech-transcription-wav2vec2-v1-seyedali</text></a>
+<a href="https://huggingface.co/steja/whisper-large-persian"><text class="model-label" x="48" y="520.0"><title>whisper-large-persian-steja</title>whisper-large-persian-steja</text></a>
 <rect class="track" x="563.0" y="508.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="508.0" width="11.8" height="16" rx="3" />
-<text class="value" x="809.5" y="520.0">7.4%</text>
+<rect class="bar cer" x="563.0" y="508.0" width="12.7" height="16" rx="3" />
+<text class="value" x="809.5" y="520.0">8.0%</text>
 <rect class="track" x="883.5" y="508.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="508.0" width="35.4" height="16" rx="3" />
-<text class="value" x="1130.0" y="520.0">29.7%</text>
+<rect class="bar wer" x="883.5" y="508.0" width="32.7" height="16" rx="3" />
+<text class="value" x="1130.0" y="520.0">27.4%</text>
 <line class="row-line" x1="24" y1="534" x2="1180" y2="534" />
 <text class="rank" x="24" y="556.0">14</text>
-<a href="https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-persian"><text class="model-label" x="48" y="556.0"><title>wav2vec2-large-xlsr-53-persian</title>wav2vec2-large-xlsr-53-persian</text></a>
+<a href="https://huggingface.co/aictsharif/whisper-large-v2-fa"><text class="model-label" x="48" y="556.0"><title>whisper-large-v2-fa-aictsharif</title>whisper-large-v2-fa-aictsharif</text></a>
 <rect class="track" x="563.0" y="544.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="544.0" width="11.8" height="16" rx="3" />
-<text class="value" x="809.5" y="556.0">7.4%</text>
+<rect class="bar cer" x="563.0" y="544.0" width="13.0" height="16" rx="3" />
+<text class="value" x="809.5" y="556.0">8.2%</text>
 <rect class="track" x="883.5" y="544.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="544.0" width="39.0" height="16" rx="3" />
-<text class="value" x="1130.0" y="556.0">32.7%</text>
+<rect class="bar wer" x="883.5" y="544.0" width="32.2" height="16" rx="3" />
+<text class="value" x="1130.0" y="556.0">27.0%</text>
 <line class="row-line" x1="24" y1="570" x2="1180" y2="570" />
 <text class="rank" x="24" y="592.0">15</text>
-<a href="https://huggingface.co/taesiri/whisper-small-fa-7"><text class="model-label" x="48" y="592.0"><title>whisper-small-fa-7-taesiri</title>whisper-small-fa-7-taesiri</text></a>
+<a href="https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian-v2"><text class="model-label" x="48" y="592.0"><title>wav2vec2-large-xlsr-persian-v2-m3hrdadfi</title>wav2vec2-large-xlsr-persian-v2-m3hrdadfi</text></a>
 <rect class="track" x="563.0" y="580.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="580.0" width="11.8" height="16" rx="3" />
-<text class="value" x="809.5" y="592.0">7.4%</text>
+<rect class="bar cer" x="563.0" y="580.0" width="13.3" height="16" rx="3" />
+<text class="value" x="809.5" y="592.0">8.3%</text>
 <rect class="track" x="883.5" y="580.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="580.0" width="33.5" height="16" rx="3" />
-<text class="value" x="1130.0" y="592.0">28.1%</text>
+<rect class="bar wer" x="883.5" y="580.0" width="41.0" height="16" rx="3" />
+<text class="value" x="1130.0" y="592.0">34.4%</text>
 <line class="row-line" x1="24" y1="606" x2="1180" y2="606" />
 <text class="rank" x="24" y="628.0">16</text>
-<a href="https://huggingface.co/nezamisafa/whisper-v3-turbo-persian-v1.0"><text class="model-label" x="48" y="628.0"><title>whisper-v3-turbo-persian-v1-0-nezamisafa</title>whisper-v3-turbo-persian-v1-0-nezamisafa</text></a>
+<a href="https://huggingface.co/openai/whisper-large-v2"><text class="model-label" x="48" y="628.0"><title>whisper-large-v2</title>whisper-large-v2</text></a>
 <rect class="track" x="563.0" y="616.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="616.0" width="12.1" height="16" rx="3" />
-<text class="value" x="809.5" y="628.0">7.6%</text>
+<rect class="bar cer" x="563.0" y="616.0" width="13.5" height="16" rx="3" />
+<text class="value" x="809.5" y="628.0">8.5%</text>
 <rect class="track" x="883.5" y="616.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="616.0" width="31.1" height="16" rx="3" />
-<text class="value" x="1130.0" y="628.0">26.1%</text>
+<rect class="bar wer" x="883.5" y="616.0" width="30.7" height="16" rx="3" />
+<text class="value" x="1130.0" y="628.0">25.8%</text>
 <line class="row-line" x1="24" y1="642" x2="1180" y2="642" />
 <text class="rank" x="24" y="664.0">17</text>
-<a href="https://huggingface.co/AmirMohseni/whisper-small-persian"><text class="model-label" x="48" y="664.0"><title>whisper-small-persian-amirmohseni</title>whisper-small-persian-amirmohseni</text></a>
+<a href="https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian"><text class="model-label" x="48" y="664.0"><title>wav2vec2-large-xlsr-persian-m3hrdadfi</title>wav2vec2-large-xlsr-persian-m3hrdadfi</text></a>
 <rect class="track" x="563.0" y="652.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="652.0" width="12.1" height="16" rx="3" />
-<text class="value" x="809.5" y="664.0">7.6%</text>
+<rect class="bar cer" x="563.0" y="652.0" width="13.5" height="16" rx="3" />
+<text class="value" x="809.5" y="664.0">8.5%</text>
 <rect class="track" x="883.5" y="652.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="652.0" width="26.3" height="16" rx="3" />
-<text class="value" x="1130.0" y="664.0">22.1%</text>
+<rect class="bar wer" x="883.5" y="652.0" width="40.3" height="16" rx="3" />
+<text class="value" x="1130.0" y="664.0">33.8%</text>
 <line class="row-line" x1="24" y1="678" x2="1180" y2="678" />
 <text class="rank" x="24" y="700.0">18</text>
-<a href="https://huggingface.co/aictsharif/whisper-small-fa"><text class="model-label" x="48" y="700.0"><title>whisper-small-fa-aictsharif</title>whisper-small-fa-aictsharif</text></a>
+<a href="https://huggingface.co/AmirMohseni/whisper-small-persian"><text class="model-label" x="48" y="700.0"><title>whisper-small-persian-amirmohseni</title>whisper-small-persian-amirmohseni</text></a>
 <rect class="track" x="563.0" y="688.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="688.0" width="12.6" height="16" rx="3" />
-<text class="value" x="809.5" y="700.0">7.9%</text>
+<rect class="bar cer" x="563.0" y="688.0" width="13.7" height="16" rx="3" />
+<text class="value" x="809.5" y="700.0">8.6%</text>
 <rect class="track" x="883.5" y="688.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="688.0" width="35.6" height="16" rx="3" />
-<text class="value" x="1130.0" y="700.0">29.9%</text>
+<rect class="bar wer" x="883.5" y="688.0" width="27.8" height="16" rx="3" />
+<text class="value" x="1130.0" y="700.0">23.3%</text>
 <line class="row-line" x1="24" y1="714" x2="1180" y2="714" />
 <text class="rank" x="24" y="736.0">19</text>
-<a href="https://huggingface.co/alism98/whisper-small-persian"><text class="model-label" x="48" y="736.0"><title>whisper-small-persian-alism98</title>whisper-small-persian-alism98</text></a>
+<a href="https://huggingface.co/aictsharif/whisper-medium-fa"><text class="model-label" x="48" y="736.0"><title>whisper-medium-fa-aictsharif</title>whisper-medium-fa-aictsharif</text></a>
 <rect class="track" x="563.0" y="724.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="724.0" width="12.7" height="16" rx="3" />
-<text class="value" x="809.5" y="736.0">8.0%</text>
+<rect class="bar cer" x="563.0" y="724.0" width="13.9" height="16" rx="3" />
+<text class="value" x="809.5" y="736.0">8.7%</text>
 <rect class="track" x="883.5" y="724.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="724.0" width="37.6" height="16" rx="3" />
-<text class="value" x="1130.0" y="736.0">31.6%</text>
+<rect class="bar wer" x="883.5" y="724.0" width="33.9" height="16" rx="3" />
+<text class="value" x="1130.0" y="736.0">28.4%</text>
 <line class="row-line" x1="24" y1="750" x2="1180" y2="750" />
 <text class="rank" x="24" y="772.0">20</text>
-<a href="https://huggingface.co/openai/whisper-large-v2"><text class="model-label" x="48" y="772.0"><title>whisper-large-v2</title>whisper-large-v2</text></a>
+<a href="https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf"><text class="model-label" x="48" y="772.0"><title>qwen3-asr-1-7b</title>qwen3-asr-1-7b</text></a>
 <rect class="track" x="563.0" y="760.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="760.0" width="13.0" height="16" rx="3" />
-<text class="value" x="809.5" y="772.0">8.2%</text>
+<rect class="bar cer" x="563.0" y="760.0" width="14.2" height="16" rx="3" />
+<text class="value" x="809.5" y="772.0">8.9%</text>
 <rect class="track" x="883.5" y="760.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="760.0" width="30.2" height="16" rx="3" />
-<text class="value" x="1130.0" y="772.0">25.3%</text>
+<rect class="bar wer" x="883.5" y="760.0" width="28.7" height="16" rx="3" />
+<text class="value" x="1130.0" y="772.0">24.1%</text>
 <line class="row-line" x1="24" y1="786" x2="1180" y2="786" />
 <text class="rank" x="24" y="808.0">21</text>
-<a href="https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian-v2"><text class="model-label" x="48" y="808.0"><title>wav2vec2-large-xlsr-persian-v2-m3hrdadfi</title>wav2vec2-large-xlsr-persian-v2-m3hrdadfi</text></a>
+<a href="https://huggingface.co/alifarokh/wav2vec2-xls-r-300m-fa"><text class="model-label" x="48" y="808.0"><title>wav2vec2-xls-r-300m-fa-alifarokh</title>wav2vec2-xls-r-300m-fa-alifarokh</text></a>
 <rect class="track" x="563.0" y="796.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="796.0" width="13.3" height="16" rx="3" />
-<text class="value" x="809.5" y="808.0">8.3%</text>
+<rect class="bar cer" x="563.0" y="796.0" width="14.8" height="16" rx="3" />
+<text class="value" x="809.5" y="808.0">9.3%</text>
 <rect class="track" x="883.5" y="796.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="796.0" width="41.0" height="16" rx="3" />
-<text class="value" x="1130.0" y="808.0">34.4%</text>
+<rect class="bar wer" x="883.5" y="796.0" width="43.4" height="16" rx="3" />
+<text class="value" x="1130.0" y="808.0">36.4%</text>
 <line class="row-line" x1="24" y1="822" x2="1180" y2="822" />
 <text class="rank" x="24" y="844.0">22</text>
-<a href="https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian"><text class="model-label" x="48" y="844.0"><title>wav2vec2-large-xlsr-persian-m3hrdadfi</title>wav2vec2-large-xlsr-persian-m3hrdadfi</text></a>
+<a href="https://huggingface.co/aictsharif/whisper-small-fa"><text class="model-label" x="48" y="844.0"><title>whisper-small-fa-aictsharif</title>whisper-small-fa-aictsharif</text></a>
 <rect class="track" x="563.0" y="832.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="832.0" width="13.5" height="16" rx="3" />
-<text class="value" x="809.5" y="844.0">8.5%</text>
+<rect class="bar cer" x="563.0" y="832.0" width="15.2" height="16" rx="3" />
+<text class="value" x="809.5" y="844.0">9.5%</text>
 <rect class="track" x="883.5" y="832.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="832.0" width="40.3" height="16" rx="3" />
-<text class="value" x="1130.0" y="844.0">33.8%</text>
+<rect class="bar wer" x="883.5" y="832.0" width="36.5" height="16" rx="3" />
+<text class="value" x="1130.0" y="844.0">30.6%</text>
 <line class="row-line" x1="24" y1="858" x2="1180" y2="858" />
 <text class="rank" x="24" y="880.0">23</text>
-<a href="https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf"><text class="model-label" x="48" y="880.0"><title>qwen3-asr-1-7b</title>qwen3-asr-1-7b</text></a>
+<a href="https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian-shemo"><text class="model-label" x="48" y="880.0"><title>wav2vec2-large-xlsr-persian-shemo-m3hrdadfi</title>wav2vec2-large-xlsr-persian-shemo-m3hrdadfi</text></a>
 <rect class="track" x="563.0" y="868.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="868.0" width="14.2" height="16" rx="3" />
-<text class="value" x="809.5" y="880.0">8.9%</text>
+<rect class="bar cer" x="563.0" y="868.0" width="16.1" height="16" rx="3" />
+<text class="value" x="809.5" y="880.0">10.1%</text>
 <rect class="track" x="883.5" y="868.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="868.0" width="28.7" height="16" rx="3" />
-<text class="value" x="1130.0" y="880.0">24.1%</text>
+<rect class="bar wer" x="883.5" y="868.0" width="36.6" height="16" rx="3" />
+<text class="value" x="1130.0" y="880.0">30.7%</text>
 <line class="row-line" x1="24" y1="894" x2="1180" y2="894" />
 <text class="rank" x="24" y="916.0">24</text>
 <a href="https://huggingface.co/SeyedAli/whisper-fa-small-v1"><text class="model-label" x="48" y="916.0"><title>whisper-fa-small-v1-seyedali</title>whisper-fa-small-v1-seyedali</text></a>
 <rect class="track" x="563.0" y="904.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="904.0" width="14.7" height="16" rx="3" />
-<text class="value" x="809.5" y="916.0">9.3%</text>
+<rect class="bar cer" x="563.0" y="904.0" width="16.2" height="16" rx="3" />
+<text class="value" x="809.5" y="916.0">10.2%</text>
 <rect class="track" x="883.5" y="904.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="904.0" width="40.0" height="16" rx="3" />
-<text class="value" x="1130.0" y="916.0">33.5%</text>
+<rect class="bar wer" x="883.5" y="904.0" width="39.7" height="16" rx="3" />
+<text class="value" x="1130.0" y="916.0">33.3%</text>
 <line class="row-line" x1="24" y1="930" x2="1180" y2="930" />
 <text class="rank" x="24" y="952.0">25</text>
-<a href="https://huggingface.co/alifarokh/wav2vec2-xls-r-300m-fa"><text class="model-label" x="48" y="952.0"><title>wav2vec2-xls-r-300m-fa-alifarokh</title>wav2vec2-xls-r-300m-fa-alifarokh</text></a>
+<a href="https://huggingface.co/alism98/whisper-small-persian"><text class="model-label" x="48" y="952.0"><title>whisper-small-persian-alism98</title>whisper-small-persian-alism98</text></a>
 <rect class="track" x="563.0" y="940.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="940.0" width="14.8" height="16" rx="3" />
-<text class="value" x="809.5" y="952.0">9.3%</text>
+<rect class="bar cer" x="563.0" y="940.0" width="17.4" height="16" rx="3" />
+<text class="value" x="809.5" y="952.0">10.9%</text>
 <rect class="track" x="883.5" y="940.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="940.0" width="43.4" height="16" rx="3" />
-<text class="value" x="1130.0" y="952.0">36.4%</text>
+<rect class="bar wer" x="883.5" y="940.0" width="40.8" height="16" rx="3" />
+<text class="value" x="1130.0" y="952.0">34.2%</text>
 <line class="row-line" x1="24" y1="966" x2="1180" y2="966" />
 <text class="rank" x="24" y="988.0">26</text>
-<a href="https://huggingface.co/steja/whisper-small-persian"><text class="model-label" x="48" y="988.0"><title>whisper-small-persian-steja</title>whisper-small-persian-steja</text></a>
+<a href="https://huggingface.co/aliyzd95/whisper-small-persian-v1"><text class="model-label" x="48" y="988.0"><title>whisper-small-persian-v1-aliyzd95</title>whisper-small-persian-v1-aliyzd95</text></a>
 <rect class="track" x="563.0" y="976.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="976.0" width="14.9" height="16" rx="3" />
-<text class="value" x="809.5" y="988.0">9.4%</text>
+<rect class="bar cer" x="563.0" y="976.0" width="17.7" height="16" rx="3" />
+<text class="value" x="809.5" y="988.0">11.1%</text>
 <rect class="track" x="883.5" y="976.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="976.0" width="41.6" height="16" rx="3" />
-<text class="value" x="1130.0" y="988.0">34.9%</text>
+<rect class="bar wer" x="883.5" y="976.0" width="37.2" height="16" rx="3" />
+<text class="value" x="1130.0" y="988.0">31.2%</text>
 <line class="row-line" x1="24" y1="1002" x2="1180" y2="1002" />
 <text class="rank" x="24" y="1024.0">27</text>
-<a href="https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian-shemo"><text class="model-label" x="48" y="1024.0"><title>wav2vec2-large-xlsr-persian-shemo-m3hrdadfi</title>wav2vec2-large-xlsr-persian-shemo-m3hrdadfi</text></a>
+<a href="https://huggingface.co/nezamisafa/whisper-v3-turbo-persian-v1.0"><text class="model-label" x="48" y="1024.0"><title>whisper-v3-turbo-persian-v1-0-nezamisafa</title>whisper-v3-turbo-persian-v1-0-nezamisafa</text></a>
 <rect class="track" x="563.0" y="1012.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="1012.0" width="16.1" height="16" rx="3" />
-<text class="value" x="809.5" y="1024.0">10.1%</text>
+<rect class="bar cer" x="563.0" y="1012.0" width="18.3" height="16" rx="3" />
+<text class="value" x="809.5" y="1024.0">11.5%</text>
 <rect class="track" x="883.5" y="1012.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="1012.0" width="36.6" height="16" rx="3" />
-<text class="value" x="1130.0" y="1024.0">30.7%</text>
+<rect class="bar wer" x="883.5" y="1012.0" width="37.9" height="16" rx="3" />
+<text class="value" x="1130.0" y="1024.0">31.8%</text>
 <line class="row-line" x1="24" y1="1038" x2="1180" y2="1038" />
 <text class="rank" x="24" y="1060.0">28</text>
-<a href="https://huggingface.co/aliyzd95/whisper-small-persian-v1"><text class="model-label" x="48" y="1060.0"><title>whisper-small-persian-v1-aliyzd95</title>whisper-small-persian-v1-aliyzd95</text></a>
+<a href="https://huggingface.co/MohammadGholizadeh/whisper-small-fa"><text class="model-label" x="48" y="1060.0"><title>whisper-small-fa-mohammadgholizadeh</title>whisper-small-fa-mohammadgholizadeh</text></a>
 <rect class="track" x="563.0" y="1048.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="1048.0" width="16.4" height="16" rx="3" />
-<text class="value" x="809.5" y="1060.0">10.3%</text>
+<rect class="bar cer" x="563.0" y="1048.0" width="19.2" height="16" rx="3" />
+<text class="value" x="809.5" y="1060.0">12.1%</text>
 <rect class="track" x="883.5" y="1048.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="1048.0" width="36.6" height="16" rx="3" />
-<text class="value" x="1130.0" y="1060.0">30.7%</text>
+<rect class="bar wer" x="883.5" y="1048.0" width="51.8" height="16" rx="3" />
+<text class="value" x="1130.0" y="1060.0">43.5%</text>
 <line class="row-line" x1="24" y1="1074" x2="1180" y2="1074" />
 <text class="rank" x="24" y="1096.0">29</text>
-<a href="https://huggingface.co/mjavadf/whisper-small-fa"><text class="model-label" x="48" y="1096.0"><title>whisper-small-fa-mjavadf</title>whisper-small-fa-mjavadf</text></a>
+<a href="https://huggingface.co/steja/whisper-small-persian"><text class="model-label" x="48" y="1096.0"><title>whisper-small-persian-steja</title>whisper-small-persian-steja</text></a>
 <rect class="track" x="563.0" y="1084.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="1084.0" width="16.9" height="16" rx="3" />
-<text class="value" x="809.5" y="1096.0">10.6%</text>
+<rect class="bar cer" x="563.0" y="1084.0" width="19.4" height="16" rx="3" />
+<text class="value" x="809.5" y="1096.0">12.2%</text>
 <rect class="track" x="883.5" y="1084.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="1084.0" width="45.9" height="16" rx="3" />
-<text class="value" x="1130.0" y="1096.0">38.5%</text>
+<rect class="bar wer" x="883.5" y="1084.0" width="41.2" height="16" rx="3" />
+<text class="value" x="1130.0" y="1096.0">34.6%</text>
 <line class="row-line" x1="24" y1="1110" x2="1180" y2="1110" />
 <text class="rank" x="24" y="1132.0">30</text>
 <a href="https://huggingface.co/aictsharif/whisper-base-fa"><text class="model-label" x="48" y="1132.0"><title>whisper-base-fa-aictsharif</title>whisper-base-fa-aictsharif</text></a>
 <rect class="track" x="563.0" y="1120.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="1120.0" width="18.1" height="16" rx="3" />
-<text class="value" x="809.5" y="1132.0">11.4%</text>
+<rect class="bar cer" x="563.0" y="1120.0" width="21.8" height="16" rx="3" />
+<text class="value" x="809.5" y="1132.0">13.7%</text>
 <rect class="track" x="883.5" y="1120.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="1120.0" width="47.9" height="16" rx="3" />
-<text class="value" x="1130.0" y="1132.0">40.2%</text>
+<rect class="bar wer" x="883.5" y="1120.0" width="51.9" height="16" rx="3" />
+<text class="value" x="1130.0" y="1132.0">43.5%</text>
 <line class="row-line" x1="24" y1="1146" x2="1180" y2="1146" />
 <text class="rank" x="24" y="1168.0">31</text>
-<a href="https://huggingface.co/MohammadGholizadeh/whisper-small-fa"><text class="model-label" x="48" y="1168.0"><title>whisper-small-fa-mohammadgholizadeh</title>whisper-small-fa-mohammadgholizadeh</text></a>
+<a href="https://huggingface.co/mjavadf/whisper-small-fa"><text class="model-label" x="48" y="1168.0"><title>whisper-small-fa-mjavadf</title>whisper-small-fa-mjavadf</text></a>
 <rect class="track" x="563.0" y="1156.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="1156.0" width="19.8" height="16" rx="3" />
-<text class="value" x="809.5" y="1168.0">12.4%</text>
+<rect class="bar cer" x="563.0" y="1156.0" width="21.9" height="16" rx="3" />
+<text class="value" x="809.5" y="1168.0">13.8%</text>
 <rect class="track" x="883.5" y="1156.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="1156.0" width="52.1" height="16" rx="3" />
-<text class="value" x="1130.0" y="1168.0">43.7%</text>
+<rect class="bar wer" x="883.5" y="1156.0" width="49.7" height="16" rx="3" />
+<text class="value" x="1130.0" y="1168.0">41.6%</text>
 <line class="row-line" x1="24" y1="1182" x2="1180" y2="1182" />
 <text class="rank" x="24" y="1204.0">32</text>
 <a href="https://huggingface.co/aictsharif/whisper-tiny-fa"><text class="model-label" x="48" y="1204.0"><title>whisper-tiny-fa-aictsharif</title>whisper-tiny-fa-aictsharif</text></a>
 <rect class="track" x="563.0" y="1192.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="1192.0" width="21.5" height="16" rx="3" />
-<text class="value" x="809.5" y="1204.0">13.5%</text>
+<rect class="bar cer" x="563.0" y="1192.0" width="26.4" height="16" rx="3" />
+<text class="value" x="809.5" y="1204.0">16.6%</text>
 <rect class="track" x="883.5" y="1192.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="1192.0" width="54.1" height="16" rx="3" />
-<text class="value" x="1130.0" y="1204.0">45.3%</text>
+<rect class="bar wer" x="883.5" y="1192.0" width="61.4" height="16" rx="3" />
+<text class="value" x="1130.0" y="1204.0">51.5%</text>
 <line class="row-line" x1="24" y1="1218" x2="1180" y2="1218" />
 <text class="rank" x="24" y="1240.0">33</text>
 <a href="https://huggingface.co/openai/whisper-medium"><text class="model-label" x="48" y="1240.0"><title>whisper-medium</title>whisper-medium</text></a>
 <rect class="track" x="563.0" y="1228.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="1228.0" width="22.6" height="16" rx="3" />
-<text class="value" x="809.5" y="1240.0">14.2%</text>
+<rect class="bar cer" x="563.0" y="1228.0" width="27.0" height="16" rx="3" />
+<text class="value" x="809.5" y="1240.0">17.0%</text>
 <rect class="track" x="883.5" y="1228.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="1228.0" width="46.3" height="16" rx="3" />
-<text class="value" x="1130.0" y="1240.0">38.8%</text>
+<rect class="bar wer" x="883.5" y="1228.0" width="51.5" height="16" rx="3" />
+<text class="value" x="1130.0" y="1240.0">43.2%</text>
 <line class="row-line" x1="24" y1="1254" x2="1180" y2="1254" />
 <text class="rank" x="24" y="1276.0">34</text>
-<a href="https://huggingface.co/hackergeek98/whisper-fa-tinyyy"><text class="model-label" x="48" y="1276.0"><title>whisper-fa-tinyyy-hackergeek98</title>whisper-fa-tinyyy-hackergeek98</text></a>
+<a href="https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf"><text class="model-label" x="48" y="1276.0"><title>qwen3-asr-0-6b</title>qwen3-asr-0-6b</text></a>
 <rect class="track" x="563.0" y="1264.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="1264.0" width="30.0" height="16" rx="3" />
-<text class="value" x="809.5" y="1276.0">18.8%</text>
+<rect class="bar cer" x="563.0" y="1264.0" width="33.3" height="16" rx="3" />
+<text class="value" x="809.5" y="1276.0">20.9%</text>
 <rect class="track" x="883.5" y="1264.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="1264.0" width="54.2" height="16" rx="3" />
-<text class="value" x="1130.0" y="1276.0">45.4%</text>
+<rect class="bar wer" x="883.5" y="1264.0" width="57.4" height="16" rx="3" />
+<text class="value" x="1130.0" y="1276.0">48.1%</text>
 <line class="row-line" x1="24" y1="1290" x2="1180" y2="1290" />
 <text class="rank" x="24" y="1312.0">35</text>
-<a href="https://huggingface.co/makhataei/Whisper-Small-Ctejarat"><text class="model-label" x="48" y="1312.0"><title>whisper-small-ctejarat-makhataei</title>whisper-small-ctejarat-makhataei</text></a>
+<a href="https://huggingface.co/hackergeek98/whisper-fa-tinyyy"><text class="model-label" x="48" y="1312.0"><title>whisper-fa-tinyyy-hackergeek98</title>whisper-fa-tinyyy-hackergeek98</text></a>
 <rect class="track" x="563.0" y="1300.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="1300.0" width="33.2" height="16" rx="3" />
-<text class="value" x="809.5" y="1312.0">20.9%</text>
+<rect class="bar cer" x="563.0" y="1300.0" width="35.1" height="16" rx="3" />
+<text class="value" x="809.5" y="1312.0">22.1%</text>
 <rect class="track" x="883.5" y="1300.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="1300.0" width="57.6" height="16" rx="3" />
-<text class="value" x="1130.0" y="1312.0">48.3%</text>
+<rect class="bar wer" x="883.5" y="1300.0" width="55.6" height="16" rx="3" />
+<text class="value" x="1130.0" y="1312.0">46.6%</text>
 <line class="row-line" x1="24" y1="1326" x2="1180" y2="1326" />
 <text class="rank" x="24" y="1348.0">36</text>
-<a href="https://huggingface.co/Qwen/Qwen3-ASR-0.6B-hf"><text class="model-label" x="48" y="1348.0"><title>qwen3-asr-0-6b</title>qwen3-asr-0-6b</text></a>
+<a href="https://huggingface.co/makhataei/Whisper-Small-Ctejarat"><text class="model-label" x="48" y="1348.0"><title>whisper-small-ctejarat-makhataei</title>whisper-small-ctejarat-makhataei</text></a>
 <rect class="track" x="563.0" y="1336.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="1336.0" width="33.3" height="16" rx="3" />
-<text class="value" x="809.5" y="1348.0">20.9%</text>
+<rect class="bar cer" x="563.0" y="1336.0" width="36.0" height="16" rx="3" />
+<text class="value" x="809.5" y="1348.0">22.6%</text>
 <rect class="track" x="883.5" y="1336.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="1336.0" width="57.4" height="16" rx="3" />
-<text class="value" x="1130.0" y="1348.0">48.1%</text>
+<rect class="bar wer" x="883.5" y="1336.0" width="61.3" height="16" rx="3" />
+<text class="value" x="1130.0" y="1348.0">51.4%</text>
 <line class="row-line" x1="24" y1="1362" x2="1180" y2="1362" />
 <text class="rank" x="24" y="1384.0">37</text>
 <a href="https://huggingface.co/openai/whisper-small"><text class="model-label" x="48" y="1384.0"><title>whisper-small</title>whisper-small</text></a>
 <rect class="track" x="563.0" y="1372.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="1372.0" width="38.8" height="16" rx="3" />
-<text class="value" x="809.5" y="1384.0">24.4%</text>
+<rect class="bar cer" x="563.0" y="1372.0" width="41.3" height="16" rx="3" />
+<text class="value" x="809.5" y="1384.0">26.0%</text>
 <rect class="track" x="883.5" y="1372.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="1372.0" width="72.0" height="16" rx="3" />
-<text class="value" x="1130.0" y="1384.0">60.4%</text>
+<rect class="bar wer" x="883.5" y="1372.0" width="73.1" height="16" rx="3" />
+<text class="value" x="1130.0" y="1384.0">61.3%</text>
 <line class="row-line" x1="24" y1="1398" x2="1180" y2="1398" />
 <text class="rank" x="24" y="1420.0">38</text>
 <a href="https://huggingface.co/nvidia/stt_fa_fastconformer_hybrid_large"><text class="model-label" x="48" y="1420.0"><title>nvidia-fastconformer-fa</title>nvidia-fastconformer-fa</text></a>
@@ -391,11 +391,11 @@
 <text class="rank" x="24" y="1456.0">39</text>
 <a href="https://huggingface.co/openai/whisper-base"><text class="model-label" x="48" y="1456.0"><title>whisper-base</title>whisper-base</text></a>
 <rect class="track" x="563.0" y="1444.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="1444.0" width="68.9" height="16" rx="3" />
-<text class="value" x="809.5" y="1456.0">43.3%</text>
+<rect class="bar cer" x="563.0" y="1444.0" width="73.0" height="16" rx="3" />
+<text class="value" x="809.5" y="1456.0">45.9%</text>
 <rect class="track" x="883.5" y="1444.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="1444.0" width="120.3" height="16" rx="3" />
-<text class="value" x="1130.0" y="1456.0">100.9%</text>
+<rect class="bar wer" x="883.5" y="1444.0" width="122.8" height="16" rx="3" />
+<text class="value" x="1130.0" y="1456.0">102.9%</text>
 <line class="row-line" x1="24" y1="1470" x2="1180" y2="1470" />
 <text class="rank" x="24" y="1492.0">40</text>
 <a href="https://huggingface.co/masoumehb/wav2vec2-large-xlsr-persian-v3"><text class="model-label" x="48" y="1492.0"><title>wav2vec2-large-xlsr-persian-v3-masoumehb</title>wav2vec2-large-xlsr-persian-v3-masoumehb</text></a>
@@ -412,16 +412,16 @@
 <rect class="bar cer" x="563.0" y="1516.0" width="154.6" height="16" rx="3" />
 <text class="value" x="809.5" y="1528.0">97.2%</text>
 <rect class="track" x="883.5" y="1516.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="1516.0" width="196.8" height="16" rx="3" />
-<text class="value" x="1130.0" y="1528.0">165.1%</text>
+<rect class="bar wer" x="883.5" y="1516.0" width="197.3" height="16" rx="3" />
+<text class="value" x="1130.0" y="1528.0">165.5%</text>
 <line class="row-line" x1="24" y1="1542" x2="1180" y2="1542" />
 <text class="rank" x="24" y="1564.0">42</text>
 <a href="https://huggingface.co/Paulwalker4884/whisper-persian"><text class="model-label" x="48" y="1564.0"><title>whisper-persian-paulwalker</title>whisper-persian-paulwalker</text></a>
 <rect class="track" x="563.0" y="1552.0" width="238.5" height="16" rx="3" />
-<rect class="bar cer" x="563.0" y="1552.0" width="227.0" height="16" rx="3" />
-<text class="value" x="809.5" y="1564.0">142.8%</text>
+<rect class="bar cer" x="563.0" y="1552.0" width="232.4" height="16" rx="3" />
+<text class="value" x="809.5" y="1564.0">146.2%</text>
 <rect class="track" x="883.5" y="1552.0" width="238.5" height="16" rx="3" />
-<rect class="bar wer" x="883.5" y="1552.0" width="111.1" height="16" rx="3" />
-<text class="value" x="1130.0" y="1564.0">93.2%</text>
+<rect class="bar wer" x="883.5" y="1552.0" width="112.3" height="16" rx="3" />
+<text class="value" x="1130.0" y="1564.0">94.2%</text>
 <line class="row-line" x1="24" y1="1578" x2="1180" y2="1578" />
 </svg>

@@ -35,8 +35,8 @@
 - [x] Add boundary, batching, legacy-metadata, runtime-policy, and long-recording smoke coverage.
 - [x] Define the exact 29-model `whisper-longform-2-1-0` refresh campaign.
 - [x] Recalibrate all 29 Whisper batch sizes on the official hardware profile.
-- [ ] Produce one fresh uninterrupted 2.1 bundle for every qualified Whisper model.
-- [ ] Regenerate and independently audit the mixed-provenance 2.1 leaderboard.
+- [x] Produce one fresh uninterrupted 2.1 bundle for every qualified Whisper model.
+- [x] Regenerate and independently audit the mixed-provenance 2.1 leaderboard.
 - [ ] Freeze the reviewed code, results, documentation, and paper-facing artifacts.
 
 ## Version 3 — `fa-v2` normalization milestone

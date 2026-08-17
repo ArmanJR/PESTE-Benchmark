@@ -29,7 +29,32 @@
     "competing_gpu_processes": "",
     "cloud_provenance": "CONTAINER_ID=47907192 VAST_CONTAINERLABEL=C.47907192"
   },
-  "official_environment": null,
+  "official_environment": {
+    "profile_id": "rtx-6000-ada-v1",
+    "profile": "NVIDIA RTX 6000 Ada Generation 48 GB / 300 W / driver >= 580 / ECC Disabled",
+    "gpu_product_name": "NVIDIA RTX 6000 Ada Generation",
+    "gpu_memory_mib": 49140,
+    "driver_version": "595.71.05",
+    "ecc_state": "Disabled",
+    "power_limit_watts": 300.0,
+    "power_max_limit_watts": 300.0,
+    "throttle_state": "0x0000000000000001",
+    "gpu_uuid": "GPU-384be5d9-429b-1084-226b-7ba0453860f4",
+    "cpu_count": 96,
+    "cpu_model": "AMD EPYC 9474F 48-Core Processor",
+    "memory_bytes": 367202926592,
+    "storage_available_bytes": 416130232320,
+    "container_architecture": "x86_64",
+    "container_os": "ubuntu 24.04",
+    "host_kernel": "5.15.0-187-generic",
+    "image_reference": "ghcr.io/armanjr/peste-benchmark@sha256:7c81292cfd47fe2ed956bf5b81f8cef5d78d1e9558299650fd9d883973bd14ef",
+    "image_digest": "sha256:7c81292cfd47fe2ed956bf5b81f8cef5d78d1e9558299650fd9d883973bd14ef",
+    "source_revision": "e7833ac24e5e2db15a66ae267066bff576d872c5",
+    "offline_guard_enforced": true,
+    "caches_read_only": true,
+    "competing_gpu_processes": "",
+    "cloud_provenance": "CONTAINER_ID=47934601 VAST_CONTAINERLABEL=C.47934601"
+  },
   "models": [
     {
       "model_id": "neuraspeech-whisperbase-neurai",
@@ -39,7 +64,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "af74703b066051d570326841c15b1efa9f164a5d94ede3bc663d49584157cf21",
-      "final_model_digest": "8b31228f969040d36ec4f839a617aef212220477c4adeab011e1c79edcc58f3b"
+      "final_model_digest": "8b31228f969040d36ec4f839a617aef212220477c4adeab011e1c79edcc58f3b",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-neuraspeech-whisperbase-neurai-20260817T100800Z"
     },
     {
       "model_id": "persian-whisper-large-v3-10-percent-17-0-one-epoch-mohammadreza-halakoo",
@@ -49,7 +76,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "8a34684293026f1f9f34d3511c81918f6017cfb752759f76f0289498ff8b6de1",
-      "final_model_digest": "24d209b09f495eecf83010f4cab3e9d3e770ef79447273ffd19a66f3cb4b91be"
+      "final_model_digest": "24d209b09f495eecf83010f4cab3e9d3e770ef79447273ffd19a66f3cb4b91be",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-persian-whisper-large-v3-10-percent-17-0-one-epoch-mohammadreza-halakoo-20260817T102041Z"
     },
     {
       "model_id": "whisper-base-fa-aictsharif",
@@ -59,7 +88,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "fdd3e9dfdd2cd24c215655717305ded0fc057ea7c368be329213fe9cb0d149b2",
-      "final_model_digest": "a976e3038c5443c30c1c1911dc270615a54ef3c610cc3d85be502695635ac69b"
+      "final_model_digest": "a976e3038c5443c30c1c1911dc270615a54ef3c610cc3d85be502695635ac69b",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-base-fa-aictsharif-20260817T105945Z"
     },
     {
       "model_id": "whisper-base",
@@ -69,7 +100,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "1a728328bd43729ee2260e7e1cdfce6f431063f13a8f65ebc774732a25735c58",
-      "final_model_digest": "6fdea727f40157ddfedc07ad66b55461e94c26941821b6a331e92e0b0cb4495d"
+      "final_model_digest": "6fdea727f40157ddfedc07ad66b55461e94c26941821b6a331e92e0b0cb4495d",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-base-20260817T105009Z"
     },
     {
       "model_id": "whisper-fa-small-v1-seyedali",
@@ -79,7 +112,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "1ae3c2d9df280d1b362d7be0ddccda2d97e27c0d164931a0bd637ddf9be30436",
-      "final_model_digest": "dcdd849f484300849a8c0353f2820487e24bc6d4079f4d46b934e39c75bc0ec8"
+      "final_model_digest": "dcdd849f484300849a8c0353f2820487e24bc6d4079f4d46b934e39c75bc0ec8",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-fa-small-v1-seyedali-20260817T110818Z"
     },
     {
       "model_id": "whisper-fa-tinyyy-hackergeek98",
@@ -89,7 +124,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "5cba35d1675eadbd76d48b381f6a7678b28d955200dae49078c0700dedd3912d",
-      "final_model_digest": "29d845807ffb1fa2ecafdaba3b2d5141d46c0e7f2397daccfc2114bc29378ae0"
+      "final_model_digest": "29d845807ffb1fa2ecafdaba3b2d5141d46c0e7f2397daccfc2114bc29378ae0",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-fa-tinyyy-hackergeek98-20260817T112104Z"
     },
     {
       "model_id": "whisper-large-fa-v1-vhdm",
@@ -99,7 +136,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "a86053cfebd06dcb23af5901dd3d382fc7a53d67f67fcd44a10379390eedc38b",
-      "final_model_digest": "bee052b831d37a249b5566164ca4627ac6e7b49aa1d412b7e5674ab0b7973775"
+      "final_model_digest": "bee052b831d37a249b5566164ca4627ac6e7b49aa1d412b7e5674ab0b7973775",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-large-fa-v1-vhdm-20260817T112821Z"
     },
     {
       "model_id": "whisper-large-persian-steja",
@@ -109,7 +148,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "81a3da74d187fd65f0a0de5793a297d457393363eb877b29c001540b910e87d0",
-      "final_model_digest": "1be2f6e86a42fd9abd952b433655a0202e6e6ef2fdb128f9ec912328ff29c26d"
+      "final_model_digest": "1be2f6e86a42fd9abd952b433655a0202e6e6ef2fdb128f9ec912328ff29c26d",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-large-persian-steja-20260817T113711Z"
     },
     {
       "model_id": "whisper-large-v2-fa-aictsharif",
@@ -119,7 +160,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 2,
       "profile_sha256": "0079a4b78bd7548351fbce941421963f47cb26cda2f8ea9a82cea1e5a1dfe85d",
-      "final_model_digest": "27578b0538c99f45f75be441626d9445f6fd89bae30843f0c238ca8a8aa045c3"
+      "final_model_digest": "27578b0538c99f45f75be441626d9445f6fd89bae30843f0c238ca8a8aa045c3",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-large-v2-fa-aictsharif-20260817T124648Z"
     },
     {
       "model_id": "whisper-large-v2",
@@ -129,7 +172,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "3d6a6dfc093d77238af4b17fb14de71c3592a4e17e3ae38b8f6151873d42fc30",
-      "final_model_digest": "8608c91d04ad4bd10f8e14fce0b54ce5ed4f7384127e095064f6beeb48bd19ee"
+      "final_model_digest": "8608c91d04ad4bd10f8e14fce0b54ce5ed4f7384127e095064f6beeb48bd19ee",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-large-v2-20260817T121622Z"
     },
     {
       "model_id": "whisper-large-v3-turbo",
@@ -139,7 +184,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "de3e243631e931132187e85cf1a1cc517b47b278f92414455fadf4806d620e68",
-      "final_model_digest": "6207b64b281c35122c4bd4740b715fbb064afa1ba4afe686dfe22a414df43e44"
+      "final_model_digest": "6207b64b281c35122c4bd4740b715fbb064afa1ba4afe686dfe22a414df43e44",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-large-v3-turbo-20260817T133753Z"
     },
     {
       "model_id": "whisper-large-v3",
@@ -149,7 +196,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "45c3e54f1576d4771ff09fe6b705fccdc8d114b01bd4de715e21b7fa2439b83f",
-      "final_model_digest": "5de21bfaaa59a4cee66b28c8f9a6e12aba7636ec250e2aa62584c38d06d18fff"
+      "final_model_digest": "5de21bfaaa59a4cee66b28c8f9a6e12aba7636ec250e2aa62584c38d06d18fff",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-large-v3-20260817T130805Z"
     },
     {
       "model_id": "whisper-medium-fa-aictsharif",
@@ -159,7 +208,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 2,
       "profile_sha256": "b53da494b28aea37b1d119ba20012c9c1683052df045dd2804953d390dc7cd6c",
-      "final_model_digest": "efb54e673036584c7af94ca9e3d5209d0dbe3474249922dd8b220eb457290b17"
+      "final_model_digest": "efb54e673036584c7af94ca9e3d5209d0dbe3474249922dd8b220eb457290b17",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-medium-fa-aictsharif-20260817T141107Z"
     },
     {
       "model_id": "whisper-medium",
@@ -169,7 +220,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "3d5a2cf1f14166621e43523f2dd8577bf3dadd087cc92cf10b3f1fbba47ac6ad",
-      "final_model_digest": "3e64452785bf158b31894ff707c0267efc6c1bb34ad17ab1ae866639ed32837f"
+      "final_model_digest": "3e64452785bf158b31894ff707c0267efc6c1bb34ad17ab1ae866639ed32837f",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-medium-20260817T134655Z"
     },
     {
       "model_id": "whisper-persian-paulwalker",
@@ -179,7 +232,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "ad46c7f32049d4b01abfb3fb76b006bda4ea73e855ab048c331e2d9e47260554",
-      "final_model_digest": "f3bfbfc6fbca2796f8843944e780736593fe4aee563ab05dc76fc6055ec85af4"
+      "final_model_digest": "f3bfbfc6fbca2796f8843944e780736593fe4aee563ab05dc76fc6055ec85af4",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-persian-paulwalker-20260817T142455Z"
     },
     {
       "model_id": "whisper-persian-v4-nezamisafa",
@@ -189,7 +244,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "26bab62b7fdec3ba3b40332e7078f1ee184b6c13a566fbfa74fc1f93a5384110",
-      "final_model_digest": "3f688b6dd9fcb3d01356841691490f65bdf3a05418125b993eb60806adf05f1c"
+      "final_model_digest": "3f688b6dd9fcb3d01356841691490f65bdf3a05418125b993eb60806adf05f1c",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-persian-v4-nezamisafa-20260817T144856Z"
     },
     {
       "model_id": "whisper-small-ctejarat-makhataei",
@@ -199,7 +256,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "e42bc417ef4142bae8bc1da0f4ecc74f210d70b5e9dd0a44f9ed6d92b8fa2d57",
-      "final_model_digest": "086ce62d90a3118841ff47ab67e196179f85f2e41c53c750200e8c563744bdf9"
+      "final_model_digest": "086ce62d90a3118841ff47ab67e196179f85f2e41c53c750200e8c563744bdf9",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-small-ctejarat-makhataei-20260817T153734Z"
     },
     {
       "model_id": "whisper-small-fa-7-taesiri",
@@ -209,7 +268,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "127e3a03555f8a426dc7590337041f4a7450f19ff280804438b638dcd226885f",
-      "final_model_digest": "fa335e347a5320ab3adb7dc0f456288b7e99f61a78a01eda3a6eee10a5684b10"
+      "final_model_digest": "fa335e347a5320ab3adb7dc0f456288b7e99f61a78a01eda3a6eee10a5684b10",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-small-fa-7-taesiri-20260817T160004Z"
     },
     {
       "model_id": "whisper-small-fa-aictsharif",
@@ -219,7 +280,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "be74aec97ef210e4d0aa927a4eb82e8075c12547539619e4c226b628315e534d",
-      "final_model_digest": "c684cde68cad8471bfdf782415070985d0ad1ec2df9245a8dc0f78fcf5902ee0"
+      "final_model_digest": "c684cde68cad8471bfdf782415070985d0ad1ec2df9245a8dc0f78fcf5902ee0",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-small-fa-aictsharif-20260817T161847Z"
     },
     {
       "model_id": "whisper-small-fa-mjavadf",
@@ -229,7 +292,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "fbbd624a128fa34320017305e8d3daa4d8624382b197395c92fddab68125df1e",
-      "final_model_digest": "54054686fb9ef1cf7c0d18bbaa599d579bb862a4d07fe37a735651cea0d73044"
+      "final_model_digest": "54054686fb9ef1cf7c0d18bbaa599d579bb862a4d07fe37a735651cea0d73044",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-small-fa-mjavadf-20260817T163234Z"
     },
     {
       "model_id": "whisper-small-fa-mohammadgholizadeh",
@@ -239,7 +304,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "d2babc557ffda343bf9b0d860fa84a3315ddb7a7777ec264d86405e0d14ce06c",
-      "final_model_digest": "e2d87444d5590230fdea190bb4897f87da6902fc89c98b454f19ce9b2b6b8895"
+      "final_model_digest": "e2d87444d5590230fdea190bb4897f87da6902fc89c98b454f19ce9b2b6b8895",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-small-fa-mohammadgholizadeh-20260817T164621Z"
     },
     {
       "model_id": "whisper-small-persian-alism98",
@@ -249,7 +316,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 2,
       "profile_sha256": "a6c229d23a1f95b6806f2e723000960723afbb609a5e318838893918bdaeb688",
-      "final_model_digest": "13ff741cb661e6b6eb16370f0bafbf7bdffcef694ff2cced3e0c5f9673ce8347"
+      "final_model_digest": "13ff741cb661e6b6eb16370f0bafbf7bdffcef694ff2cced3e0c5f9673ce8347",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-small-persian-alism98-20260817T165940Z"
     },
     {
       "model_id": "whisper-small-persian-amirmohseni",
@@ -259,7 +328,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 2,
       "profile_sha256": "bdea0ba9305afd041121efddd46522d35dc24a8fd81ad21cb0de8df2eb7a61e8",
-      "final_model_digest": "7d1529917ded0c98974f9c3e66f2bde222ca5840e5745b73dbaaacb757f88405"
+      "final_model_digest": "7d1529917ded0c98974f9c3e66f2bde222ca5840e5745b73dbaaacb757f88405",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-small-persian-amirmohseni-20260817T170740Z"
     },
     {
       "model_id": "whisper-small-persian-steja",
@@ -269,7 +340,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "fcce9e700598c232af92907f22184cc18933add33c8b48e665a374e2d519fbdb",
-      "final_model_digest": "9cc1193a7bf188911d2a6c598d9b4ac54abe60e63cb3e421135b5b650324d897"
+      "final_model_digest": "9cc1193a7bf188911d2a6c598d9b4ac54abe60e63cb3e421135b5b650324d897",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-small-persian-steja-20260817T172044Z"
     },
     {
       "model_id": "whisper-small-persian-v1-aliyzd95",
@@ -279,7 +352,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "19ebe140a3b9d8df4a1f8108e5bc30e66516f7161437b98bbf1748c949a62cb0",
-      "final_model_digest": "adaf36615379aaba173f8c8957c00a4e65511c66a7d91cac20a29068894994d7"
+      "final_model_digest": "adaf36615379aaba173f8c8957c00a4e65511c66a7d91cac20a29068894994d7",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-small-persian-v1-aliyzd95-20260817T173619Z"
     },
     {
       "model_id": "whisper-small",
@@ -289,7 +364,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 2,
       "profile_sha256": "1dfe712651ed1e129f46fa44be9f200254b1d1134801d4199b484455f0afe191",
-      "final_model_digest": "5385968b1a6542cf0cff67f6276b22c222cdc108cd5cafd269405148616b9df6"
+      "final_model_digest": "5385968b1a6542cf0cff67f6276b22c222cdc108cd5cafd269405148616b9df6",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-small-20260817T152515Z"
     },
     {
       "model_id": "whisper-tiny-fa-aictsharif",
@@ -299,7 +376,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "fc10c7b7d7c56e092e360a1690a1943e94141192a78a1b3b4e25f7928b272515",
-      "final_model_digest": "cf8f898dd9d4cf6f17b70bf084a39f75289a06ef134eca5c660356cf2fbe5026"
+      "final_model_digest": "cf8f898dd9d4cf6f17b70bf084a39f75289a06ef134eca5c660356cf2fbe5026",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-tiny-fa-aictsharif-20260817T175946Z"
     },
     {
       "model_id": "whisper-tiny",
@@ -309,7 +388,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "3045436f81b26dabd5a10e56f77607382d12b080918e8ded2bd337d608900d80",
-      "final_model_digest": "a5d69b8550e99389163525a40772b399cd4c07ec6854e6402b5ce1272f7860cb"
+      "final_model_digest": "a5d69b8550e99389163525a40772b399cd4c07ec6854e6402b5ce1272f7860cb",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-tiny-20260817T174950Z"
     },
     {
       "model_id": "whisper-v3-turbo-persian-v1-0-nezamisafa",
@@ -319,7 +400,9 @@
       "qualification_status": "qualified",
       "selected_batch_size": 1,
       "profile_sha256": "b877b62584d6683a6d8c777e2fc68a58f5e6e27b88c383a81a274ffaf76d4f54",
-      "final_model_digest": "9a26f13a40aa5548558c756a121c91a91072243bffa45de5110b82d944d5ad23"
+      "final_model_digest": "9a26f13a40aa5548558c756a121c91a91072243bffa45de5110b82d944d5ad23",
+      "run_status": "success",
+      "run_id": "fleurs-fa-ir-v1-whisper-v3-turbo-persian-v1-0-nezamisafa-20260817T181028Z"
     }
   ]
 }

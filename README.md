@@ -26,22 +26,24 @@ Persian automatic speech recognition.
 
 The tables show the top 10 models. See the [full leaderboard](docs/full-leaderboard.md) for complete standings.
 
+Result provenance: 13 results from `ghcr.io/armanjr/peste-benchmark:2.0.0`, 29 results from `ghcr.io/armanjr/peste-benchmark:2.1.0`. The generated JSON and CSV include each row's model digest, image digest, and source revision.
+
 ### Normalized accuracy
 
 ![Normalized accuracy leaderboard](generated/leaderboard-accuracy.svg)
 
 | Order | Model | CER | WER | Word accuracy |
 |---:|---|---:|---:|---:|
-| 1 | [whisper-persian-v4-nezamisafa](https://huggingface.co/nezamisafa/whisper-persian-v4) | 0.0493<br><sub>95% CI: 0.0443–0.0550</sub> | 0.1312<br><sub>95% CI: 0.1233–0.1393</sub> | 86.88% |
-| 2 | [whisper-large-v2-fa-aictsharif](https://huggingface.co/aictsharif/whisper-large-v2-fa) | 0.0510<br><sub>95% CI: 0.0445–0.0589</sub> | 0.2326<br><sub>95% CI: 0.2233–0.2424</sub> | 76.74% |
-| 3 | [visualears-fastconformer-fa-full-ab](https://huggingface.co/Reza2kn/visualears-fastconformer-fa-full-ab) | 0.0518<br><sub>95% CI: 0.0475–0.0565</sub> | 0.1552<br><sub>95% CI: 0.1481–0.1624</sub> | 84.48% |
-| 4 | [whisper-large-fa-v1-vhdm](https://huggingface.co/vhdm/whisper-large-fa-v1) | 0.0535<br><sub>95% CI: 0.0473–0.0611</sub> | 0.1448<br><sub>95% CI: 0.1361–0.1542</sub> | 85.52% |
-| 5 | [whisper-large-persian-steja](https://huggingface.co/steja/whisper-large-persian) | 0.0584<br><sub>95% CI: 0.0538–0.0636</sub> | 0.2643<br><sub>95% CI: 0.2554–0.2732</sub> | 73.57% |
-| 6 | [whisper-large-v3](https://huggingface.co/openai/whisper-large-v3) | 0.0605<br><sub>95% CI: 0.0560–0.0655</sub> | 0.2044<br><sub>95% CI: 0.1961–0.2129</sub> | 79.56% |
-| 7 | [persian-whisper-large-v3-10-percent-17-0-one-epoch-mohammadreza-halakoo](https://huggingface.co/MohammadReza-Halakoo/persian-whisper-large-v3-10-percent-17-0-one-epoch) | 0.0623<br><sub>95% CI: 0.0574–0.0675</sub> | 0.2743<br><sub>95% CI: 0.2654–0.2831</sub> | 72.57% |
-| 8 | [whisper-large-v3-turbo](https://huggingface.co/openai/whisper-large-v3-turbo) | 0.0629<br><sub>95% CI: 0.0570–0.0699</sub> | 0.2042<br><sub>95% CI: 0.1951–0.2135</sub> | 79.58% |
-| 9 | [shenava-rizeh-v1-0](https://huggingface.co/Reza2kn/Shenava-Rizeh-v1.0) | 0.0640<br><sub>95% CI: 0.0589–0.0694</sub> | 0.1555<br><sub>95% CI: 0.1470–0.1638</sub> | 84.45% |
-| 10 | [whisper-medium-fa-aictsharif](https://huggingface.co/aictsharif/whisper-medium-fa) | 0.0658<br><sub>95% CI: 0.0517–0.0836</sub> | 0.2604<br><sub>95% CI: 0.2434–0.2804</sub> | 73.96% |
+| 1 | [whisper-persian-v4-nezamisafa](https://huggingface.co/nezamisafa/whisper-persian-v4) | 0.0497<br><sub>95% CI: 0.0447–0.0553</sub> | 0.1318<br><sub>95% CI: 0.1238–0.1398</sub> | 86.82% |
+| 2 | [visualears-fastconformer-fa-full-ab](https://huggingface.co/Reza2kn/visualears-fastconformer-fa-full-ab) | 0.0518<br><sub>95% CI: 0.0475–0.0565</sub> | 0.1552<br><sub>95% CI: 0.1481–0.1624</sub> | 84.48% |
+| 3 | [whisper-large-fa-v1-vhdm](https://huggingface.co/vhdm/whisper-large-fa-v1) | 0.0550<br><sub>95% CI: 0.0463–0.0689</sub> | 0.1457<br><sub>95% CI: 0.1358–0.1577</sub> | 85.43% |
+| 4 | [whisper-large-v3](https://huggingface.co/openai/whisper-large-v3) | 0.0597<br><sub>95% CI: 0.0558–0.0640</sub> | 0.2037<br><sub>95% CI: 0.1957–0.2119</sub> | 79.63% |
+| 5 | [whisper-large-v3-turbo](https://huggingface.co/openai/whisper-large-v3-turbo) | 0.0610<br><sub>95% CI: 0.0564–0.0663</sub> | 0.2027<br><sub>95% CI: 0.1945–0.2111</sub> | 79.73% |
+| 6 | [shenava-rizeh-v1-0](https://huggingface.co/Reza2kn/Shenava-Rizeh-v1.0) | 0.0640<br><sub>95% CI: 0.0589–0.0694</sub> | 0.1555<br><sub>95% CI: 0.1470–0.1638</sub> | 84.45% |
+| 7 | [xls-r-1b-fa-cv8-ghofrani](https://huggingface.co/ghofrani/xls-r-1b-fa-cv8) | 0.0704<br><sub>95% CI: 0.0655–0.0757</sub> | 0.3042<br><sub>95% CI: 0.2953–0.3133</sub> | 69.58% |
+| 8 | [whisper-small-fa-7-taesiri](https://huggingface.co/taesiri/whisper-small-fa-7) | 0.0727<br><sub>95% CI: 0.0661–0.0798</sub> | 0.2805<br><sub>95% CI: 0.2710–0.2901</sub> | 71.95% |
+| 9 | [persian-speech-transcription-wav2vec2-v1-seyedali](https://huggingface.co/SeyedAli/Persian-Speech-Transcription-Wav2Vec2-V1) | 0.0740<br><sub>95% CI: 0.0690–0.0794</sub> | 0.2972<br><sub>95% CI: 0.2876–0.3066</sub> | 70.28% |
+| 10 | [wav2vec2-large-xlsr-53-persian](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-persian) | 0.0741<br><sub>95% CI: 0.0690–0.0793</sub> | 0.3269<br><sub>95% CI: 0.3179–0.3357</sub> | 67.31% |
 
 CER is primary because Persian WER is sensitive to word segmentation. The 95% intervals use a deterministic 10,000-replicate utterance bootstrap with seed 20250731; point-estimate order alone does not establish a significant difference.
 
@@ -73,8 +75,7 @@ Throughput is total audio seconds divided by measured processing seconds; RTF is
 | [nvidia-fastconformer-fa](https://huggingface.co/nvidia/stt_fa_fastconformer_hybrid_large) | 0.2646 (0.2552–0.2741) | 1199.914× |
 | [shenava-rizeh-v1-0](https://huggingface.co/Reza2kn/Shenava-Rizeh-v1.0) | 0.0640 (0.0589–0.0694) | 675.031× |
 | [visualears-fastconformer-fa-full-ab](https://huggingface.co/Reza2kn/visualears-fastconformer-fa-full-ab) | 0.0518 (0.0475–0.0565) | 378.349× |
-| [whisper-large-v2-fa-aictsharif](https://huggingface.co/aictsharif/whisper-large-v2-fa) | 0.0510 (0.0445–0.0589) | 4.597× |
-| [whisper-persian-v4-nezamisafa](https://huggingface.co/nezamisafa/whisper-persian-v4) | 0.0493 (0.0443–0.0550) | 2.445× |
+| [whisper-persian-v4-nezamisafa](https://huggingface.co/nezamisafa/whisper-persian-v4) | 0.0497 (0.0447–0.0553) | 6.352× |
 
 A model is Pareto-efficient when no other speed-valid model has equal-or-lower CER and equal-or-higher throughput with at least one strict advantage. This is a trade-off classification, not a composite score; JSON and CSV artifacts retain the full dominance analysis.
 
