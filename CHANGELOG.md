@@ -12,6 +12,8 @@
 - Hardened batch calibration so large candidates exercise their exact batch dimension and cannot
   be selected after a smaller candidate demonstrates batch-sensitive output.
 - Added the exact 29-model `whisper-longform-2-1-0` recalibration and result-refresh campaign.
+- Qualified all 29 Whisper candidates on the official RTX 6000 Ada profile; exact-dimension,
+  monotonic calibration selected batch size 1 for 24 models and batch size 2 for five models.
 - Preserved schema 2, `fleurs-fa-ir-v1`, `fa-v1`, metrics, checkpoint revisions, dependency pins,
   and the 13 unaffected non-Whisper 2.0 result identities.
 
