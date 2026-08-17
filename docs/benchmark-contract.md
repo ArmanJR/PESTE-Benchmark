@@ -115,9 +115,11 @@ warmups and three measured passes each.
 
 A candidate is rejected when it OOMs, exceeds 85% of total VRAM on the longest-duration stress
 batch, violates output cardinality/order, or differs from singleton normalized output on a fixed
-16-recording conformance set. Among safe candidates, the smallest reaching at least 95% of the
-best safe throughput is selected. Memory telemetry exists only during calibration and is not a
-published benchmark metric.
+16-recording conformance set. Candidates above 16 repeat that fixed set to exercise the exact
+declared batch dimension. Conformance safety is monotonic: after one candidate diverges from
+singleton output, every larger candidate is rejected even if one particular grouping happens to
+match. Among safe candidates, the smallest reaching at least 95% of the best safe throughput is
+selected. Memory telemetry exists only during calibration and is not a published benchmark metric.
 
 NeMo CTC calibration is conservatively capped at batch 32 and stresses the actual longest
 recordings. This avoids PyTorch convolution kernels whose padded tensor dimensions exceed the

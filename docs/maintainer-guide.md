@@ -55,6 +55,14 @@ ID and exclude it from the next attempt rather than paying to reproduce the same
 uv run peste cloud up --image "$image_ref" --exclude-offer <offer-id>
 ```
 
+Vast can regenerate offer IDs for another GPU or a later attempt on the same physical host. When a
+failure is machine-wide, record the `machine_id` from `vastai show instances --raw` and exclude the
+machine so every current and regenerated offer from it is skipped:
+
+```bash
+uv run peste cloud up --image "$image_ref" --exclude-machine <machine-id>
+```
+
 Use the printed direct SSH URL:
 
 ```bash
@@ -64,11 +72,13 @@ uv run peste model profile-speed --model <model-id> --host <ssh-url>
 ```
 
 Commit the calibrated `speed_profile.batch_size` only after reviewing all candidates, the 85%
-headroom stress result, singleton conformance, and the 95% knee decision. Because it changes the
-model digest, perform calibration for every model before full runs. Destroy the calibration
-instance, build the commit containing all reviewed profiles, and provision a fresh container from
-that workflow's immutable digest: the carrier image contains the model JSON files, and a stale
-image will not match the updated request digest.
+headroom stress result, monotonic singleton conformance, and the 95% knee decision. Candidates
+larger than the fixed conformance set must show evidence from the exact candidate batch dimension;
+evidence produced without that guard is invalid. Because a selected batch size changes the model
+digest, perform calibration for every model before full runs. Destroy the calibration instance,
+build the commit containing all reviewed profiles, and provision a fresh container from that
+workflow's immutable digest: the carrier image contains the model JSON files, and a stale image
+will not match the updated request digest.
 
 ```bash
 uv run peste validate-specs

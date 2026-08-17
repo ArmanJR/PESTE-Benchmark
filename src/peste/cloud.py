@@ -24,6 +24,11 @@ VAST_IMAGE_REPOSITORY = "ghcr.io/armanjr/peste-benchmark"
 IMAGE_REFERENCE_PATTERN = re.compile(rf"^{re.escape(VAST_IMAGE_REPOSITORY)}@sha256:[0-9a-f]{{64}}$")
 CONTAINER_ONSTART = (
     "set -eu; install -d -m 0755 /cache/dataset /cache/hf /results; "
+    "install -d -o root -g root -m 0700 /root/.ssh; "
+    "chown root:root /root /root/.ssh; chmod 0700 /root /root/.ssh; "
+    "if [ -f /root/.ssh/authorized_keys ]; then "
+    "chown root:root /root/.ssh/authorized_keys; "
+    "chmod 0600 /root/.ssh/authorized_keys; fi; "
     "touch /etc/environment; "
     "for name in PESTE_IMAGE_REFERENCE PESTE_IMAGE_DIGEST PESTE_SOURCE_REVISION CONTAINER_ID "
     'VAST_CONTAINERLABEL; do value=$(printenv "$name" 2>/dev/null || true); '
@@ -324,6 +329,7 @@ def provision_official_container(
     disk_gb: int = DEFAULT_VAST_DISK_GB,
     maximum_attempts: int = 3,
     excluded_offer_ids: frozenset[int] | None = None,
+    excluded_machine_ids: frozenset[int] | None = None,
 ) -> ProvisionedInstance:
     """Provision a doctor-approved container, destroying every rejected attempt."""
     image_reference = validate_image_reference(image_reference)
@@ -360,11 +366,21 @@ def provision_official_container(
             client.destroy_instance(existing_id)
 
     excluded = excluded_offer_ids or frozenset()
+    excluded_machines = excluded_machine_ids or frozenset()
     offers = [
         offer
         for offer in client.search_offers(max_dph=max_dph, disk_gb=disk_gb)
         if int(offer["id"]) not in excluded
+        and int(offer.get("machine_id", -1)) not in excluded_machines
     ]
+    LOGGER.info(
+        "Filtered Vast.ai offers for provisioning",
+        extra={
+            "offer_count": len(offers),
+            "excluded_offer_ids": sorted(excluded),
+            "excluded_machine_ids": sorted(excluded_machines),
+        },
+    )
     if not offers:
         raise RuntimeError(
             "No non-excluded Vast.ai offers satisfy the RTX 6000 Ada container preselection policy"

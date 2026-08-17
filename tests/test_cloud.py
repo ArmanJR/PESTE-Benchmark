@@ -80,6 +80,8 @@ def test_create_uses_digest_pinned_image_direct_ssh_and_container_policy(tmp_pat
     assert command[command.index("--label") + 1] == "peste-official"
     assert command[command.index("--onstart-cmd") + 1] == CONTAINER_ONSTART
     assert "PESTE_SOURCE_REVISION" in CONTAINER_ONSTART
+    assert "chmod 0600 /root/.ssh/authorized_keys" in CONTAINER_ONSTART
+    assert "chmod 0700 /root /root/.ssh" in CONTAINER_ONSTART
     environment = command[command.index("--env") + 1]
     assert f"PESTE_IMAGE_REFERENCE={IMAGE}" in environment
     assert f"PESTE_IMAGE_DIGEST=sha256:{'a' * 64}" in environment
@@ -215,7 +217,10 @@ def test_api_key_is_redacted_from_failure_and_logs(
 
 class LifecycleClient:
     def __init__(self, *, wait_failure: bool = False) -> None:
-        self.offers = [{"id": 1, "dph_total": 0.4}, {"id": 2, "dph_total": 0.5}]
+        self.offers = [
+            {"id": 1, "machine_id": 10, "dph_total": 0.4},
+            {"id": 2, "machine_id": 20, "dph_total": 0.5},
+        ]
         self.destroyed: list[int] = []
         self.created: list[int] = []
         self.wait_failure = wait_failure
@@ -333,6 +338,18 @@ def test_provisioning_skips_explicitly_excluded_offer() -> None:
         lambda host: SimpleNamespace(doctor=lambda: None),
         IMAGE,
         excluded_offer_ids=frozenset({1}),
+    )
+    assert result.offer_id == 2
+    assert client.created == [2]
+
+
+def test_provisioning_skips_every_offer_from_excluded_machine() -> None:
+    client = LifecycleClient()
+    result = provision_official_container(
+        client,  # type: ignore[arg-type]
+        lambda host: SimpleNamespace(doctor=lambda: None),
+        IMAGE,
+        excluded_machine_ids=frozenset({10}),
     )
     assert result.offer_id == 2
     assert client.created == [2]

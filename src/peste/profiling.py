@@ -107,6 +107,14 @@ def _normalized_outputs(
     return outputs
 
 
+def _repeat_to_minimum[T](values: Sequence[T], minimum_count: int) -> list[T]:
+    """Repeat a non-empty conformance sequence to exercise the requested batch size."""
+    if not values:
+        raise ValueError("Cannot repeat an empty conformance sequence")
+    target_count = max(len(values), minimum_count)
+    return [values[index % len(values)] for index in range(target_count)]
+
+
 def calibrate_batch_size(
     adapter: ASRAdapter,
     rows: Sequence[ManifestRow],
@@ -131,6 +139,7 @@ def calibrate_batch_size(
         raise RuntimeError("CUDA device reported no VRAM")
 
     results: list[CandidateResult] = []
+    first_divergent_batch_size: int | None = None
     ordered_rows = sorted(rows, key=lambda row: (row.duration_seconds, row.upstream_row_index))
     for candidate in candidate_batch_sizes(adapter):
         LOGGER.info(
@@ -159,10 +168,14 @@ def calibrate_batch_size(
                     )
                 )
                 continue
+            candidate_conformance_paths = _repeat_to_minimum(conformance_paths, candidate)
+            expected_conformance = _repeat_to_minimum(singleton, candidate)
             candidate_conformance = _normalized_outputs(
-                adapter, conformance_paths, candidate, normalization_version
+                adapter, candidate_conformance_paths, candidate, normalization_version
             )
-            if candidate_conformance != singleton:
+            if candidate_conformance != expected_conformance:
+                if first_divergent_batch_size is None:
+                    first_divergent_batch_size = candidate
                 results.append(
                     CandidateResult(
                         batch_size=candidate,
@@ -170,6 +183,20 @@ def calibrate_batch_size(
                         throughput_x=None,
                         peak_vram_fraction=peak_fraction,
                         rejection_reason="normalized output diverges from singleton conformance",
+                    )
+                )
+                continue
+            if first_divergent_batch_size is not None:
+                results.append(
+                    CandidateResult(
+                        batch_size=candidate,
+                        safe=False,
+                        throughput_x=None,
+                        peak_vram_fraction=peak_fraction,
+                        rejection_reason=(
+                            "smaller batch-size candidate "
+                            f"{first_divergent_batch_size} diverges from singleton conformance"
+                        ),
                     )
                 )
                 continue

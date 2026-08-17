@@ -438,6 +438,12 @@ def cloud_up(
         list[int] | None,
         typer.Option("--exclude-offer", min=1, help="Skip a known-broken offer ID; repeatable"),
     ] = None,
+    exclude_machine: Annotated[
+        list[int] | None,
+        typer.Option(
+            "--exclude-machine", min=1, help="Skip every offer from a broken machine ID; repeatable"
+        ),
+    ] = None,
 ) -> None:
     from peste.cloud import VastClient, provision_official_container
     from peste.orchestration import GpuOrchestrator
@@ -450,6 +456,7 @@ def cloud_up(
         disk_gb=disk_gb,
         maximum_attempts=maximum_attempts,
         excluded_offer_ids=frozenset(exclude_offer or []),
+        excluded_machine_ids=frozenset(exclude_machine or []),
     )
     LOGGER.info(
         "Provisioned doctor-approved Vast.ai container",

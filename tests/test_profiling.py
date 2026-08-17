@@ -52,12 +52,14 @@ class ProfileAdapter(ASRAdapter):
         self.bad_cardinality_at = bad_cardinality_at
         self.diverge_at = diverge_at
         self.last_batch_size = 0
+        self.batches_seen: list[tuple[str, ...]] = []
 
     def load(self) -> None:
         pass
 
     def transcribe_batch(self, audio_paths: list[Path]) -> list[Transcription]:
         self.last_batch_size = len(audio_paths)
+        self.batches_seen.append(tuple(path.stem for path in audio_paths))
         if self.oom_at == len(audio_paths):
             raise FakeCuda.OutOfMemoryError("test OOM")
         if self.indexing_limit_at == len(audio_paths):
@@ -135,6 +137,7 @@ def test_profiler_selects_smallest_candidate_at_95_percent_knee(
     )
     assert result.selected_batch_size == 4
     assert [candidate.safe for candidate in result.candidates] == [True, True, True]
+    assert ("audio-0", "audio-3", "audio-0", "audio-3") in adapter.batches_seen
 
 
 def test_profiler_rejects_oom_and_uses_next_best_candidate(
@@ -217,3 +220,5 @@ def test_profiler_rejects_cardinality_and_singleton_divergence(
     assert any(
         "diverges" in (candidate.rejection_reason or "") for candidate in divergence.candidates
     )
+    assert [candidate.safe for candidate in divergence.candidates] == [True, False, False]
+    assert "smaller batch-size candidate 2" in (divergence.candidates[-1].rejection_reason or "")
