@@ -140,11 +140,11 @@ treated as clean held-out evidence.
 PESTE code and definitions are Apache-2.0. FLEURS content is CC BY 4.0; see [`NOTICE`](NOTICE).
 
 ```bibtex
-@software{jafarnezhad_peste_persian_speech_to_text_benchmark,
-  author  = {Jafarnezhad, Arman},
-  title   = {PESTE: Persian Speech to Text benchmark},
-  year    = {2026},
-  url     = {https://github.com/ArmanJR/PESTE-Benchmark},
-  version = {2.1.0}
+@misc{jafarnezhad2026peste,
+  author       = {Jafarnezhad, Arman},
+  title        = {{PESTE}: {P}ersian {S}peech-to-{T}ext Benchmark},
+  year         = {2026},
+  howpublished = {\url{https://github.com/ArmanJR/PESTE-Benchmark}},
+  note         = {Version 2.1.0}
 }
 ```
